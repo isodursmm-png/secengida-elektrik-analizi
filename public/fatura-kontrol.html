@@ -393,20 +393,24 @@ function gesUretimHtml() {
   const y = fYil.value, a = fAy.value;
   const A = U.aylar.filter(x => !y || x.ay.startsWith(y));
   const T = U.tesisler;
-  const top = A.reduce((t, x) => { t.k += x.uretim || 0; t.t += x.tutar || 0; x.tesis.forEach((g, i) => { t.g[i].k += g.kwh || 0; t.g[i].t += g.tutar || 0; }); return t; }, { k: 0, t: 0, g: T.map(() => ({ k: 0, t: 0 })) });
-  const th = '<tr><th rowspan="2">Ay</th><th rowspan="2">Toplam üretim (kWh)</th><th rowspan="2">Birim (TL/kWh, KDV dahil)</th><th rowspan="2">Tutar (TL)</th>' + T.map(t => '<th colspan="2" title="' + esc(t.gucKaynak) + '">' + esc(t.lokasyon) + '<br><span style="font-weight:400;font-size:10.5px">' + (t.guc ? kwh(t.guc) + ' kW · ' + esc(t.gucKaynak) : 'güç yok') + '</span></th>').join('') + '</tr>'
+  const top = A.reduce((t, x) => { t.k += x.uretim || 0; t.t += x.tutar || 0; t.tu += x.tahminiUretim || 0; t.oz += x.ozTuketim || 0; t.ozt += x.ozTuketimTL || 0; x.tesis.forEach((g, i) => { t.g[i].k += g.kwh || 0; t.g[i].t += g.tutar || 0; }); return t; }, { k: 0, t: 0, tu: 0, oz: 0, ozt: 0, g: T.map(() => ({ k: 0, t: 0 })) });
+  const TH = !!U.tahmin; // SECENGIDA: PVGIS tahmini toplam üretim (öz tüketim dahil)
+  const th = '<tr><th rowspan="2">Ay</th><th rowspan="2">' + (TH ? 'Şebekeye veriş (2.8.0)<br><span class="th-alt">mahsuba giren üretim · kWh</span>' : 'Toplam üretim (kWh)') + '</th><th rowspan="2">Birim (TL/kWh, KDV dahil)</th><th rowspan="2">Tutar (TL)</th>'
+    + (TH ? '<th rowspan="2" class="tahmini-th">Tahmini toplam üretim<br><span class="th-alt">PVGIS · öz tüketim dahil · kWh</span></th><th rowspan="2" class="tahmini-th">Öz tüketim ≈<br><span class="th-alt">kWh · şebekeden alınmayan TL</span></th>' : '') + T.map(t => '<th colspan="2" title="' + esc(t.gucKaynak) + '">' + esc(t.lokasyon) + '<br><span style="font-weight:400;font-size:10.5px">' + (t.guc ? kwh(t.guc) + ' kW · ' + esc(t.gucKaynak) : 'güç yok') + '</span></th>').join('') + '</tr>'
     + '<tr>' + T.map(() => '<th>kWh</th><th>TL</th>').join('') + '</tr>';
-  const sat = A.map(x => '<tr' + (a && x.ay.slice(5) === a ? ' class="secili-ay"' : '') + '><td class="l">' + ayEt(x.ay) + '</td><td class="n"><b>' + kwh(x.uretim) + '</b></td><td class="n">' + b4(x.birim) + '</td><td class="n"><b>' + tl(x.tutar) + '</b></td>'
+  const sat = A.map(x => '<tr' + (a && x.ay.slice(5) === a ? ' class="secili-ay"' : '') + '><td class="l">' + ayEt(x.ay) + '</td><td class="n"><b>' + kwh(x.uretim) + '</b>' + (x.ilaveVeris ? '<div class="alt-not">' + kwh(x.ilaveVeris) + ' kWh tahmini (ilave)</div>' : '') + '</td><td class="n">' + b4(x.birim) + '</td><td class="n"><b>' + tl(x.tutar) + '</b></td>'
+    + (TH ? '<td class="n tahmini">' + kwh(x.tahminiUretim) + '</td><td class="n tahmini">' + kwh(x.ozTuketim) + '<div class="alt-not">' + tl(x.ozTuketimTL) + ' TL</div></td>' : '')
     + x.tesis.map(g => '<td class="n' + (g.tahmini ? ' tahmini' : '') + '">' + kwh(g.kwh) + '</td><td class="n' + (g.tahmini ? ' tahmini' : '') + '">' + tl(g.tutar) + '</td>').join('') + '</tr>').join('');
   // Faturası olup panelde saatlik verisi olmayan aylar (son veriden sonrası): nedeniyle ayrı satır
   const sonAy = U.aylar.length ? U.aylar[U.aylar.length - 1].ay : '', gesNo = new Set(T.map(t => t.sozlesmeNo)), eksik = {};
   for (const s of V.satirlar) if (gesNo.has(s.sozlesmeNo) && s.donem > sonAy && (!y || s.donem.startsWith(y))) eksik[s.donem] = (eksik[s.donem] || 0) + 1;
   const sonGun = U.sonGun ? U.sonGun.split('-').reverse().join('.') : ayEt(sonAy);
-  const eksikSat = Object.keys(eksik).sort().map(d => '<tr class="eksik-ay' + (a && d.slice(5) === a ? ' secili-ay' : '') + '"><td class="l">' + ayEt(d) + '</td><td colspan="' + (3 + 2 * T.length) + '">⚠ <b>Panelde bu ayın saatlik GES verisi yok</b> (son veri: ' + sonGun + ') · bu ay ' + eksik[d] + ' GES faturası var. Ayın üretim dosyası panelin GES klasörüne konunca bu satır kendiliğinden dolar.</td></tr>').join('');
-  const tp = '<tr class="top"><td>TOPLAM · ' + A.length + ' ay</td><td class="n">' + kwh(top.k) + '</td><td></td><td class="n">' + tl(top.t) + '</td>' + top.g.map(g => '<td class="n">' + kwh(g.k) + '</td><td class="n">' + tl(g.t) + '</td>').join('') + '</tr>';
+  const eksikSat = Object.keys(eksik).sort().map(d => '<tr class="eksik-ay' + (a && d.slice(5) === a ? ' secili-ay' : '') + '"><td class="l">' + ayEt(d) + '</td><td colspan="' + (3 + (TH ? 2 : 0) + 2 * T.length) + '">⚠ <b>Panelde bu ayın saatlik GES verisi yok</b> (son veri: ' + sonGun + ') · bu ay ' + eksik[d] + ' GES faturası var. Ayın üretim dosyası panelin GES klasörüne konunca bu satır kendiliğinden dolar.</td></tr>').join('');
+  const tp = '<tr class="top"><td>TOPLAM · ' + A.length + ' ay</td><td class="n">' + kwh(top.k) + '</td><td></td><td class="n">' + tl(top.t) + '</td>' + (TH ? '<td class="n">' + kwh(top.tu) + '</td><td class="n">' + kwh(top.oz) + '<div class="alt-not">' + tl(top.ozt) + ' TL</div></td>' : '') + top.g.map(g => '<td class="n">' + kwh(g.k) + '</td><td class="n">' + tl(g.t) + '</td>').join('') + '</tr>';
   return '<div class="ges-ur"><h3>☀ Üretilen GES enerjisi · mahsupsuz · ay ve GES bazında' + (y ? ' · ' + y : '') + '</h3>'
     + '<div class="not">Yalnızca <b>üretilen</b> enerji: mahsup, tüketim ve fatura bu tabloya karışmaz. <b>Kaynak:</b> ' + esc(U.kaynak) + (U.sonGun ? ' · son veri <b>' + U.sonGun.split('-').reverse().join('.') + '</b>' : '') + '. <b>Tutar</b> = üretim × ' + esc(U.fiyat) + ' (bu enerji şebekeden alınsaydı ödenecek tutar).<br>'
-    + '<span class="tahmini-not">GES bazındaki dağılım tahminidir</span>: panel verisi tesis ayrımı taşımadığı için toplam üretim tesislerin gücüne göre paylaştırıldı (italik). Tesis bazında ölçüm gelince o tesis kesin değere geçer.</div>'
+    + (TH ? '<span class="tahmini-not">Tahmini toplam üretim ve öz tüketim (italik) yaklaşıktır</span>: ' + esc(U.tahminKaynak) + '. Öz tüketim = tahmini üretim − şebekeye veriş: fabrikada anında kullanılan, sayaçtan geçmeyen ve faturada hiç görünmeyen GES enerjisi; TL = şebekeden alınsaydı ödenecek tutar (OSB birimi, KDV dahil). Kesin değer inverter üretim verisiyle bulunur.</div>'
+      : '<span class="tahmini-not">GES bazındaki dağılım tahminidir</span>: panel verisi tesis ayrımı taşımadığı için toplam üretim tesislerin gücüne göre paylaştırıldı (italik). Tesis bazında ölçüm gelince o tesis kesin değere geçer.</div>')
     + '<div class="tablo-kap" style="max-height:none"><table>' + th + sat + eksikSat + tp + '</table></div></div>';
 }
 // 📊 GES mahsup tetkiki (GES üretim tablosunun altında, yeşil): tedarikçi faturalarında GES üretimi tam mahsup edilmiş mi?
@@ -421,7 +425,7 @@ function faturaMatrisHtml() {
   const alt = (v, birim) => v == null ? '' : '<div class="alt-not">' + kwh(v) + ' ' + birim + '</div>';
   const yok = t => '<span class="yok">' + t + '</span>';
   const isaretli = v => v == null ? '—' : (v > 0 ? '+' : '') + tl(v);
-  const DURUM = { tam: ['✔ tam mahsup', 'd-tam'], eksik: ['✘ eksik mahsup', 'd-eksik'], fazla: ['▲ fazla mahsup', 'd-fazla'], 'veri-yok': ['○ üretim verisi yok', 'd-yok'] };
+  const DURUM = { tam: ['✔ tam mahsup', 'd-tam'], eksik: ['✘ eksik mahsup', 'd-eksik'], fazla: ['▲ fazla mahsup', 'd-fazla'], 'veri-yok': ['○ üretim verisi yok', 'd-yok'], 'saatlik-yok': ['○ saatlik veri yok (OSOS)', 'd-yok'], 'fatura-bekleniyor': ['… AOSB faturası bekleniyor', 'd-yok'] };
   const top = (f) => L.reduce((s, m) => s + (+f(m) || 0), 0);
   // Farkların nedeni: mini ikon + açıklama (üzerine gelince)
   const ik = (sembol, sinif, baslik) => '<span class="mini ' + sinif + '" title="' + esc(baslik) + '">' + sembol + '</span>';
@@ -430,15 +434,25 @@ function faturaMatrisHtml() {
   const kayma = m => m.ayFark != null && m.kuralKwh && Math.abs(m.ayFark) > m.kuralKwh * K.tolerans && (m.durum === 'tam' || dengelendi(m));
   const farkIkon = m => [
     m.fazlaKwh > 0 ? ik('☀', 'i-fazla', 'İhtiyaç fazlası ' + kwh(m.fazlaKwh) + ' kWh ≈ ' + tl(m.fazlaTL) + ' TL (vergisiz): mahsup edilmez, satılır; faturada görünmez, bu farkın ana nedeni') : '',
-    m.mahsupFatura ? ik('🔌', 'i-dag', 'Tarla mahsubu: mağaza faturalarında yalnız enerji düşer, dağıtım bedeli ödenir; GES değeri perakende (dağıtım dahil) birimle hesaplandığı için fark büyür') : '',
+    m.mahsupFatura && !K.secengida ? ik('🔌', 'i-dag', 'Tarla mahsubu: mağaza faturalarında yalnız enerji düşer, dağıtım bedeli ödenir; GES değeri perakende (dağıtım dahil) birimle hesaplandığı için fark büyür') : '',
     kayma(m) ? ik('⇄', 'i-kayma', 'Okuma dönemi kayması: bu ayın faturalarında mahsup ' + (m.ayFark > 0 ? 'fazla' : 'eksik') + ' görünüyor (' + (m.ayFark > 0 ? '+' : '') + kwh(m.ayFark) + ' kWh), komşu ayın faturasıyla dengeleniyor; birikimli toplam tutuyor') : '',
-    m.gesTL == null ? ik('○', 'i-yok', 'Panelde bu ayın saatlik GES üretim verisi yok') : '',
+    m.gesTL == null ? ik('○', 'i-yok', K.secengida ? 'Önceki ayın (' + ayEt(m.uretimAyi) + ') AOSB faturası yok: veriş bilinmiyor' : 'Panelde bu ayın saatlik GES üretim verisi yok') : '',
+    m.durum === 'saatlik-yok' ? ik('⏱', 'i-yok', 'Saatlik mahsup: OSOS saatlik çekiş/veriş verisi olmadan mevzuata göre mahsup doğrulanamaz') : '',
   ].join('');
-  const LEJ = '<div class="lejant-mini">' + ik('☀', 'i-fazla', '') + ' ihtiyaç fazlası (mahsup edilmez, satılır) · ' + ik('🔌', 'i-dag', '') + ' tarla mahsubu: dağıtım düşmez · ' + ik('⇄', 'i-kayma', '') + ' okuma dönemi kayması (komşu ayda dengelenir) · ' + ik('○', 'i-yok', '') + ' üretim verisi yok · ' + ik('✔', 'i-tam', '') + ' birikimli toplamda tam mahsup · ' + ik('✘', 'i-eksik', '') + ' eksik mahsup · <i>ikonların üzerine gelince ayrıntı ve tutar görünür</i></div>';
+  const LEJ = '<div class="lejant-mini">' + ik('☀', 'i-fazla', '') + ' ihtiyaç fazlası (mahsup edilmez, satılır) · ' + (K.secengida ? ik('⏱', 'i-yok', '') + ' saatlik mahsup: OSOS verisi gerekir · ' : ik('🔌', 'i-dag', '') + ' tarla mahsubu: dağıtım düşmez · ') + ik('⇄', 'i-kayma', '') + ' okuma dönemi kayması (komşu ayda dengelenir) · ' + ik('○', 'i-yok', '') + ' üretim verisi yok · ' + ik('✔', 'i-tam', '') + ' birikimli toplamda tam mahsup · ' + ik('✘', 'i-eksik', '') + ' eksik mahsup · <i>ikonların üzerine gelince ayrıntı ve tutar görünür</i></div>';
   // Karar kutusu (birikimli kWh)
   const O = K.ozet;
   let karar = '';
-  if (O) {
+  if (O && K.secengida) {
+    const d = DURUM[O.durum] || DURUM['veri-yok'];
+    karar = '<div class="karar ' + d[1] + '"><div class="karar-bas">' + d[0].toUpperCase() + ' · aylık mahsup dönemi · ' + ayEt(O.bas) + ' – ' + ayEt(O.son) + ' faturaları</div>'
+      + 'Önceki ayda şebekeye verilen <b>' + kwh(O.kuralKwh) + ' kWh</b>, sonraki faturalarda mahsup edilen <b>' + kwh(O.faturaKwh) + ' kWh</b> → birikimli fark <b>' + (O.farkKwh > 0 ? '+' : '') + kwh(O.farkKwh) + ' kWh (' + (O.farkYuzde > 0 ? '+' : '') + String(O.farkYuzde).replace('.', ',') + '%)</b>. '
+      + (O.durum === 'tam' ? 'Aylık mahsup döneminde GES verişi faturalara <b>tam yansımış</b>; her ayın verişi bir sonraki faturada o ayın birim fiyatından düşülmüş.' : O.durum === 'eksik' ? '<b>Verilen enerjinin bir kısmı mahsup edilmemiş</b>: OSB\'ye sorulmalı.' : '<b>Verişin üzerinde mahsup</b> görünüyor.')
+      + (O.fazlaAylar.length ? '<div class="fazla-uyari">⚠ <b>Saatlik mahsup dönemi (01.05.2026 →): ihtiyaç fazlası ≈ ' + kwh(O.fazlaKwh) + ' kWh ≈ ' + tl(O.fazlaTL) + ' TL</b> (vergisiz, OSB enerji birimiyle yaklaşık). '
+        + O.fazlaAylar.map(f => ayEt(f.uretimAyi) + ': verilen ' + kwh(f.veris) + ' → ' + ayEt(f.ay) + ' faturasında mahsup ' + kwh(f.mahsup) + ', kalan <b>' + kwh(f.fazla) + ' kWh</b>').join(' · ')
+        + '. Saatlik mahsupta yalnız her saatin min(çekiş, veriş) toplamı düşülür; kalan ihtiyaç fazlasıdır (tatil / duruş günlerinde fabrika tüketmediğinde oluşur): <b>mahsup edilmez, satılır, faturada görünmez</b>. Bedelinin SECENGIDA\'ya ödenip ödenmediği (OSB / görevli tedarik şirketi alacak dekontu) kontrol edilmeli; saatlik dağılım için OSB\'den abone ' + esc((V.satirlar.find(s => s.seri === 'OSB') || {}).sozlesmeNo || '') + ' OSOS saatlik çekiş/veriş verisi istenmeli.</div>' : '')
+      + (O.veriYok.length ? '<div class="alt-not" style="margin-top:4px">' + O.veriYok.map(v => ayEt(v.ay) + ' faturasında ' + kwh(v.mahsupKwh) + ' kWh mahsup var, önceki ayın faturası yok → kararda sayılmadı').join(' · ') + '</div>' : '') + '</div>';
+  } else if (O) {
     const d = DURUM[O.durum] || DURUM['veri-yok'];
     karar = '<div class="karar ' + d[1] + '"><div class="karar-bas">' + d[0].toUpperCase() + ' · ' + ayEt(O.bas) + ' – ' + ayEt(O.son) + '</div>'
       + 'Mevzuata göre mahsup edilmesi gereken <b>' + kwh(O.kuralKwh) + ' kWh</b>, tedarikçi faturalarında mahsup edilen <b>' + kwh(O.faturaKwh) + ' kWh</b> → birikimli fark <b>' + (O.farkKwh > 0 ? '+' : '') + kwh(O.farkKwh) + ' kWh (' + (O.farkYuzde > 0 ? '+' : '') + String(O.farkYuzde).replace('.', ',') + '%)</b>. '
@@ -453,7 +467,7 @@ function faturaMatrisHtml() {
       + '<td class="n"><b>' + tl(m.reel) + '</b>' + alt(m.reelKwh, 'kWh') + '</td>'
       + '<td class="n mah">' + tl(m.mahsupTL) + alt(m.mahsupKwh, 'kWh · ' + m.mahsupFatura + ' fatura') + '</td>'
       + '<td class="n"><b>' + tl(m.mahsupsuz) + '</b></td>'
-      + '<td class="n ges">' + (m.gesTL != null ? '−' + tl(m.gesTL) + alt(m.gesKwh, 'kWh') : yok('üretim verisi yok')) + '</td>'
+      + '<td class="n ges">' + (m.gesTL != null ? '−' + tl(m.gesTL) + alt(m.gesKwh, 'kWh' + (m.uretimAyi ? ' · ' + ayEt(m.uretimAyi) + ' verişi' : '')) : yok(m.uretimAyi ? ayEt(m.uretimAyi) + ' verişi bilinmiyor' : 'üretim verisi yok')) + '</td>'
       + '<td class="n">' + (m.beklenen != null ? tl(m.beklenen) : '—') + '</td>'
       + '<td class="n"><b>' + tl(m.odenen) + '</b></td>'
       + '<td class="n ' + (m.fark == null ? '' : m.fark > 0 ? 'f-pos' : 'f-neg') + '">' + isaretli(m.fark) + '<div class="ikonlar">' + farkIkon(m) + '</div></td></tr>').join('')
@@ -461,18 +475,21 @@ function faturaMatrisHtml() {
     + '<td class="n">−' + tl(top(m => m.gesTL)) + alt(top(m => m.gesKwh), 'kWh · ' + L.filter(m => m.gesTL != null).length + ' ay') + '</td><td class="n">' + tl(top(m => m.beklenen)) + '</td><td class="n">' + tl(top(m => m.odenen)) + '</td><td class="n">' + isaretli(top(m => m.fark)) + '</td></tr></table>';
   // 2) kWh tetkiki: mevzuata göre mahsup ↔ faturada mahsup, birikimli fark, ihtiyaç fazlası
   const t2 = '<table><tr><th>Ay</th><th>Kural</th><th>GES üretimi (veriş)<br><span class="th-alt">kWh</span></th><th>Mevzuata göre mahsup<br><span class="th-alt">kWh</span></th><th>Faturalarda mahsup edilen<br><span class="th-alt">kWh</span></th><th>Aylık fark<br><span class="th-alt">kWh</span></th><th>Birikimli fark<br><span class="th-alt">kWh · %</span></th><th>İhtiyaç fazlası<br><span class="th-alt">kWh · TL vergisiz</span></th><th>Durum</th></tr>'
-    + L.map(m => { const d = dengelendi(m) ? ['⇄ sonraki ayda dengelendi', 'd-kayma'] : DURUM[m.durum]; return '<tr' + sec(m) + '><td class="l">' + ayEt(m.ay) + '</td><td>' + m.rejim + '</td><td class="n">' + (m.gesKwh != null ? kwh(m.gesKwh) : yok('veri yok')) + '</td><td class="n">' + (m.kuralKwh != null ? kwh(m.kuralKwh) : '—') + '</td><td class="n mah"><b>' + kwh(m.mahsupKwh) + '</b></td>'
+    + L.map(m => { const d = dengelendi(m) ? ['⇄ sonraki ayda dengelendi', 'd-kayma'] : DURUM[m.durum]; return '<tr' + sec(m) + '><td class="l">' + ayEt(m.ay) + '</td><td>' + m.rejim + '</td><td class="n">' + (m.gesKwh != null ? kwh(m.gesKwh) : yok('veri yok')) + '</td><td class="n">' + (m.kuralKwh != null ? kwh(m.kuralKwh) : m.durum === 'saatlik-yok' ? yok('OSOS yok') : m.durum === 'fatura-bekleniyor' ? yok('fatura bekleniyor') : '—') + '</td><td class="n mah"><b>' + kwh(m.mahsupKwh) + '</b></td>'
       + '<td class="n">' + (m.ayFark != null ? (m.ayFark > 0 ? '+' : '') + kwh(m.ayFark) + (kayma(m) ? ' ' + ik('⇄', 'i-kayma', 'Okuma dönemi kayması: komşu ayın faturasıyla dengeleniyor, birikimli toplam tutuyor') : '') : '—') + '</td><td class="n"><b>' + (m.kumFark != null ? (m.kumFark > 0 ? '+' : '') + kwh(m.kumFark) + '</b><div class="alt-not">' + (m.kumFarkYuzde > 0 ? '+' : '') + String(m.kumFarkYuzde).replace('.', ',') + '%</div>' : '—</b>') + '</td>'
       + '<td class="n">' + (m.fazlaKwh != null ? (m.fazlaKwh > 0 ? ik('☀', 'i-fazla', 'Mahsup edilmez, satılır; faturada görünmez, ayrıca ödenmeli') + ' ' : '') + kwh(m.fazlaKwh) + '<div class="alt-not">' + tl(m.fazlaTL) + ' TL</div>' : '—') + '</td><td><span class="durum ' + d[1] + '">' + d[0] + '</span></td></tr>'; }).join('') + '</table>';
   return '<div class="matris"><h3>📊 GES mahsup tetkiki · hesaplanan tüm bedel · (−) GES üretimi · ödenen' + (y ? ' · ' + y : '') + '</h3>'
-    + '<div class="not">Amaç: tedarikçinin (CK) faturalarında GES üretiminin <b>mevzuata göre tam mahsup edilip edilmediğini</b> bulmak. Tüm tutarlar <b>KDV ve vergiler dahil</b>, tüm firmalar ve lokasyonlar. '
+    + (K.secengida ? '<div class="not">Amaç: AOSB fabrika GES\'inin (çatı, ' + kwh((V.gesUretim && V.gesUretim.tesisler[0] || {}).guc) + ' kWe) şebekeye verdiği enerjinin <b>OSB faturalarında mevzuata göre mahsup edilip edilmediğini</b> bulmak. Tüm tutarlar <b>KDV dahil</b> (OSB faturasında ETV yok), tüm faturalar (AOSB + CK + ANT Trafo). '
+      + '<b>Faturada düşülen mahsup</b> = AOSB faturasındaki "Aktif enerji üretim bir önceki dönem" satırı + KDV. <b>Hesaplanan tüm bedel</b> = reel fatura + düşülen mahsup. '
+      + '<b>(−) GES üretimi</b> = bu faturada mahsup edilmesi gereken enerji: <b>önceki ayın şebekeye verişi</b> (sayaç 2.8.0) × o ayın OSB birimi, KDV dahil (fabrikada öz tüketilen üretim sayaçtan geçmez, burada yoktur). '
+      + '<b>Fark</b> = verilip mahsup edilmeyen enerjinin değeri; saatlik mahsup döneminde bu ihtiyaç fazlasıdır.</div>' : '<div class="not">Amaç: tedarikçinin (CK) faturalarında GES üretiminin <b>mevzuata göre tam mahsup edilip edilmediğini</b> bulmak. Tüm tutarlar <b>KDV ve vergiler dahil</b>, tüm firmalar ve lokasyonlar. '
     + '<b>Faturada düşülen mahsup</b> = faturalardaki eksi kWh’li enerji satırları (tarla mahsubu mağaza faturalarında: enerji düşer, dağıtım ödenir) ve eksi dağıtım satırları, ETV ve KDV eklenerek. '
     + '<b>Hesaplanan tüm bedel</b> = reel fatura + düşülen mahsup: mahsup olmasaydı ödenecek tutar. <b>GES üretimi</b> = yukarıdaki mahsupsuz üretim değeri (emsal perakende birim). '
-    + '<b>Fark</b> sıfır olmaz: ihtiyaç fazlası mahsup edilmez, tarla mahsubunda dağıtım düşmez; asıl karar aşağıdaki kWh tetkikindedir.</div>'
+    + '<b>Fark</b> sıfır olmaz: ihtiyaç fazlası mahsup edilmez, tarla mahsubunda dağıtım düşmez; asıl karar aşağıdaki kWh tetkikindedir.</div>')
     + karar
     + '<div class="tablo-kap" style="max-height:none">' + t1 + '</div>' + LEJ
     + '<h4>🔎 kWh tetkiki · mevzuata göre mahsup ↔ faturalarda mahsup edilen</h4>'
-    + '<div class="not">Mevzuata göre mahsup: 30.04.2026’ya kadar <b>aylık</b> min(çekiş, veriş), 01.05.2026’dan <b>saatlik</b> her saatin min(çekiş, veriş) toplamı (panelin saatlik GES verisinden). Üretimin kalanı <b>ihtiyaç fazlası</b>dır. Durum birikimli farka göre (±%' + Math.round(K.tolerans * 100) + ').</div>'
+    + '<div class="not">Mevzuata göre mahsup: 30.04.2026’ya kadar <b>aylık</b> min(çekiş, veriş), 01.05.2026’dan <b>saatlik</b> her saatin min(çekiş, veriş) toplamı (' + (K.secengida ? 'OSOS saatlik verisi gerekir; yokken faturada mahsup edilen kabul edilir, kalan veriş ihtiyaç fazlası gösterilir · satır = fatura ayı, veriş = önceki ay' : 'panelin saatlik GES verisinden') + '). Üretimin kalanı <b>ihtiyaç fazlası</b>dır. Durum birikimli farka göre (±%' + Math.round(K.tolerans * 100) + ').</div>'
     + '<div class="tablo-kap" style="max-height:none">' + t2 + '</div>' + LEJ + '</div>';
 }
 function ciz() {

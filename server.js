@@ -931,6 +931,13 @@ function faturaKiyasRaporu() {
     // GES mahsup tetkiki: faturalarda düşülen mahsup ↔ mevzuata göre mahsup (birikimli), ihtiyaç fazlası
     k.mahsupKontrol = GESM.mahsupKontrolu({ satirlar: k.satirlar, okunan: PDFg, sayac: g.sayac, birim: g.birim, uretim: k.gesUretim });
   } catch (e) { log('GES mahsup fatura kontrolüne eklenemedi:', e.message); }
+  // SECENGIDA: panelde saatlik GES verisi yoksa üretim ve mahsup tetkiki AOSB faturalarından (lib/secengida_ges.js)
+  try {
+    if (!Object.keys((MDEPO.oku().panelVeri || {}).gesSaatlik || {}).length) {
+      const sg = require('./lib/secengida_ges.js').secengidaGes({ satirlar: k.satirlar, okunan: okunanHepsi(), gunes: jsonOku(GUNES_DOSYASI, {}).Antalya, saatlikBaslangic: MAHSUP.SAATLIK_MAHSUP_BASLANGIC });
+      if (sg) { k.gesUretim = sg.uretim; k.mahsupKontrol = sg.kontrol; }
+    }
+  } catch (e) { log('SECENGIDA GES tetkiki hesaplanamadı:', e.message); }
   return { ok: true, var: true, firmaBilgisi: fb, alinma: p.alinma, sonDegisiklik: sonDegisiklik(p.faturalar), sonYenileme: p.sonYenileme, panel: { ...panelDurum, adres: p.adres, klasor: p.klasor }, yekdem: yekdemDurum, ptf: { son: durum.ptfSonGuncelleme, hata: durum.ptfHata }, bulut: BULUT, ...k };
 }
 
