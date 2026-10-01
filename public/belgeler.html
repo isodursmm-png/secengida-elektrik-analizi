@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belgeler</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:#f3f5f9;color:#1c2430;font-size:13px}
+.kap{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
+.baslik{background:#1a3a6b;color:#fff;padding:10px 14px;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:10px}
+.baslik h2{margin:0;font-size:19px}
+.aciklama{color:#fff;background:#244a84;margin:0 0 12px;padding:8px 14px;line-height:1.55;border-radius:0 0 8px 8px}
+.kart{background:#fff;border:1px solid #dde3ec;border-radius:8px;padding:12px 14px;margin-bottom:12px}
+.kart h3{margin:0 0 8px;font-size:14px;color:#1a3a6b}
+.birak{border:2px dashed #e67e22;background:#fff8ef;border-radius:8px;padding:18px;text-align:center;color:#8a4b08;cursor:pointer;transition:background .15s}
+.birak.ustunde{background:#fde2c2}
+.birak b{font-size:14px}
+.alanlar{display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:10px;align-items:flex-end}
+.alanlar label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;font-weight:700;color:#1a3a6b}
+.alanlar select,.alanlar input{padding:6px 8px;border:1px solid #c7cfdc;border-radius:5px;font-size:12.5px;min-width:170px}
+.btn{background:#fff;border:1px solid #c7cfdc;color:#1a3a6b;font-weight:600;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12.5px}
+.btn:hover{background:#eef2f8}
+.btn.turuncu{background:#e67e22;border-color:#d35400;color:#fff;font-weight:700}.btn.turuncu:hover{background:#d35400}
+.btn.kucuk{padding:2px 8px;font-size:11.5px}
+.btn.sil{color:#a93226;border-color:#f1a9a0}.btn.sil:hover{background:#fdecea}
+.secilen{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.secilen .dosya{display:flex;align-items:center;gap:8px;background:#f5f8fc;border:1px solid #e3e8f0;border-radius:5px;padding:3px 8px;font-size:12px}
+.cubuk{flex:1;height:6px;background:#e3e8f0;border-radius:3px;overflow:hidden;min-width:80px}
+.cubuk i{display:block;height:100%;width:0;background:#e67e22;transition:width .2s}
+.uyari{background:#c0392b;color:#fff;border-radius:7px;padding:9px 14px;margin-bottom:12px;font-weight:600}
+.bilgi{background:#eef7f1;border:1px solid #b9dcc6;color:#1d3b2a;border-radius:7px;padding:6px 12px;margin-bottom:12px;font-size:12px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{background:#1a3a6b;color:#fff;padding:5px 7px;text-align:left;font-weight:600;position:sticky;top:0}
+td{padding:4px 7px;border-bottom:1px solid #eef0f3;vertical-align:middle}
+tr:hover td{background:#f5f8fc}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kat{display:inline-block;padding:0 7px;border-radius:9px;font-size:11px;font-weight:700;line-height:18px;white-space:nowrap;background:#e3eaf5;color:#1a3a6b}
+.kat.ges{background:#e3f4ea;color:#1e7045}.kat.fatura{background:#fdf0e3;color:#b35a0c}.kat.teminat{background:#f1eefa;color:#5b3f99}.kat.sozlesme{background:#e4eef9;color:#1d5a91}
+.ad a{color:#1a3a6b;font-weight:700;text-decoration:none}.ad a:hover{text-decoration:underline}
+.bos{padding:18px;text-align:center;color:#7a8594}
+.arac{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.arac input,.arac select{padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;font-size:12.5px}
+.klasorler{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.klasor{flex:1;min-width:220px;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #dde3ec;border-left:6px solid #c7cfdc;border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .15s}
+.klasor:hover{border-color:#e67e22}
+.klasor.aktif{background:#fff4e0;border-color:#f0c27a;border-left-color:#e67e22;box-shadow:0 2px 8px rgba(230,126,34,.25)}
+.klasor .ik{font-size:28px}.klasor b{font-size:15px;color:#1a3a6b}.klasor .alt{font-size:11.5px;color:#7a8594}
+.klasor .say{margin-left:auto;background:#1a3a6b;color:#fff;border-radius:12px;padding:1px 10px;font-weight:700;font-size:12px}
+.klasor.aktif .say{background:#e67e22}
+.ozet{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:stretch;margin-bottom:8px}
+.ozet:empty{display:none}
+.ozet .k{background:#f5f8fc;border:1px solid #dde3ec;border-radius:6px;padding:4px 10px;cursor:pointer;line-height:1.35}
+.ozet .k:hover{border-color:#e67e22}
+.ozet .k.sec{background:#fff4e0;border-color:#e67e22}
+.ozet .k small{display:block;color:#7a8594;font-size:11px}
+.ozet .k b{font-size:13.5px;color:#1a3a6b;font-variant-numeric:tabular-nums}
+.ozet .k.top{background:#1a3a6b;border-color:#1a3a6b;cursor:default}.ozet .k.top small{color:#c9d6ea}.ozet .k.top b{color:#fff;font-size:14.5px}
+</style>
+</head>
+<body>
+<div class="kap">
+  <div class="baslik"><h2>📁 Belgeler</h2></div>
+  <div class="aciklama">Fatura PDF’leri, GES faturaları, CK Elektrik teminat dosyaları, sözleşmeler ve diğer belgeler. Dosyalar <b>yalnızca Supabase’de</b> (özel, dışarıya kapalı depolama) tutulur; bilgisayara kopya yazılmaz. Masaüstünde ve bulut sitesinde aynı liste görünür.</div>
+  <div id="durum"></div>
+
+  <div class="klasorler" id="klasorler"></div>
+
+  <div class="kart">
+    <h3 id="yBaslik">⬆ Yükle</h3>
+    <div class="birak" id="birak" onclick="document.getElementById('dosyaSec').click()">
+      <b>Dosyaları buraya sürükleyip bırakın</b> ya da tıklayıp seçin<br>
+      <span style="font-size:11.5px">PDF, resim, Excel, Word… · birden fazla dosya · dosya başına en çok 30 MB</span>
+    </div>
+    <input type="file" id="dosyaSec" multiple style="display:none" onchange="dosyalariEkle(this.files); this.value=''">
+    <div class="alanlar">
+      <label>Kategori<select id="yKat"></select></label>
+      <label>Lokasyon / sözleşme (isteğe bağlı)<select id="ySoz"><option value="">—</option></select></label>
+      <label>Dönem (isteğe bağlı)<input type="month" id="yDonem"></label>
+      <label style="flex:1;min-width:220px">Açıklama (isteğe bağlı)<input id="yAcik" placeholder="örn. Ağustos 2026 GES faturası, mahsup kontrolü için"></label>
+      <button class="btn turuncu" id="yBtn" onclick="yukleHepsi()">⬆ Yükle</button>
+    </div>
+    <div class="secilen" id="secilen"></div>
+  </div>
+
+  <div class="kart">
+    <h3>📄 Yüklenen dosyalar <span id="sayi" style="font-weight:400;color:#7a8594"></span></h3>
+    <div class="arac">
+      <select id="fAy" onchange="ayKaydet();ciz()" title="Dönem (fatura ayı)"><option value="">Tüm aylar</option></select>
+      <select id="fKat" onchange="ciz()"><option value="">Tüm kategoriler</option></select>
+      <input id="fAra" placeholder="ara: ad, lokasyon, açıklama…" oninput="ciz()" style="min-width:260px">
+      <button class="btn" onclick="yukleListe()">⟳ Yenile</button>
+      <button class="btn" onclick="esle()" title="Dosya adındaki fatura numarasını panel faturalarında arar; lokasyon, dönem ve kategoriyi doldurur">🔗 Faturalarla eşleştir</button>
+    </div>
+    <div class="ozet" id="ozet"></div>
+    <div class="ozet" id="ozet"></div>
+    <div style="overflow:auto"><table id="tablo"></table></div>
+  </div>
+</div>
+<script>
+// İki klasör: Faturalar ve Belgeler (Supabase kovasında da ayrı klasörler: faturalar/ ve belgeler/)
+const KLASOR = {
+  faturalar: { ad: 'Faturalar', ik: '🧾', alt: 'Elektrik ve GES fatura PDF’leri', kat: [['Elektrik faturası', 'fatura'], ['GES faturası', 'ges'], ['Fark / ek fatura', 'fatura'], ['Diğer fatura', '']] },
+  belgeler: { ad: 'Belgeler', ik: '📁', alt: 'Teminat, sözleşme, tarife ve diğer belgeler', kat: [['CK Elektrik / teminat', 'teminat'], ['Sözleşme', 'sozlesme'], ['Tarife / EPDK', ''], ['Yazışma', ''], ['Diğer', '']] },
+};
+const KAT_SINIF = Object.fromEntries([...KLASOR.faturalar.kat, ...KLASOR.belgeler.kat]);
+let B = [], SECILEN = [], SOZ = {};
+// Sayfa her açılışta Faturalar klasörüyle başlar (İshak'ın isteği, 2026-10-01)
+let AKTIF = 'faturalar';
+const klasoru = x => x.klasor || 'belgeler';
+function klasorAc(k) {
+  AKTIF = k;
+  const K = KLASOR[k];
+  document.getElementById('yBaslik').textContent = '⬆ ' + K.ad + ' klasörüne yükle';
+  document.getElementById('yKat').innerHTML = K.kat.map(([a]) => '<option>' + a + '</option>').join('');
+  document.getElementById('fKat').innerHTML = '<option value="">Tüm kategoriler</option>' + K.kat.map(([a]) => '<option>' + a + '</option>').join('');
+  ciz();
+}
+function klasorCiz() {
+  document.getElementById('klasorler').innerHTML = Object.entries(KLASOR).map(([k, K]) => '<div class="klasor' + (k === AKTIF ? ' aktif' : '') + '" onclick="klasorAc(\'' + k + '\')"><span class="ik">' + K.ik + '</span><div><b>' + K.ad + '</b><div class="alt">' + K.alt + '</div></div><span class="say">' + B.filter(x => klasoru(x) === k).length + '</span></div>').join('');
+}
+const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const boyut = n => n > 1048576 ? (n / 1048576).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' MB' : Math.max(1, Math.round(n / 1024)).toLocaleString('tr-TR') + ' KB';
+const tarih = iso => iso ? new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+const AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const donemEt = d => d ? AY[+d.slice(5) - 1] + ' ' + d.slice(0, 4) : '';
+
+
+// Sürükle-bırak
+const birak = document.getElementById('birak');
+['dragenter', 'dragover'].forEach(o => birak.addEventListener(o, e => { e.preventDefault(); birak.classList.add('ustunde'); }));
+['dragleave', 'drop'].forEach(o => birak.addEventListener(o, e => { e.preventDefault(); birak.classList.remove('ustunde'); }));
+birak.addEventListener('drop', e => dosyalariEkle(e.dataTransfer.files));
+document.addEventListener('dragover', e => e.preventDefault()); document.addEventListener('drop', e => e.preventDefault());
+
+function dosyalariEkle(liste) {
+  for (const f of liste) {
+    if (f.size > 30 * 1024 * 1024) { alert(f.name + ': 30 MB sınırını aşıyor.'); continue; }
+    SECILEN.push({ f, durum: 'bekliyor', yuzde: 0 });
+  }
+  seciliCiz();
+  // Tek dosya ve ad bir GES tesisine / aya işaret ediyorsa kategoriyi öner
+  if (AKTIF === 'faturalar' && SECILEN.length && /GES/i.test(SECILEN[0].f.name)) document.getElementById('yKat').value = 'GES faturası';
+}
+function seciliCiz() {
+  document.getElementById('secilen').innerHTML = SECILEN.map((s, i) => '<div class="dosya"><span>' + (s.durum === 'tamam' ? '✅' : s.durum === 'hata' ? '⚠️' : '📄') + '</span><b style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px">' + esc(s.f.name) + '</b><span style="color:#7a8594">' + boyut(s.f.size) + '</span>'
+    + '<div class="cubuk"><i style="width:' + s.yuzde + '%"></i></div><span style="min-width:120px;color:' + (s.durum === 'hata' ? '#a93226' : '#5d6673') + '">' + esc(s.mesaj || s.durum) + '</span>'
+    + (s.durum === 'bekliyor' ? '<button class="btn kucuk" onclick="SECILEN.splice(' + i + ',1);seciliCiz()">✕</button>' : '') + '</div>').join('');
+}
+function yukleTek(s) {
+  return new Promise(resolve => {
+    const soz = document.getElementById('ySoz').value, q = new URLSearchParams({ ad: s.f.name, klasor: AKTIF, kategori: document.getElementById('yKat').value, sozlesme: soz, lokasyon: soz && SOZ[soz] ? SOZ[soz] : '', donem: document.getElementById('yDonem').value, aciklama: document.getElementById('yAcik').value });
+    const x = new XMLHttpRequest();
+    x.open('POST', '/api/belgeler/yukle?' + q.toString());
+    x.upload.onprogress = e => { if (e.lengthComputable) { s.yuzde = Math.round(e.loaded / e.total * 95); s.durum = 'yükleniyor'; seciliCiz(); } };
+    x.onload = () => {
+      let j = {}; try { j = JSON.parse(x.responseText); } catch (e) { }
+      if (x.status === 200 && j.ok) { s.durum = 'tamam'; s.yuzde = 100; s.mesaj = j.ayni ? 'yüklendi · aynısı zaten var: ' + j.ayni : 'yüklendi'; B = j.belgeler || B; }
+      else { s.durum = 'hata'; s.mesaj = j.hata || 'HTTP ' + x.status; }
+      seciliCiz(); resolve();
+    };
+    x.onerror = () => { s.durum = 'hata'; s.mesaj = 'bağlantı hatası'; seciliCiz(); resolve(); };
+    x.send(s.f);
+  });
+}
+async function yukleHepsi() {
+  const bekleyen = SECILEN.filter(s => s.durum === 'bekliyor');
+  if (!bekleyen.length) { alert('Önce dosya seçin ya da sürükleyip bırakın.'); return; }
+  const b = document.getElementById('yBtn'); b.disabled = true;
+  for (const s of bekleyen) await yukleTek(s);
+  b.disabled = false; ciz();
+  setTimeout(() => { SECILEN = SECILEN.filter(s => s.durum !== 'tamam'); seciliCiz(); }, 4000);
+}
+
+const tl = n => (n || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TL';
+let AY_SECIM = (() => { try { return localStorage.getItem('belge_ay'); } catch (e) { return null; } })();
+function ayKaydet() { AY_SECIM = document.getElementById('fAy').value; try { localStorage.setItem('belge_ay', AY_SECIM); } catch (e) { } }
+function ayListesi(kB) {
+  const aylar = [...new Set(kB.map(x => x.donem).filter(Boolean))].sort().reverse();
+  if (AY_SECIM === null || (AY_SECIM && !aylar.includes(AY_SECIM))) AY_SECIM = aylar[0] || ''; // ilk açılışta en son ay
+  document.getElementById('fAy').innerHTML = '<option value="">Tüm aylar</option>' + aylar.map(d => '<option value="' + d + '"' + (d === AY_SECIM ? ' selected' : '') + '>' + donemEt(d) + ' (' + kB.filter(x => x.donem === d).length + ')</option>').join('')
+    + (kB.some(x => !x.donem) ? '<option value="-"' + (AY_SECIM === '-' ? ' selected' : '') + '>Dönemsiz</option>' : '');
+  document.getElementById('fAy').value = AY_SECIM;
+}
+function katSec(kat) { const s = document.getElementById('fKat'); s.value = s.value === kat ? '' : kat; ciz(); }
+// Üst satır: seçili ay (ve arama) için kategori bazında KDV dahil fatura tutarı toplamları (tutar = PDF'teki "Fatura Tutarı")
+function ozetCiz(L, k) {
+  const el = document.getElementById('ozet');
+  if (AKTIF !== 'faturalar' || !L.length) { el.innerHTML = ''; return; }
+  const T = {};
+  for (const x of L) { const t = T[x.kategori] || (T[x.kategori] = { n: 0, tutar: 0, okunmayan: 0 }); t.n++; if (x.tutar != null) t.tutar += x.tutar; else t.okunmayan++; }
+  const sira = KLASOR.faturalar.kat.map(([a]) => a).filter(a => T[a]).concat(Object.keys(T).filter(a => !KLASOR.faturalar.kat.some(([b]) => b === a)));
+  const gen = Object.values(T).reduce((s, t) => ({ n: s.n + t.n, tutar: s.tutar + t.tutar, okunmayan: s.okunmayan + t.okunmayan }), { n: 0, tutar: 0, okunmayan: 0 });
+  const ay = document.getElementById('fAy').value, ayAd = ay === '-' ? 'Dönemsiz' : ay ? donemEt(ay) : 'Tüm aylar';
+  const not = t => t.okunmayan ? ' · <span style="color:#a93226" title="PDF’ten tutarı okunamayan dosya">' + t.okunmayan + ' okunmadı</span>' : '';
+  el.innerHTML = sira.map(a => '<div class="k' + (a === k ? ' sec' : '') + '" onclick="katSec(\'' + esc(a).replace(/'/g, "\\'") + '\')" title="Bu kategoriye süz"><small><span class="kat ' + (KAT_SINIF[a] || '') + '">' + esc(a) + '</span> · ' + T[a].n + ' fatura' + not(T[a]) + '</small><b>' + tl(T[a].tutar) + '</b></div>').join('')
+    + '<div class="k top"><small>' + esc(ayAd) + ' · toplam ' + gen.n + ' fatura · KDV dahil' + (gen.okunmayan ? ' · ' + gen.okunmayan + ' okunmadı' : '') + '</small><b>' + tl(gen.tutar) + '</b></div>';
+}
+function ciz() {
+  const k = document.getElementById('fKat').value, a = document.getElementById('fAra').value.toLocaleLowerCase('tr-TR');
+  klasorCiz();
+  const kB = B.filter(x => klasoru(x) === AKTIF);
+  ayListesi(kB);
+  const ay = AY_SECIM;
+  const M = kB.filter(x => (!ay || (ay === '-' ? !x.donem : x.donem === ay)) && (!a || [x.ad, x.lokasyon, x.sozlesme, x.aciklama, x.kategori, donemEt(x.donem)].join(' ').toLocaleLowerCase('tr-TR').includes(a)));
+  const L = M.filter(x => !k || x.kategori === k);
+  ozetCiz(M, k);
+  document.getElementById('sayi').textContent = '· ' + KLASOR[AKTIF].ik + ' ' + KLASOR[AKTIF].ad + ' · ' + L.length + (L.length !== kB.length ? ' / ' + kB.length : '') + ' dosya';
+  const t = document.getElementById('tablo');
+  if (!L.length) { t.innerHTML = '<tr><td class="bos">' + (kB.length ? 'Seçime uyan dosya yok.' : KLASOR[AKTIF].ad + ' klasöründe henüz dosya yok.') + '</td></tr>'; return; }
+  const fat = AKTIF === 'faturalar';
+  t.innerHTML = '<tr><th>Belge</th><th>Kategori</th><th>Lokasyon / sözleşme</th><th>Dönem</th>' + (fat ? '<th style="text-align:right">Tutar (KDV dahil)</th>' : '') + '<th>Açıklama</th><th style="text-align:right">Boyut</th><th>Yükleme</th><th></th></tr>'
+    + L.map(x => '<tr><td class="ad"><a href="/belge-gor/' + encodeURIComponent(x.id) + '" target="_blank" title="Faturayı ve sitenin hesabını yan yana aç">' + esc(x.ad) + '</a></td>'
+      + '<td><span class="kat ' + (KAT_SINIF[x.kategori] || '') + '">' + esc(x.kategori) + '</span></td>'
+      + '<td>' + esc(x.lokasyon || '') + (x.sozlesme ? ' <span style="color:#7a8594">' + esc(x.sozlesme) + '</span>' : '') + '</td>'
+      + '<td>' + donemEt(x.donem) + '</td>' + (fat ? '<td class="n">' + (x.tutar != null ? tl(x.tutar) : '<span style="color:#a0a8b4">—</span>') + '</td>' : '') + '<td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + esc(x.aciklama) + '">' + esc(x.aciklama) + '</td>'
+      + '<td class="n">' + boyut(x.boyut) + '</td><td style="white-space:nowrap">' + tarih(x.yukleme) + '</td>'
+      + '<td style="white-space:nowrap"><a class="btn kucuk" href="/belge-gor/' + encodeURIComponent(x.id) + '" target="_blank" title="Belge + sitenin hesabı yan yana">👁 Aç</a> <a class="btn kucuk" href="/belge/' + encodeURIComponent(x.id) + '?indir=1">⬇ İndir</a> <button class="btn kucuk sil" onclick="sil(\'' + x.id + '\')">🗑 Sil</button></td></tr>').join('');
+}
+async function esle() {
+  const j = await (await fetch('/api/belgeler/esle', { method: 'POST' })).json();
+  if (j.ok) { B = j.belgeler || B; ciz(); alert(j.toplam + ' dosyadan ' + j.eslesen + ' tanesi bir faturayla eşleşiyor (' + j.degisen + ' kayıt güncellendi).'); } else alert('Eşleştirilemedi: ' + (j.hata || ''));
+}
+async function sil(id) {
+  const x = B.find(b => b.id === id);
+  if (!x || !confirm('"' + x.ad + '" silinsin mi? Supabase’den kalıcı olarak kaldırılır.')) return;
+  const j = await (await fetch('/api/belgeler/sil', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })).json();
+  if (!j.ok) alert('Silinemedi.'); B = j.belgeler || B; ciz();
+}
+async function yukleListe() {
+  try {
+    const j = await (await fetch('/api/belgeler')).json();
+    document.getElementById('durum').innerHTML = j.supabase ? '<div class="bilgi">☁ Depolama: <b>Supabase</b> · özel kova <b>elektrik-belgeler</b> · dosyalar yalnızca orada tutulur.</div>' : '<div class="uyari">⚠ Supabase tanımlı değil: belgeler yalnızca Supabase’de tutulduğu için yükleme yapılamaz. (.env / Render: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)</div>';
+    if (j.hata && j.supabase) document.getElementById('durum').innerHTML += '<div class="uyari">⚠ ' + esc(j.hata) + '</div>';
+    B = j.belgeler || []; ciz();
+  } catch (e) { document.getElementById('durum').innerHTML = '<div class="uyari">⚠ Sunucuya ulaşılamadı: ' + esc(e.message) + '</div>'; }
+}
+// Lokasyon / sözleşme listesi (fatura verisinden)
+fetch('/api/fatura-kiyas').then(r => r.json()).then(j => {
+  if (!j.var) return;
+  const E = j.firmaBilgisi.eslesme;
+  const L = Object.entries(E).map(([no, e]) => ({ no, ad: e.lokasyon || '(adsız)' })).sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
+  for (const x of L) SOZ[x.no] = x.ad;
+  document.getElementById('ySoz').innerHTML = '<option value="">—</option>' + L.map(x => '<option value="' + x.no + '">' + esc(x.ad) + ' · ' + x.no + '</option>').join('');
+}).catch(() => { });
+klasorAc(AKTIF);
+yukleListe();
+</script>
+</body>
+</html>

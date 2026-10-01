@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Referans</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:#f3f5f9;color:#1c2430;font-size:13px}
+.kap{padding:16px 20px 40px;max-width:1500px;margin:0 auto}
+.baslik{background:#1a3a6b;color:#fff;padding:10px 14px;border-radius:8px 8px 0 0;display:flex;align-items:center;gap:10px}
+.baslik h2{margin:0;font-size:19px}
+.aciklama{color:#fff;background:#244a84;margin:0 0 12px;padding:8px 14px;line-height:1.55;border-radius:0 0 8px 8px}
+.secim{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;background:#fff;border:1px solid #dde3ec;border-left:4px solid #e67e22;border-radius:8px;padding:8px 12px;margin-bottom:12px}
+.secim label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;font-weight:700;color:#1a3a6b}
+.secim select{padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;font-size:12.5px;min-width:150px}
+.secim .not{font-size:11.5px;color:#7a8594;margin-left:auto}
+.izgara{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:12px}
+.kart{background:#fff;border:1px solid #dde3ec;border-radius:8px;padding:10px 14px}
+.kart h3{margin:0 0 8px;font-size:14px;color:#1a3a6b}
+.kart.tam{grid-column:1/-1}
+table{border-collapse:collapse;font-size:12px;width:100%}
+th{background:#f6d9a8;color:#5a3b00;padding:3px 8px;text-align:left;font-weight:700}
+td{padding:3px 8px;border-bottom:1px solid #f0e2c8;vertical-align:top}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+tr.vurgu td{background:#fde9cc;font-weight:800}
+.cumle{font-size:12px;line-height:1.55;margin-top:6px}
+.lj{display:grid;grid-template-columns:24px 1fr;gap:3px 8px;font-size:12px}
+.lj .i{text-align:center;font-weight:800}
+.mahsup{font-size:12px;line-height:1.6;background:#eef7f1;border:1px solid #b9dcc6;border-radius:6px;padding:6px 10px;color:#1d3b2a}
+.cip{display:inline-block;padding:0 6px;border-radius:5px;font-size:11px;font-weight:700;line-height:17px;margin:0 3px 2px 0;border:1px solid}
+.cip.ok{background:#e3f4ea;color:#1e7045;border-color:#a9dcbf}.cip.kapali{background:#fdecea;color:#a93226;border-color:#f1a9a0}
+.uyari{background:#c0392b;color:#fff;border-radius:7px;padding:9px 14px;margin-bottom:12px;font-weight:600}
+.bos{color:#7a8594;padding:8px 0}
+@media (max-width:560px){.kap{padding:12px 16px 30px}.izgara{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="kap">
+  <div class="baslik"><h2>📘 Referans</h2></div>
+  <div class="aciklama">Sayfaların üstündeki şeritte özetlenen bilgilerin ayrıntısı: verilerin ne zaman güncellendiği, seçilen dönemin fatura ve mahsup özeti, mahsubun ne olduğu ve tablolardaki işaretlerin anlamı. Sunucudan canlı gelir, 5 dakikada bir yenilenir.</div>
+  <div id="durum"></div>
+  <div class="secim">
+    <label>Yıl<select id="fYil" onchange="ciz()"></select></label>
+    <label>Ay<select id="fAy" onchange="ciz()"></select></label>
+    <span class="not" id="yenilenme"></span>
+  </div>
+  <div class="izgara" id="icerik"><div class="kart tam bos">Yükleniyor…</div></div>
+</div>
+<script>
+// Fatura Kontrol (/api/fatura-kiyas) ve GES Mahsup (/api/ges-mahsup) verisiyle; özet hesapları o sayfalardaki
+// eski "ayrıntı" panelinin (vzOzet) aynısıdır, dönem bu sayfanın Yıl / Ay seçiminden gelir.
+const AY_AD = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const tl0 = v => v == null ? '—' : Math.round(v).toLocaleString('tr-TR');
+const kwh0 = v => v == null ? '—' : Math.round(v).toLocaleString('tr-TR');
+const uzun = iso => iso ? new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+const dk = iso => iso ? (Date.now() - new Date(iso)) / 60000 : Infinity;
+const isaret = (iso, sinir, hata) => sinir == null ? '' : hata ? '⚠️' : dk(iso) <= sinir ? '✅' : '⏳';
+const adr = a => String(a || '').replace(/^https?:\/\//, '').replace(/:8010$/, '');
+const fYil = document.getElementById('fYil'), fAy = document.getElementById('fAy');
+let V = null, G = null, D = null, YENILEME = null;
+
+const orantisiz = s => s.hesap && (s.odenen / s.hesap > 2 || s.odenen / s.hesap < 0.5);
+function durumK(s) {
+  if (s.mukerrer) return 'mukerrer';
+  if ((s.durum === 'fazla' || s.durum === 'eksik') && orantisiz(s)) return 'incele';
+  return { dogru: 'dogru', fazla: 'fazla', eksik: 'eksik', 'ek-fatura': 'ek', 'kapsam-disi': 'ges' }[s.durum] || 'yok';
+}
+const donemUyar = d => (!fYil.value || d.startsWith(fYil.value)) && (!fAy.value || d.slice(5) === fAy.value);
+const donemAdi = () => fAy.value && fYil.value ? AY_AD[+fAy.value - 1] + ' ' + fYil.value : fAy.value ? AY_AD[+fAy.value - 1] + ' (tüm yıllar)' : fYil.value ? fYil.value + ' yılı' : 'Tüm dönemler';
+const para = v => (v > 0 ? '+' : '') + tl0(v) + ' TL', renk = v => v > 0.5 ? '#a93226' : v < -0.5 ? '#1e7045' : '#5a3b00';
+const satir = (ad, tutar, ek, vurgu, isaretli, ters) => '<tr' + (vurgu ? ' class="vurgu"' : '') + '><td>' + ad + '</td><td class="n"' + (isaretli ? ' style="color:' + renk(ters ? -tutar : tutar) + '"' : '') + '>' + (isaretli ? para(tutar) : tl0(tutar) + ' TL') + '</td><td class="n" style="color:#8a6d3b;font-weight:400">' + (ek || '') + '</td></tr>';
+const topla = (L, f) => L.reduce((a, s) => a + (+f(s) || 0), 0);
+
+// 1) Veri güncelleme (eski şerit ayrıntısının sol yarısı)
+function veriKarti() {
+  const P = V.panel || {}, bulut = V.bulut || /^Supabase/.test(P.adres || '');
+  const ok = P.paneller || [], kapali = P.okunamayan || [];
+  const panelEk = ok.map(x => '<span class="cip ok">✅ ' + esc(adr(x.adres)) + ' · ' + x.fatura + ' fatura</span>').join('')
+    + kapali.map(x => '<span class="cip kapali" title="' + esc(x) + '">⛔ ' + esc(adr(x.split(': ')[0])) + ' · ' + (/kapalı/.test(x) ? 'kapalı' : 'okunamadı') + '</span>').join('')
+    + (bulut && P.adres ? '<span class="cip ok">☁ ' + esc(P.adres) + '</span>' : '');
+  const S = [
+    { ad: 'Panel faturaları', siklik: bulut ? 'Supabase’den, 30 dakikada bir (masaüstü panelleri okur)' : '30 dakikada bir · ağdaki tüm paneller', iso: P.sonBasari || V.alinma, sinir: 45, hata: P.hata, ek: panelEk },
+    { ad: 'Son fatura değişikliği', siklik: 'yeni / değişen fatura geldikçe', iso: V.sonDegisiklik, sinir: null },
+  ];
+  if (V.ptf) S.push({ ad: 'EPİAŞ PTF', siklik: 'her saat', iso: V.ptf.son, sinir: 90, hata: V.ptf.hata });
+  if (V.yekdem) S.push({ ad: 'YEKDEM', siklik: 'günde bir + her açılışta', iso: V.yekdem.son, sinir: 26 * 60, hata: V.yekdem.hata });
+  // Ana sayfa (Elektrik Analizi) verisinden: EPDK tarife kontrolü ve yürürlükteki tarifeler
+  const d = D && D.durum || {}, T = D && D.tarifeler || [];
+  if (D) S.push({ ad: 'EPDK tarife kontrolü', siklik: 'günde bir (MEDAŞ arşivi)', iso: d.tarifeSonKontrol, sinir: 26 * 60, hata: d.tarifeHata, ek: d.tarifeYeniBulunan ? '🆕 ' + esc(d.tarifeYeniBulunan) + ' otomatik eklendi' : '' });
+  if (T.length) S.push({ ad: 'Yürürlükteki tarifeler', siklik: 'yeni tarife yayımlandıkça', iso: null, sinir: null, ek: '<b>' + T.map(x => x.gecerlilik.split('-').reverse().join('.')).join(', ') + '</b>' });
+  S.push({ ad: 'Bu sayfa', siklik: '5 dakikada bir kendini yeniler', iso: YENILEME, sinir: 7, ek: 'Görüntülenme: ' + uzun(new Date().toISOString()) });
+  return '<div class="kart tam"><h3>🕒 Veri güncelleme</h3><table><tr><th>Veri</th><th>Sıklık</th><th>Son güncelleme</th><th>Durum</th><th>Ayrıntı</th></tr>'
+    + S.map(r => '<tr><td><b>' + r.ad + '</b></td><td>' + r.siklik + '</td><td><b>' + uzun(r.iso) + '</b></td><td style="text-align:center">' + (r.hata ? '<span title="' + esc(r.hata) + '">⚠️ hata</span>' : isaret(r.iso, r.sinir, r.hata)) + '</td><td>' + (r.ek || '') + '</td></tr>').join('') + '</table></div>';
+}
+// 2) Fatura + mahsup özeti (Fatura Kontrol'deki vzOzet)
+function faturaKarti() {
+  const F = V.satirlar.filter(s => donemUyar(s.donem)), donem = donemAdi();
+  const K = F.filter(s => s.hesap != null && durumK(s) !== 'mukerrer');
+  const odenen = topla(F, s => s.odenen), ko = topla(K, s => s.odenen), h = topla(K, s => s.hesap), fark = ko - h;
+  const fz = F.filter(s => durumK(s) === 'fazla'), az = F.filter(s => durumK(s) === 'eksik');
+  const GS = F.filter(s => s.gesMahsup), gBrut = topla(GS, s => s.gesMahsup.brut), gOd = topla(GS, s => s.odenen), gM = topla(GS, s => s.gesMahsup.mahsup);
+  let r = satir('Faturada ödenen (KDV dahil)', odenen, F.length + ' fatura', true)
+    + satir('Karşılaştırılan faturalarda ödenen', ko, K.length + ' fatura') + satir('Uygulamanın hesabı', h, '')
+    + satir('Fark: ödenen − hesap', fark, '', true, true)
+    + satir('&nbsp;&nbsp;✘ fazla faturalanan', topla(fz, s => s.fark), fz.length + ' fatura', false, true) + satir('&nbsp;&nbsp;▼ az faturalanan', topla(az, s => s.fark), az.length + ' fatura', false, true);
+  if (GS.length) r += satir('☀ GES: mahsupsuz olsaydı', gBrut, GS.length + ' fatura') + satir('☀ GES: faturada ödenen', gOd, '') + satir('☀ GES: yansıyan mahsup (mahsupsuz − ödenen)', gM, '', true, true, true);
+  let c = '<b>' + donem + '</b>: toplam <b>' + tl0(odenen) + ' TL</b> ödendi. Karşılaştırılan faturalarda uygulamanın hesabına göre <b style="color:' + renk(fark) + '">' + tl0(Math.abs(fark)) + ' TL ' + (fark > 0.5 ? 'fazla' : fark < -0.5 ? 'az' : 'fark yok,') + '</b> ödenmiş'
+    + ' (' + fz.length + ' faturada ' + tl0(topla(fz, s => s.fark)) + ' TL fazla, ' + az.length + ' faturada ' + tl0(Math.abs(topla(az, s => s.fark))) + ' TL az).';
+  if (GS.length) c += ' GES’li ' + GS.length + ' faturada mahsup sonrası ' + (gM >= 0 ? '<b style="color:#1e7045">' + tl0(gM) + ' TL indirim yansımış</b>.' : '<b style="color:#a93226">mahsupsuz fiyattan bile ' + tl0(-gM) + ' TL fazla ödenmiş</b>.');
+  return '<div class="kart"><h3>🧾 Fatura Kontrol · fatura + mahsup özeti · ' + donem + '</h3><table>' + r + '</table><div class="cumle">' + c + '</div></div>';
+}
+// 3) GES fatura + mahsup özeti (GES Mahsup'taki vzOzet) + üretilen GES (mahsupsuz)
+function gesKarti() {
+  if (!G || !G.var) return '<div class="kart"><h3>☀ GES Mahsup · özet</h3><div class="bos">GES verisi yok.</div></div>';
+  const F = (G.satirlar || []).filter(s => donemUyar(s.donem)), donem = donemAdi();
+  const K = F.filter(s => s.mahsupTL != null), say = d => F.filter(s => s.durum === d).length;
+  const od = topla(K, s => s.odenen), brut = topla(K, s => s.brut), m = topla(K, s => s.mahsupTL);
+  const S = (G.sayac || []).filter(a => donemUyar(a.ay) && a.rejim === 'Saatlik' && a.rejimEtkisiTL != null), ek = topla(S, a => a.rejimEtkisiTL);
+  let r = satir('GES faturalarında ödenen (KDV dahil)', od, K.length + ' fatura', true) + satir('Mahsupsuz olsaydı ödenecek', brut, '')
+    + satir('Yansıyan mahsup (mahsupsuz − ödenen)', m, '', true, true, true)
+    + '<tr><td colspan="3">✔ ' + say('yansimis') + ' yansımış · ○ ' + say('yok-mahsup') + ' görünmüyor · ✘ ' + say('fazla') + ' fazla ödenmiş</td></tr>';
+  if (S.length) r += satir('⏱ Saatlik kuralın ek maliyeti (sayaç, çatı)', ek, S.length + ' ay', false, true);
+  const U = (V.gesUretim && V.gesUretim.aylar || []).filter(a => donemUyar(a.ay));
+  if (U.length) r += '<tr class="vurgu"><td>☀ Üretilen GES enerjisi (mahsupsuz)</td><td class="n">' + kwh0(topla(U, a => a.uretim)) + ' kWh</td><td class="n">' + tl0(topla(U, a => a.tutar)) + ' TL</td></tr>';
+  let c = '<b>' + donem + '</b>: GES’li faturalarda <b>' + tl0(od) + ' TL</b> ödendi; mahsup olmasaydı <b>' + tl0(brut) + ' TL</b> ödenecekti. '
+    + (m >= 0 ? 'Mahsup sonrası <b style="color:#1e7045">' + tl0(m) + ' TL indirim</b> faturaya yansımış.' : '<b style="color:#a93226">Mahsup yansımamış: mahsupsuz fiyattan bile ' + tl0(-m) + ' TL fazla ödenmiş</b>; bu faturalar tedarikçiye sorulmalı.');
+  if (S.length) c += ' Saatlik mahsup kuralı, aylık kurala göre ' + (ek > 0 ? '<b style="color:#a93226">' + tl0(ek) + ' TL ek maliyet</b> getirdi.' : '<b style="color:#1e7045">' + tl0(-ek) + ' TL avantaj</b> sağladı.');
+  return '<div class="kart"><h3>☀ GES Mahsup · fatura + mahsup özeti · ' + donem + '</h3><table>' + r + '</table><div class="cumle">' + c + '</div></div>';
+}
+// 4) Sabit açıklamalar
+const lj = (i, renk, metin) => '<span class="i" style="color:' + renk + '">' + i + '</span><span>' + metin + '</span>';
+const MAHSUP = '<div class="kart"><h3>☀ Mahsup nedir?</h3><div class="mahsup">'
+  + '<b>GES’in ürettiği elektrik, tüketilen elektrikten düşülür</b>; faturaya yalnızca fark yansır. Üretim tüketimi aşarsa artan kısım <b>ihtiyaç fazlası</b> olarak satılır (alacak).<br>'
+  + '<b>ÇA</b> çatı: aynı ölçüm noktası, mahsup tam perakende fiyat değerinde · <b>TA</b> tarla: uzaktan mahsup, yalnız enerji bedeli düşer, dağıtım ödenir.<br>'
+  + '<b>Aylık kural</b> (Nisan 2026’ya kadar) ay toplamını, <b>saatlik kural</b> (01.05.2026’dan) her saati ayrı netleştirir.<br>'
+  + '<b>Yansıyan mahsup</b> = mahsupsuz tutar (kWh × emsal birim) − ödenen: <span style="color:#1e7045;font-weight:700">+ indirim yansımış</span> · <span style="color:#a93226;font-weight:700">− mahsupsuz fiyattan bile fazla ödenmiş</span>.<br>'
+  + '<b>Üretilen GES enerjisi (mahsupsuz)</b>: panelin saatlik verisindeki veriş (Toplam Üretim) × ayın emsal birimi; GES bazındaki dağılım tahminidir.<br>'
+  + '<i>Panel faturadan yalnız kWh ve tutarı okur; çekiş / veriş / mahsup satırları okunmadığı için sonuç yaklaşıktır. PDF’i yüklenen faturalarda kalemler faturadan okunur.</i></div></div>';
+const ISARET = '<div class="kart"><h3>🔖 Tablodaki işaretler</h3>'
+  + '<div style="font-weight:700;margin:2px 0 4px">Fatura Kontrol</div><div class="lj">' + lj('✔', '#1e8449', '<b>Doğru</b>: fark ±%3 ya da 10 TL içinde') + lj('✘', '#c0392b', '<b>Fazla</b>: uygulamanın hesabından %3’ten fazla yüksek faturalanmış') + lj('▼', '#d35400', '<b>Az</b>: uygulamanın hesabından %3’ten fazla düşük faturalanmış') + lj('⚠', '#7d3c98', '<b>İncele</b>: ödenen, hesaplananın 2 katından fazla ya da yarısından az (orantısız)') + lj('＋', '#1a3a6b', '<b>Ek fatura</b>: kWh’siz ek / fark / düzeltme faturası') + lj('☀', '#5d6673', '<b>GES</b>: kapsam dışı; mahsup GES Mahsup sekmesinde hesaplanır') + '</div>'
+  + '<div style="font-weight:700;margin:8px 0 4px">GES Mahsup</div><div class="lj">' + lj('✔', '#1e8449', '<b>Yansımış</b>: mahsup / alacak faturaya yansımış (doğru)') + lj('○', '#d35400', '<b>Görünmüyor</b>: mahsup yok, normal fiyattan faturalanmış') + lj('✘', '#c0392b', '<b>Fazla ödenmiş</b>: mahsupsuz (normal) fiyattan bile fazla ödenmiş') + '</div>'
+  + '<div style="font-weight:700;margin:8px 0 4px">Güncelleme durumu</div><div class="lj">' + lj('✅', '#1e8449', 'Güncel: beklenen sürede güncellendi') + lj('⏳', '#b35a0c', 'Beklenenden eski: son güncelleme gecikti') + lj('⚠️', '#a93226', 'Hata: kaynağa ulaşılamadı (üzerine gelince neden görünür)') + lj('⛔', '#a93226', 'Panel kapalı / okunamadı; sonraki turda yeniden denenir') + '</div></div>';
+
+function secimler() {
+  const aylar = [...new Set(V.satirlar.map(s => s.donem))].sort();
+  const yillar = [...new Set(aylar.map(a => a.slice(0, 4)))].reverse();
+  const sy = fYil.value, sa = fAy.value, ilk = !fYil.options.length;
+  fYil.innerHTML = '<option value="">Tüm yıllar</option>' + yillar.map(y => '<option>' + y + '</option>').join('');
+  fAy.innerHTML = '<option value="">Tüm aylar</option>' + AY_AD.map((a, i) => '<option value="' + String(i + 1).padStart(2, '0') + '">' + a + '</option>').join('');
+  // İlk açılışta en son ay seçilir
+  if (ilk && aylar.length) { const son = aylar[aylar.length - 1]; fYil.value = son.slice(0, 4); fAy.value = son.slice(5); } else { fYil.value = sy; fAy.value = sa; }
+}
+function ciz() {
+  if (!V) return;
+  if (!V.var) { document.getElementById('icerik').innerHTML = '<div class="kart tam bos">Henüz saklanan fatura yok.</div>'; return; }
+  document.getElementById('icerik').innerHTML = veriKarti() + faturaKarti() + gesKarti() + MAHSUP + ISARET;
+  document.getElementById('yenilenme').textContent = 'Son yenileme: ' + uzun(YENILEME);
+}
+async function yukle() {
+  try {
+    const [a, b, c] = await Promise.all([fetch('/api/fatura-kiyas').then(r => r.json()), fetch('/api/ges-mahsup').then(r => r.json()).catch(() => null), fetch('/api/veri').then(r => r.json()).catch(() => null)]);
+    V = a; G = b; D = c; YENILEME = new Date().toISOString();
+    document.getElementById('durum').innerHTML = '';
+    if (V.var) secimler();
+    ciz();
+  } catch (e) { document.getElementById('durum').innerHTML = '<div class="uyari">⚠ Sunucuya ulaşılamadı: ' + esc(e.message) + '</div>'; }
+}
+yukle();
+setInterval(() => { if (!document.hidden) yukle(); }, 5 * 60 * 1000);
+</script>
+</body>
+</html>

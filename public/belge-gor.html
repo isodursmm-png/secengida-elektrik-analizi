@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fatura görüntüle</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Segoe UI",Arial,sans-serif;background:#f3f5f9;color:#1c2430;font-size:13px;display:flex;flex-direction:column}
+.ust{background:#1a3a6b;color:#fff;padding:7px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ust a{color:#fff;text-decoration:none;font-weight:700}
+.ust .ad{font-weight:700;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:50vw}
+.ust .bosluk{flex:1}
+.btn{display:inline-block;background:#fff;border:1px solid #c7cfdc;color:#1a3a6b;font-weight:700;padding:5px 11px;border-radius:6px;cursor:pointer;font-size:12.5px;text-decoration:none;white-space:nowrap}
+.btn:hover{background:#eef2f8}
+.btn.turuncu{background:#e67e22;border-color:#e67e22;color:#fff}.btn.turuncu:hover{background:#ca6f1e}
+.ust a.btn{color:#1a3a6b}.ust a.btn:hover{background:#eef2f8}
+/* Sağ panelin başlığı, soldaki PDF araç çubuğuyla aynı yükseklik ve renkte (başlıklar aynı hizada) */
+.sag-bas{position:sticky;top:0;z-index:2;height:56px;display:flex;align-items:center;gap:8px;margin:0 -14px 10px;padding:0 14px;background:#323639;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden}
+.sag-bas span{overflow:hidden;text-overflow:ellipsis}.sag-bas .kat{background:#e67e22;border-radius:9px;padding:0 8px;font-size:11px;line-height:18px;flex:none}
+.btn.yesil{background:#1e8449;border-color:#1e8449;color:#fff}
+.ic{flex:1;display:flex;min-height:0}
+.sol{flex:1 1 58%;min-width:0;background:#525659;display:flex}
+.sol iframe,.sol img{flex:1;width:100%;height:100%;border:none;object-fit:contain;background:#525659}
+.sag{flex:0 0 42%;max-width:640px;min-width:340px;overflow:auto;padding:0 14px 12px;border-left:4px solid #e67e22;background:#fff}
+.sag h3{margin:0 0 4px;color:#1a3a6b;font-size:16px}
+.alt{color:#5d6673;margin-bottom:8px;font-size:12px}
+.kutu{background:#fff4e0;border:1px solid #f0c27a;border-left:5px solid #e67e22;border-radius:7px;padding:7px 10px;margin:8px 0;color:#5a3b00;font-size:12px;line-height:1.5}
+.gkutu{background:#eef7f1;border:1px solid #b9dcc6;border-left:5px solid #1e8449;border-radius:7px;padding:7px 10px;margin:8px 0;color:#1d3b2a;font-size:12px;line-height:1.5}
+table{border-collapse:collapse;width:100%;font-size:12.5px;margin:6px 0}
+th{background:#1a3a6b;color:#fff;padding:4px 8px;text-align:left;font-weight:600}
+td{padding:4px 8px;border-bottom:1px solid #eef0f3}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.top td{font-weight:800;background:#f3f6fb}
+.rozet{display:inline-block;padding:1px 8px;border-radius:10px;font-weight:700;font-size:11.5px}
+.r-ok{background:#e8f6ee;color:#1e8449}.r-fazla{background:#c0392b;color:#fff}.r-eksik{background:#e67e22;color:#fff}.r-incele{background:#7d3c98;color:#fff}.r-gri{background:#eef0f3;color:#5d6673}.r-mavi{background:#e3eaf5;color:#1a3a6b}
+.dugmeler{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.adaylar button{display:block;width:100%;text-align:left;margin:3px 0}
+select,input{padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;font-size:12.5px}
+@media (max-width:900px){.ic{flex-direction:column}.sol{min-height:60vh}.sag{max-width:none;min-width:0;border-left:none;border-top:4px solid #e67e22}}
+</style>
+</head>
+<body>
+<div class="ust">
+  <a href="/" title="Elektrik Analizi ana sayfası">⚡ Elektrik Analizi</a>
+  <span>›</span><a href="/belgeler" title="Belgeler sayfası">📁 Belgeler</a><span>›</span>
+  <span class="ad" id="ustAd">…</span>
+  <span class="bosluk"></span>
+  <a class="btn" id="ustIndir" href="#">⬇ İndir</a>
+  <a class="btn" id="ustTek" href="#" target="_blank" title="Faturayı tek başına tam ekran aç">⤢ Yalnız fatura</a>
+</div>
+<div class="ic">
+  <div class="sol" id="sol"></div>
+  <div class="sag" id="sag">Yükleniyor…</div>
+</div>
+<script src="/pdf-serit.js"></script>
+<style>.sag .pdf-serit .kapat,.sag .pdf-serit h4,.sag .pdf-serit .dug{display:none}.sag .pdf-serit{margin-top:0}.sag .pdf-serit table{min-width:0;width:100%}</style>
+<script>
+const ID = decodeURIComponent(location.pathname.split('/')[2] || '');
+const esc = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const tl = v => v == null ? '—' : Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const kwh = v => v == null ? '—' : Number(v).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+const AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const ayEt = d => d ? AY[+d.slice(5) - 1] + ' ' + d.slice(0, 4) : '';
+const DURUM = { dogru: ['✔ Doğru', 'r-ok'], fazla: ['✘ Fazla faturalanmış', 'r-fazla'], eksik: ['▼ Az faturalanmış', 'r-eksik'], 'ek-fatura': ['＋ Ek fatura (kWh yok)', 'r-mavi'], 'kapsam-disi': ['☀ GES · kapsam dışı', 'r-gri'], hesaplanamadi: ['Hesaplanamadı', 'r-gri'] };
+let K = null, V = null;
+
+function gorsel() {
+  const src = '/belge/' + encodeURIComponent(ID);
+  document.getElementById('ustIndir').href = src + '?indir=1';
+  document.getElementById('ustTek').href = src;
+  // PDF: yan önizleme paneli kapalı, sayfa genişliğine sığdırılmış (küçük resimler okunmuyordu)
+  document.getElementById('sol').innerHTML = /^image\//.test(K.tur) ? '<img src="' + src + '" alt="' + esc(K.ad) + '">' : '<iframe src="' + src + '#navpanes=0&pagemode=none&view=FitH" title="' + esc(K.ad) + '"></iframe>';
+}
+function eslesenler() {
+  if (!V || !V.var) return [];
+  if (K.faturaNo) { const x = V.satirlar.filter(s => s.faturaNo === K.faturaNo); if (x.length) return x; }
+  if (K.sozlesme) return V.satirlar.filter(s => s.sozlesmeNo === K.sozlesme && (!K.donem || s.donem === K.donem));
+  return [];
+}
+function hesapKarti(s) {
+  const d = DURUM[s.durum] || [s.durum, 'r-gri'], h = s.hesapDetay;
+  const orant = s.hesap && (s.odenen / s.hesap > 2 || s.odenen / s.hesap < 0.5);
+  let h1 = '<h3>' + esc(s.lokasyon) + ' · ' + ayEt(s.donem) + '</h3>'
+    + '<div class="alt">Sözleşme <b>' + esc(s.sozlesmeNo) + '</b> · fatura no <b>' + esc(s.faturaNo) + '</b> · ' + esc(s.seri === 'CK1' ? 'CK1 · ulusal tarife' : s.seri === 'CK2' ? 'CK2 · ikili anlaşma' : s.seri) + (s.firma ? ' · firma <b>' + esc(s.firma) + '</b>' : '') + '</div>'
+    + '<span class="rozet ' + (orant && ['fazla', 'eksik'].includes(s.durum) ? 'r-incele' : d[1]) + '">' + (orant && ['fazla', 'eksik'].includes(s.durum) ? '⚠ İncele · tutar kWh ile orantısız' : d[0]) + '</span>';
+  // Reel fatura (PDF) ↔ sitenin hesabı: tablolardaki şeritle aynı karşılaştırma (pdf-serit.js), vergi ayrıntısı ve kontrol dahil
+  h1 += '<div id="pdfKart" class="alt" style="margin-top:8px">⏳ Reel fatura (PDF) okunuyor…</div>';
+  if (h) h1 += '<div class="alt">Hesap yöntemi: <b>' + esc(h.yontem) + '</b>' + (h.ptf ? ' · PTF ' + tl(h.ptf) + ' TL/MWh · YEKDEM ' + tl(h.yekdem) + ' TL/MWh' : '') + '</div>';
+  if (s.aciklama) h1 += '<div class="kutu">' + esc(s.aciklama) + '</div>';
+  if (s.gesMahsup) {
+    const g = s.gesMahsup;
+    h1 += '<div class="gkutu"><b>☀ GES mahsubu</b> (GES’in ürettiği elektrik tüketimden düşülür)<br>Mahsupsuz olsaydı: <b>' + tl(g.brut) + ' TL</b> · faturada ödenen: <b>' + tl(s.odenen) + ' TL</b><br>Yansıyan mahsup: <b style="color:' + (g.mahsup >= 0 ? '#1e8449' : '#a93226') + '">' + (g.mahsup > 0 ? '+' : '') + tl(g.mahsup) + ' TL</b> · '
+      + (g.durum === 'yansimis' ? '✔ mahsup faturaya yansımış' : g.durum === 'fazla' ? '✘ mahsupsuz fiyattan bile fazla ödenmiş' : '○ mahsup görünmüyor') + (g.rejim ? ' · ' + esc(g.rejim) + ' kural' : '') + '</div>';
+  }
+  if (s.guvence != null) h1 += '<div class="alt">Güvence bedeli (bu dönemde geçerli): <b>' + tl(s.guvence) + ' TL</b></div>';
+  const q = new URLSearchParams({ fatura: s.faturaNo });
+  h1 += '<div class="dugmeler"><a class="btn turuncu" href="/fatura-kontrol?' + q + '" target="_blank">🧾 Fatura Kontrol’de aç</a>'
+    + '<a class="btn" href="/fatura-kontrol?lok=' + encodeURIComponent(s.sozlesmeNo) + '" target="_blank">📍 Lokasyonun tüm faturaları</a>'
+    + (s.gesMahsup || s.durum === 'kapsam-disi' ? '<a class="btn yesil" href="/ges-mahsup" target="_blank">☀ GES Mahsup</a>' : '')
+    + '<a class="btn" href="/" target="_blank">⚡ Ana sayfa</a></div>';
+  return h1;
+}
+function eslestirFormu(mesaj) {
+  const L = V && V.var ? [...new Map(V.satirlar.map(s => [s.sozlesmeNo, s.lokasyon])).entries()].sort((a, b) => String(a[1]).localeCompare(String(b[1]), 'tr')) : [];
+  return '<div class="kutu">' + mesaj + '</div><div style="display:flex;flex-direction:column;gap:6px;max-width:420px">'
+    + '<label>Lokasyon / sözleşme<br><select id="eSoz" style="width:100%"><option value="">— seçin —</option>' + L.map(([no, ad]) => '<option value="' + no + '"' + (no === K.sozlesme ? ' selected' : '') + '>' + esc(ad) + ' · ' + no + '</option>').join('') + '</select></label>'
+    + '<label>Dönem<br><input type="month" id="eDonem" value="' + esc(K.donem || '') + '"></label>'
+    + '<label>Fatura no (isteğe bağlı)<br><input id="eNo" placeholder="CK2…" value="' + esc(K.faturaNo || '') + '"></label>'
+    + '<button class="btn turuncu" onclick="eslestir()">🔗 Bu faturayla eşleştir</button></div>';
+}
+async function eslestir() {
+  const soz = document.getElementById('eSoz').value;
+  const b = { id: ID, sozlesme: soz, donem: document.getElementById('eDonem').value, faturaNo: document.getElementById('eNo').value.trim().toUpperCase() };
+  if (soz && V && V.var) { const s = V.satirlar.find(x => x.sozlesmeNo === soz); if (s) b.lokasyon = s.lokasyon; }
+  await fetch('/api/belgeler/guncelle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+  basla();
+}
+function sagCiz(secilen) {
+  const E = eslesenler(), sag = document.getElementById('sag');
+  let h = '<div class="sag-bas">📊 <span>Sitenin hesabı' + (K.faturaNo ? ' · ' + esc(K.faturaNo) : '') + '</span><span class="kat">' + esc(K.kategori) + '</span></div>'
+    + (K.aciklama ? '<div class="alt">' + esc(K.aciklama) + '</div>' : '');
+  if (!V || !V.var) { sag.innerHTML = h + '<div class="kutu">Sitenin fatura verisi alınamadı.</div>'; return; }
+  if (!E.length) { sag.innerHTML = h + eslestirFormu('Bu belge henüz sitedeki bir faturayla eşleşmedi' + (K.faturaNo ? ' (fatura no ' + esc(K.faturaNo) + ' panelde yok)' : '') + '. Lokasyon ve dönem seçerek eşleştirin; sitenin hesabı burada görünür.'); return; }
+  const s = E[secilen || 0];
+  if (E.length > 1) h += '<div class="kutu adaylar">Bu lokasyon ve dönemde <b>' + E.length + '</b> fatura var, hangisi?' + E.map((x, i) => '<button class="btn" onclick="sagCiz(' + i + ')">' + (i === (secilen || 0) ? '▶ ' : '') + esc(x.faturaNo) + ' · ' + kwh(x.kwh) + ' kWh · ' + tl(x.odenen) + ' TL</button>').join('') + '</div>';
+  setTimeout(() => pdfKartDoldur(s), 0);
+  sag.innerHTML = h + hesapKarti(s) + '<div style="margin-top:6px"><a href="#" onclick="document.getElementById(\'sag\').innerHTML=eslestirFormu(\'Eşleştirmeyi değiştirin:\');return false" style="font-size:11.5px;color:#7a8594">🔗 eşleştirmeyi değiştir</a></div>';
+}
+const PDF_ONBELLEK = {};
+async function pdfKartDoldur(s) {
+  const kap = document.getElementById('pdfKart');
+  if (!kap || !window.pdfSeritHtml) return;
+  try {
+    const r = PDF_ONBELLEK[s.faturaNo] || (PDF_ONBELLEK[s.faturaNo] = await (await fetch('/api/fatura-pdf?faturaNo=' + encodeURIComponent(s.faturaNo))).json());
+    kap.className = ''; kap.innerHTML = window.pdfSeritHtml(s, r);
+  } catch (e) { kap.textContent = 'Reel fatura okunamadı: ' + e.message; }
+}
+async function basla() {
+  try {
+    const [b, v] = await Promise.all([fetch('/api/belgeler').then(r => r.json()), fetch('/api/fatura-kiyas').then(r => r.json()).catch(() => null)]);
+    K = (b.belgeler || []).find(x => x.id === ID); V = v;
+    if (!K) { document.getElementById('sag').innerHTML = '<div class="kutu">Belge bulunamadı (silinmiş olabilir).</div><a class="btn" href="/belgeler">📁 Belgeler</a>'; return; }
+    document.title = K.ad + ' · Elektrik Analizi'; document.getElementById('ustAd').textContent = K.ad;
+    if (!document.querySelector('#sol iframe, #sol img')) gorsel();
+    sagCiz(0);
+  } catch (e) { document.getElementById('sag').innerHTML = '<div class="kutu">Sunucuya ulaşılamadı: ' + esc(e.message) + '</div>'; }
+}
+basla();
+</script>
+</body>
+</html>

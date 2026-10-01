@@ -1,0 +1,22 @@
+# Bağımlılıklar
+node_modules/
+
+# Gizli ayarlar: şifreler ASLA depoya girmez
+.env
+*.env
+!.env.example
+
+# Çalışma verisi: fatura, panel, PTF, ayar dosyaları (şirket verisi)
+veri/
+elektrik_*.json
+elektrik_panel_ham/
+elektrik_bedeller/
+
+# Yedek ve geçici dosyalar
+*.bak*
+*.log
+.DS_Store
+Thumbs.db
+
+# Supabase yükleme SQL'i (şirket verisi)
+supabase/veri/

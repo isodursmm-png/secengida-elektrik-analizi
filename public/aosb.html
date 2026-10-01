@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AOSB Fabrika · GES</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f3f5f9;color:#0b0b0b;font-size:13px}
+.ust{background:#1a3a6b;color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.ust h1{margin:0;font-size:18px;letter-spacing:.3px}
+.ust .alt{font-size:12px;opacity:.85}
+.ust .bosluk{flex:1}
+.btn-yenile{background:#e67e22;border:1px solid #d35400;color:#fff;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;box-shadow:0 3px 10px rgba(211,84,0,.45);font-size:13px}
+.btn-yenile:hover{background:#d35400}.btn-yenile:disabled{opacity:.6;cursor:wait}
+.duzen{display:flex;align-items:flex-start;min-height:calc(100vh - 56px)}
+.sol{width:270px;flex:0 0 270px;background:#1e8449;border-right:1px solid #186a3b;color:#fff;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:14px 12px 30px}
+.sol h3{margin:12px 0 6px;padding:5px 10px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.25);border-radius:6px}
+.sol h3:first-child{margin-top:0}
+.konu{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:0 0 5px;border-radius:7px;cursor:pointer;color:#fff;font-weight:600;font-size:13px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.38);border-left:3px solid rgba(255,255,255,.55)}
+.konu:hover{background:#239b56;border-color:rgba(255,255,255,.7)}
+.konu.aktif{background:#fff;border-left-color:#e67e22;border-left-width:5px;color:#d35400;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.konu.gunes{background:#f1c40f;color:#5a3b00;border-color:#b7950b;font-weight:800}
+.konu.gunes.aktif{background:#fff;color:#b9770e}
+.konu .ik{width:20px;text-align:center}
+.konu .say{margin-left:auto;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;background:#fff;color:#1a3a6b}
+.say.k{background:#c0392b;color:#fff}.say.t{background:#d35400;color:#fff}
+.ana{flex:1;min-width:0;padding:18px 22px 40px}
+.baslik{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;background:#1a3a6b;color:#fff;padding:10px 14px;border-radius:8px 8px 0 0}
+.baslik.gunes{background:#b9770e}
+.baslik h2{margin:0;color:#fff;font-size:19px}
+.aciklama{color:#fff;background:#244a84;margin:0 0 12px;padding:8px 14px;line-height:1.55;border-radius:0 0 8px 8px}
+.aciklama.gunes{background:#d68910}
+.kartlar{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.kart{background:#1a3a6b;color:#fff;border-radius:8px;padding:12px 14px;border-top:5px solid #5dade2}
+.kart .e{font-size:11.5px;color:#d6e4f5;font-weight:600}
+.kart .d{font-size:21px;font-weight:700;margin-top:4px}
+.kart .a{font-size:11.5px;color:#d6e4f5;margin-top:3px}
+.kart.ok{border-top-color:#2ecc71}.kart.eksik{border-top-color:#e67e22}.kart.gunes{border-top-color:#f1c40f}
+.kart.fazla{background:#c0392b;border-top-color:#7b241c}
+.bulgu{background:#1a3a6b;color:#fff;border-left:6px solid #5dade2;border-radius:6px;padding:10px 14px;margin-bottom:8px;line-height:1.55}
+.bulgu.k{background:#c0392b;border-left-color:#7b241c}.bulgu.y{border-left-color:#2ecc71}.bulgu.t{border-left-color:#e67e22}.bulgu.g{background:#7e5109;border-left-color:#f1c40f}
+.tablo-kap{background:#fff;border:1px solid #dde3ec;border-radius:8px;overflow:auto;max-height:calc(100vh - 230px);margin-bottom:14px}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{background:#1a3a6b;color:#fff;padding:4px 6px;line-height:1.2;vertical-align:middle;text-align:center;font-weight:600;position:sticky;top:0;z-index:2;white-space:normal;max-width:130px}
+.gunes th{background:#b9770e}
+td{padding:3px 6px;border-bottom:1px solid #eef0f3;text-align:right;white-space:nowrap;line-height:1.3}
+td.s{text-align:left}td.o{text-align:center}
+tr:nth-child(even) td{background:#f7f9fc}
+tr.top td{background:#e3eaf5 !important;font-weight:700;border-top:2px solid #1a3a6b}
+.gunes tr.top td{background:#fdebd0 !important;border-top-color:#b9770e}
+td.k{color:#c0392b;font-weight:700}td.y{color:#1e8449;font-weight:700}td.t{color:#d35400;font-weight:700}
+.rozet{display:inline-block;padding:0 7px;border-radius:10px;font-weight:700;font-size:11px;line-height:18px}
+.r-ok{background:#e8f6ee;color:#1e8449}.r-k{background:#c0392b;color:#fff}.r-t{background:#e67e22;color:#fff}.r-g{background:#eef0f3;color:#5d6673}
+a.fno{color:#1a3a6b;font-weight:600;text-decoration:none;border-bottom:1px dotted #1a3a6b}
+.not{font-size:11.5px;color:#52514e;margin:4px 0 14px;line-height:1.5}
+.bos{padding:40px;text-align:center;color:#5d6673;font-size:14px}
+</style>
+</head>
+<body>
+<div class="ust">
+  <div><h1>🏭 AOSB FABRİKA · GES</h1><div class="alt" id="ustAlt">SECENGIDA · Antalya OSB 1. Kısım · faturalar PDF'ten</div></div>
+  <div class="bosluk"></div>
+  <button class="btn-yenile" id="btnYenile" onclick="yenile()">⟳ Klasörü yeniden oku</button>
+</div>
+<div class="duzen">
+  <div class="sol" id="sol"></div>
+  <div class="ana" id="ana"><div class="bos">⏳ Yükleniyor…</div></div>
+</div>
+<script>
+let V = null, GORUNUM = 'ozet', GECMIS = [];
+const AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const ayAd = a => a ? AY[+a.slice(5, 7) - 1] + ' ' + a.slice(0, 4) : '';
+const n = (v, d = 2) => v == null || v === '' || !isFinite(v) ? '—' : Number(v).toLocaleString('tr-TR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const tl = v => n(v, 2), kwh = v => n(v, 0), b6 = v => n(v, 6), k4 = v => n(v, 4);
+const kac = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fno = (no, id) => id ? '<a class="fno" href="/belge-gor/' + encodeURIComponent(id) + '" target="_blank" title="Faturayı aç">' + no + '</a>' : no;
+const topla = (l, k) => l.reduce((t, x) => t + (+x[k] || 0), 0);
+
+const KONULAR = [
+  ['ozet', '📋', 'Genel özet'],
+  ['ay', '🗓', 'Ay bazlı fatura matrisi'],
+  ['fiyat', '💱', 'Birim fiyat · geçici ↔ kesin'],
+  ['ges', '☀', 'GES veriş ↔ mahsup', 'gunes'],
+  ['bedel', '🔌', 'Bedeller · reaktif · demand'],
+  ['saglama', '✔', 'Fatura sağlaması'],
+  ['trafo', '⚡', 'ANT Trafo hizmet faturaları'],
+];
+function solCiz() {
+  const sayac = { saglama: V ? V.aylar.reduce((t, a) => t + a.saglamaHata, 0) : 0, ges: V ? V.aylar.filter(a => a.verisFark > Math.max(50, a.veris * 0.05)).length : 0, ay: V ? V.aylar.filter(a => a.ilave).length : 0 };
+  let h = '<h3>Konular</h3>';
+  for (const [k, ik, ad, cls] of KONULAR) h += '<div class="konu ' + (cls || '') + (GORUNUM === k ? ' aktif' : '') + '" onclick="git(\'' + k + '\')"><span class="ik">' + ik + '</span>' + ad + (sayac[k] ? '<span class="say ' + (k === 'saglama' ? 'k' : 't') + '">' + sayac[k] + '</span>' : '') + '</div>';
+  if (V) h += '<h3>Kaynak</h3><div style="font-size:11.5px;line-height:1.5;padding:0 4px">' + kac((V.kaynak && V.kaynak.klasorler || []).join(', ') || 'Masaüstü\\SECENGIDA') + '<br>Son tarama: ' + (V.kaynak && V.kaynak.sonTarama ? new Date(V.kaynak.sonTarama).toLocaleString('tr-TR') : '—') + '<br>Klasöre yeni zip / PDF bırakıldığında otomatik okunur.</div>';
+  document.getElementById('sol').innerHTML = h;
+}
+function git(k) { if (k !== GORUNUM) GECMIS.push(GORUNUM); GORUNUM = k; ciz(); window.scrollTo(0, 0); }
+function geri() { if (!GECMIS.length) return false; GORUNUM = GECMIS.pop(); ciz(); return true; }
+const baslik = (b, a, g) => '<div class="baslik' + (g ? ' gunes' : '') + '"><h2>' + b + '</h2></div><div class="aciklama' + (g ? ' gunes' : '') + '">' + a + '</div>';
+function tablo(bas, satirlar, toplam, g) {
+  return '<div class="tablo-kap' + (g ? ' gunes' : '') + '"><table><thead><tr>' + bas.map(x => '<th>' + x + '</th>').join('') + '</tr></thead><tbody>' + satirlar.join('') + (toplam || '') + '</tbody></table></div>';
+}
+const td = (v, c) => '<td' + (c ? ' class="' + c + '"' : '') + '>' + v + '</td>';
+
+function ozet() {
+  const A = V.aylar, son = A[A.length - 1];
+  const odenen = topla(A, 'odenecek'), kwhT = topla(A, 'kwh'), ilave = topla(A, 'ilave'), veris = topla(A, 'veris'), mahsup = topla(A, 'uretimMahsupKwh'), mahsupTL = -topla(A, 'uretimMahsupTL'), antT = topla(V.ant, 'tutar');
+  const sHata = A.reduce((t, a) => t + a.saglamaHata, 0);
+  const gesEksik = A.filter(a => a.verisFark != null && a.verisFark > Math.max(50, a.veris * 0.05));
+  let h = baslik('Genel özet · ' + ayAd(A[0].ay) + ' – ' + ayAd(son.ay), 'Antalya OSB fabrika faturaları (abone ' + kac((A[0].faturaNo ? 'AOSB-3033' : '')) + ') ve ANT Trafo hizmet faturaları. Değerler faturaların PDF\'inden okunur; sağlama, birim fiyat ve GES mahsup tetkiki ay ay yapılır.');
+  h += '<div class="kartlar">';
+  h += '<div class="kart"><div class="e">Ödenen elektrik (AOSB, KDV dahil)</div><div class="d">' + tl(odenen) + ' TL</div><div class="a">' + A.length + ' fatura · ' + kwh(kwhT) + ' kWh · ort. ' + n(odenen / kwhT, 3) + ' TL/kWh</div></div>';
+  h += '<div class="kart ' + (sHata ? 'fazla' : 'ok') + '"><div class="e">Fatura sağlaması</div><div class="d">' + (sHata ? sHata + ' hata' : 'Tamamı tutuyor') + '</div><div class="a">kalem × birim, ara toplamlar, KDV %20, fatura tutarı</div></div>';
+  h += '<div class="kart ' + (ilave ? 'eksik' : 'ok') + '"><div class="e">Tahmini (ilave) tüketim</div><div class="d">' + kwh(ilave) + ' kWh</div><div class="a">' + (ilave ? A.filter(a => a.ilave).map(a => ayAd(a.ay) + ' ' + kwh(a.ilave)).join(' · ') : 'sayaçla ölçülmeyen tüketim yok') + '</div></div>';
+  h += '<div class="kart gunes"><div class="e">☀ GES · şebekeye veriş / mahsup edilen</div><div class="d">' + kwh(veris) + ' / ' + kwh(mahsup) + ' kWh</div><div class="a">mahsup indirimi ' + tl(mahsupTL) + ' TL · kurulu ' + kwh(A[0].uretimKwe) + ' kWe</div></div>';
+  h += '<div class="kart"><div class="e">ANT Trafo hizmet (KDV dahil)</div><div class="d">' + tl(antT) + ' TL</div><div class="a">' + V.ant.length + ' fatura · aylık ' + tl(V.antMedyan) + ' TL + KDV</div></div>';
+  h += '</div><h3 style="color:#1a3a6b;margin:6px 0">Bulgular</h3>';
+  if (sHata) h += '<div class="bulgu k">✘ ' + sHata + ' sağlama tutmuyor: ayrıntı <a href="#" onclick="git(\'saglama\');return false">Fatura sağlaması</a> bölümünde.</div>';
+  else h += '<div class="bulgu y">✔ Bütün AOSB faturaları kendi içinde tutarlı: kalem tutarları, enerji ara toplamı, KDV matrahı, KDV %20 ve fatura tutarı kuruşu kuruşuna sağlanıyor.</div>';
+  for (const a of A.filter(a => a.ilave)) h += '<div class="bulgu t">⚠ <b>' + ayAd(a.ay) + '</b>: sayaçla ölçülemeyen <b>' + kwh(a.ilave) + ' kWh</b> tahmini tüketim faturaya eklenmiş (faturalanan ' + kwh(a.kwh) + ' kWh\'ın %' + n(a.ilave / a.kwh * 100, 1) + '\'i, ~' + tl(a.ilave * a.geciciBirim * 1.2) + ' TL KDV dahil).' + (a.not ? ' Faturadaki not: “' + kac(a.not) + '”' : '') + ' Tahminin dayanağı OSB\'den istenmeli.</div>';
+  if (gesEksik.length) h += '<div class="bulgu g">☀ ' + ayAd(V.saatlikBaslangic.slice(0, 7)) + ' itibarıyla saatlik mahsup: şebekeye verilen kWh\'ın bir kısmı mahsup edilmiyor (' + gesEksik.map(a => ayAd(a.ay) + ' ' + kwh(a.veris) + ' → ' + kwh(a.mahsupSonra)).join(' · ') + '). Saatlik mahsupta aynı saat içindeki çekiş önce düşülür; aylık toplam veriş yerine saatlik net fazla mahsup edilir. Ayrıntı <a href="#" onclick="git(\'ges\');return false" style="color:#f9e79f">GES veriş ↔ mahsup</a>.</div>';
+  const ok = A.filter(a => a.mahsupSonra != null && Math.abs(a.verisFark) <= Math.max(50, a.veris * 0.05));
+  if (ok.length) h += '<div class="bulgu y">✔ Aylık mahsup dönemi (' + ok.map(a => ayAd(a.ay)).join(', ') + '): verilen kWh bir sonraki faturada önceki ayın birim fiyatından tam mahsup edilmiş.</div>';
+  const etvYok = A.every(a => !a.etv);
+  if (etvYok) h += '<div class="bulgu t">ℹ AOSB faturalarında Elektrik Tüketim Vergisi (E.T.V.) satırı boş: hiçbir ayda ETV tahsil edilmemiş. 2464 s. Kanun\'a göre sanayi kullanımında ETV oranı %1\'dir; ETV\'nin neden uygulanmadığı (muafiyet vb.) OSB\'den teyit edilmeli (ileride geriye dönük tahakkuk riski).</div>';
+  const gruplar = [...new Set(A.map(a => a.tarifeGrubu))];
+  if (gruplar.length > 1) h += '<div class="bulgu t">ℹ Tarife grubu değişmiş: ' + A.filter((a, i) => i === 0 || a.tarifeGrubu !== A[i - 1].tarifeGrubu).map(a => ayAd(a.ay) + ' → <b>' + kac(a.tarifeGrubu) + '</b>').join(' · ') + '.</div>';
+  const fk = A.filter(a => a.kKesin != null);
+  if (fk.length) h += '<div class="bulgu">💱 OSB enerjiyi geçici birim fiyatla keser, kesin fiyat farkını bir sonraki faturaya yansıtır. Kesinleşen fiyatın (PTF+YEKDEM)\'e oranı ' + n(Math.min(...fk.map(a => a.kKesin)), 4) + ' – ' + n(Math.max(...fk.map(a => a.kKesin)), 4) + ' (son kaynak referansı ' + n(V.sktt, 4) + '). Ayrıntı <a href="#" onclick="git(\'fiyat\');return false">Birim fiyat</a>.</div>';
+  const maxD = Math.max(...A.map(a => a.demand || 0));
+  h += '<div class="bulgu">🔌 En yüksek demand ' + kwh(maxD) + ' kW (sözleşme gücü ' + kwh(A[0].sozlesmeGucu) + ' kW, %' + n(maxD / A[0].sozlesmeGucu * 100, 0) + '). Reaktif endüktif oran en çok %' + n(Math.max(...A.map(a => a.induktifOran || 0)), 1) + ', kapasitif %' + n(Math.max(...A.map(a => a.kapasitifOran || 0)), 1) + ': reaktif bedel çıkmamış.</div>';
+  const cok = V.ant.filter(x => x.ayAdedi && Math.round(x.ayAdedi) > 1);
+  if (cok.length) h += '<div class="bulgu">⚡ ANT Trafo: ' + cok.map(x => ayAd(x.ay) + ' faturası ' + Math.round(x.ayAdedi) + ' aylık toplu (' + tl(x.matrah) + ' TL + KDV)').join(' · ') + '; diğer aylar sabit ' + tl(V.antMedyan) + ' TL + KDV.</div>';
+  return h;
+}
+function ayMatris() {
+  const A = V.aylar;
+  const bas = ['Dönem', 'Fatura', 'Tarife grubu', 'Faturalanan kWh', 'Ölçülen kWh', 'İlave (tahmini) kWh', 'Gündüz', 'Puant', 'Gece', 'Enerji TL', 'Önceki ay fiyat farkı TL', 'GES mahsup TL', 'İletim + dağıtım TL', 'ETV', 'KDV matrahı', 'KDV', 'Fatura tutarı', 'TL/kWh (KDV dahil)'];
+  const s = A.map(a => '<tr>' + td(ayAd(a.ay), 's') + td(fno(a.faturaNo, a.belgeId), 's') + td(kac(a.tarifeGrubu), 's') + td(kwh(a.kwh)) + td(kwh(a.olculen)) + td(a.ilave ? kwh(a.ilave) : '—', a.ilave ? 't' : '') + td(kwh(a.gunduz)) + td(kwh(a.puant)) + td(kwh(a.gece)) + td(tl(a.enerjiTL)) + td(tl(a.fiyatFarkiTL), a.fiyatFarkiTL > 0 ? 'k' : a.fiyatFarkiTL < 0 ? 'y' : '') + td(tl(a.uretimMahsupTL), 'y') + td(tl(a.iletimTuketim + a.iletimSabit + a.dagitim + a.digerBedel)) + td(tl(a.etv)) + td(tl(a.matrah)) + td(tl(a.kdv)) + td('<b>' + tl(a.odenecek) + '</b>') + td(n(a.odenecek / a.kwh, 4)) + '</tr>');
+  const t = '<tr class="top">' + td('Toplam', 's') + td('') + td('') + td(kwh(topla(A, 'kwh'))) + td(kwh(topla(A, 'olculen'))) + td(kwh(topla(A, 'ilave'))) + td(kwh(topla(A, 'gunduz'))) + td(kwh(topla(A, 'puant'))) + td(kwh(topla(A, 'gece'))) + td(tl(topla(A, 'enerjiTL'))) + td(tl(topla(A, 'fiyatFarkiTL'))) + td(tl(topla(A, 'uretimMahsupTL'))) + td(tl(topla(A, 'iletimTuketim') + topla(A, 'iletimSabit') + topla(A, 'dagitim') + topla(A, 'digerBedel'))) + td(tl(topla(A, 'etv'))) + td(tl(topla(A, 'matrah'))) + td(tl(topla(A, 'kdv'))) + td(tl(topla(A, 'odenecek'))) + td(n(topla(A, 'odenecek') / topla(A, 'kwh'), 4)) + '</tr>';
+  return baslik('Ay bazlı fatura matrisi', 'Her AOSB faturası kalem kalem. "Önceki ay fiyat farkı" ve "GES mahsup" satırları bir önceki döneme aittir (geçici fiyatın kesinleşmesi ve önceki ay şebekeye verilen enerji). Fatura numarasına tıklayınca PDF açılır.') + tablo(bas, s, t);
+}
+function fiyat() {
+  const A = V.aylar;
+  const bas = ['Dönem', 'Faturalanan kWh', 'Geçici birim TL/kWh', 'Sonraki faturadaki fark TL/kWh', 'Kesin birim TL/kWh', 'Fark tutarı TL', 'EPİAŞ PTF', 'YEKDEM', '(PTF+YEKDEM) TL/kWh', 'Geçici ÷ (PTF+YEKDEM)', 'Kesin ÷ (PTF+YEKDEM)', 'Gündüz/puant/gece ağırlıklı PTF', 'Son kaynak referansı TL/kWh', 'Kesin − referans (TL)'];
+  const s = A.map(a => {
+    const refFark = a.kesinBirim != null && a.refBirim != null ? (a.kesinBirim - a.refBirim) * a.kwh : null;
+    return '<tr>' + td(ayAd(a.ay), 's') + td(kwh(a.kwh)) + td(b6(a.geciciBirim)) + td(a.sonrakiFark == null ? '<span class="rozet r-g">bekleniyor</span>' : b6(a.sonrakiFark), a.sonrakiFark > 0 ? 'k' : a.sonrakiFark < 0 ? 'y' : '') + td(a.kesinBirim == null ? '—' : '<b>' + b6(a.kesinBirim) + '</b>') + td(tl(a.sonrakiFarkTL), a.sonrakiFarkTL > 0 ? 'k' : a.sonrakiFarkTL < 0 ? 'y' : '') + td(n(a.ptf)) + td(n(a.yekdem)) + td(b6(a.ptfYekdem)) + td(k4(a.kGecici)) + td(k4(a.kKesin), a.kKesin > V.sktt + 0.01 ? 'k' : '') + td(n(a.zonPtf)) + td(b6(a.refBirim)) + td(tl(refFark), refFark > 0 ? 'k' : refFark < 0 ? 'y' : '') + '</tr>';
+  });
+  const t = '<tr class="top">' + td('Toplam', 's') + td(kwh(topla(A, 'kwh'))) + td('') + td('') + td('') + td(tl(topla(A, 'sonrakiFarkTL'))) + td('') + td('') + td('') + td('') + td('') + td('') + td('') + td(tl(A.reduce((t, a) => t + (a.kesinBirim != null && a.refBirim != null ? (a.kesinBirim - a.refBirim) * a.kwh : 0), 0))) + '</tr>';
+  return baslik('Birim fiyat · geçici ↔ kesin', 'OSB her ayın enerjisini geçici birim fiyatla keser; kesin fiyat (saatlik tüketim profiline göre PTF + YEKDEM) belli olunca fark bir sonraki faturada "Aktif enerji birim fiyat farkı" satırıyla, bu ayın kWh\'ı üzerinden alınır / iade edilir. Kesin birim = geçici + sonraki faturadaki fark. EPİAŞ aylık PTF ve YEKDEM ile oranlanır; son kaynak referansı (PTF+YEKDEM) × ' + n(V.sktt, 4) + '. "Kesin − referans" eksi ise kesinleşen enerji bedeli referansın altındadır.') + tablo(bas, s, t)
+    + '<div class="not">Not: OSB\'nin kesin fiyatı saatlik tüketim profiline göre ağırlıklandırıldığından aylık ortalama PTF ile birebir eşleşmez; gündüz/puant/gece ağırlıklı PTF yalnızca yaklaşık profil etkisini gösterir.</div>';
+}
+function ges() {
+  const A = V.aylar;
+  const bas = ['Dönem', 'Mahsup rejimi', 'Şebekeye veriş (2.8.0) kWh', 'Sonraki faturada mahsup edilen kWh', 'Mahsup edilmeyen kWh', 'Mahsup oranı', 'Bu faturada mahsup edilen kWh (önceki ay)', 'Mahsup birim TL/kWh', 'Önceki ayın geçici birimi', 'Mahsup indirimi TL'];
+  const s = A.map((a, i) => {
+    const onceki = A[i - 1], birimUyar = onceki && a.uretimMahsupBirim != null ? Math.abs(a.uretimMahsupBirim - onceki.geciciBirim) < 1e-6 : null;
+    const oran = a.mahsupSonra != null && a.veris ? a.mahsupSonra / a.veris * 100 : null;
+    return '<tr>' + td(ayAd(a.ay), 's') + td(a.rejim, 'o') + td(kwh(a.veris)) + td(a.mahsupSonra == null ? '<span class="rozet r-g">bekleniyor</span>' : kwh(a.mahsupSonra)) + td(a.verisFark == null ? '—' : kwh(a.verisFark), a.verisFark > Math.max(50, a.veris * 0.05) ? 't' : '') + td(oran == null ? '—' : '%' + n(oran, 1), oran != null && oran < 95 ? 't' : 'y') + td(kwh(a.uretimMahsupKwh)) + td(b6(a.uretimMahsupBirim)) + td(onceki ? b6(onceki.geciciBirim) + (birimUyar ? ' ✔' : birimUyar === false ? ' ✘' : '') : '—', birimUyar === false ? 'k' : '') + td(tl(-a.uretimMahsupTL), 'y') + '</tr>';
+  });
+  const t = '<tr class="top">' + td('Toplam', 's') + td('') + td(kwh(topla(A, 'veris'))) + td(kwh(topla(A.filter(a => a.mahsupSonra != null), 'mahsupSonra'))) + td(kwh(topla(A.filter(a => a.verisFark != null), 'verisFark'))) + td('') + td(kwh(topla(A, 'uretimMahsupKwh'))) + td('') + td('') + td(tl(-topla(A, 'uretimMahsupTL'))) + '</tr>';
+  return baslik('☀ GES · şebekeye veriş ↔ mahsup', 'Fabrikanın ' + kwh(A[0].uretimKwe) + ' kWe GES\'i ürettiğini önce kendi tüketiminde kullanır; fazlası şebekeye verilir (sayaç 2.8.0). Verilen enerji bir sonraki faturada "Aktif enerji üretim bir önceki dönem" satırıyla, önceki ayın birim fiyatından düşülür. ' + ayAd(V.saatlikBaslangic.slice(0, 7)) + ' itibarıyla mahsup saatlik yapılır: her saatin çekişi o saatin verişinden düşülür, yalnızca saatlik net fazla mahsup edilir.', true) + tablo(bas, s, t, true)
+    + '<div class="not">Not: Panelde bu tesisin saatlik çekiş/veriş verisi yok; saatlik mahsubun doğruluğu (hangi saat ne kadar fazla) ancak OSOS saatlik verisiyle teyit edilebilir. GES\'in toplam üretimi (öz tüketim dahil) faturada yer almaz.</div>';
+}
+function bedel() {
+  const A = V.aylar;
+  const bas = ['Dönem', 'İletim (tüketim) TL', 'İletim sabit (kW) TL', 'Dağıtım TL', 'Diğer bedeller TL', 'İletim+dağıtım TL/kWh', 'Maks. demand kW', 'Sözleşme gücü kW', 'Demand / güç', 'Endüktif %', 'Kapasitif %', 'Reaktif bedel TL'];
+  const s = A.map(a => '<tr>' + td(ayAd(a.ay), 's') + td(tl(a.iletimTuketim)) + td(tl(a.iletimSabit)) + td(tl(a.dagitim)) + td(tl(a.digerBedel)) + td(n((a.iletimTuketim + a.iletimSabit + a.dagitim) / a.kwh, 4)) + td(kwh(a.demand)) + td(kwh(a.sozlesmeGucu)) + td('%' + n(a.demand / a.sozlesmeGucu * 100, 0), a.demand > a.sozlesmeGucu ? 'k' : '') + td(n(a.induktifOran, 1), a.induktifOran > 20 ? 'k' : '') + td(n(a.kapasitifOran, 1), a.kapasitifOran > 15 ? 'k' : '') + td(tl(a.reaktifTL), a.reaktifTL ? 'k' : '') + '</tr>');
+  const t = '<tr class="top">' + td('Toplam', 's') + td(tl(topla(A, 'iletimTuketim'))) + td(tl(topla(A, 'iletimSabit'))) + td(tl(topla(A, 'dagitim'))) + td(tl(topla(A, 'digerBedel'))) + td(n((topla(A, 'iletimTuketim') + topla(A, 'iletimSabit') + topla(A, 'dagitim')) / topla(A, 'kwh'), 4)) + td('') + td('') + td('') + td('') + td('') + td(tl(topla(A, 'reaktifTL'))) + '</tr>';
+  return baslik('Bedeller · reaktif · demand', 'OSB\'nin iletim (tüketim ve sabit kW) ve dağıtım sistem kullanım bedelleri. Reaktif oran = sayaçtaki reaktif okuma ÷ aktif okuma; sınırlar endüktif %20, kapasitif %15 (aşılırsa reaktif bedel faturalanır). Demand sayaç okuması × çarpandır.') + tablo(bas, s, t);
+}
+function saglama() {
+  let h = baslik('Fatura sağlaması', 'Her faturanın kendi içindeki hesap: kalem tutarı = miktar × birim fiyat, faturalanan kWh = endeks farkı × çarpan + ilave, gündüz + puant + gece = ölçülen, enerji ara toplamı, KDV matrahı, KDV %20, fatura tutarı. ✘ işaretliler tutmayanlar.');
+  for (const a of V.aylar) {
+    const s = a.saglama.map(k => '<tr>' + td(kac(k.ad), 's') + td(tl(k.beklenen)) + td(tl(k.faturada)) + td(tl(k.fark), k.tamam ? '' : 'k') + td(k.tamam ? '<span class="rozet r-ok">✔</span>' : '<span class="rozet r-k">✘</span>', 'o') + '</tr>');
+    h += '<h3 style="color:#1a3a6b;margin:12px 0 6px">' + ayAd(a.ay) + ' · ' + fno(a.faturaNo, a.belgeId) + (a.saglamaHata ? ' <span class="rozet r-k">' + a.saglamaHata + ' hata</span>' : ' <span class="rozet r-ok">tamam</span>') + '</h3>' + tablo(['Kontrol', 'Hesaplanan', 'Faturada', 'Fark', 'Sonuç'], s);
+  }
+  return h;
+}
+function trafo() {
+  const T = V.ant;
+  const s = T.map(x => '<tr>' + td(ayAd(x.ay), 's') + td(fno(x.faturaNo, x.belgeId), 's') + td(kac(x.hizmet || ''), 's') + td(tl(x.matrah)) + td(tl(x.kdv)) + td('<b>' + tl(x.tutar) + '</b>') + td(x.ayAdedi && Math.round(x.ayAdedi) > 1 ? '<span class="rozet r-t">' + Math.round(x.ayAdedi) + ' aylık</span>' : Math.abs((x.ayAdedi || 1) - 1) > 0.01 ? '<span class="rozet r-k">farklı tutar</span>' : '<span class="rozet r-ok">olağan</span>', 'o') + td(x.saglamaHata ? '<span class="rozet r-k">✘</span>' : '<span class="rozet r-ok">✔</span>', 'o') + '</tr>');
+  const t = '<tr class="top">' + td('Toplam', 's') + td('') + td('') + td(tl(topla(T, 'matrah'))) + td(tl(topla(T, 'kdv'))) + td(tl(topla(T, 'tutar'))) + td('') + td('') + '</tr>';
+  return baslik('ANT Trafo hizmet faturaları', 'AOSB 1. Kısım 2500 kVA bina trafosunun işletme sorumluluğu hizmeti (ANT Trafo Elektrik Mühendislik A.Ş.). kWh içermez; aylık sabit bedel ' + tl(V.antMedyan) + ' TL + KDV %20. Tutar olağan aylık bedelle kıyaslanır, KDV ve toplam sağlanır.') + tablo(['Dönem', 'Fatura', 'Hizmet', 'Matrah TL', 'KDV TL', 'Toplam TL', 'Olağan aya göre', 'Sağlama'], s, t);
+}
+const CIZ = { ozet, ay: ayMatris, fiyat, ges, bedel, saglama, trafo };
+function ciz() {
+  solCiz();
+  const ana = document.getElementById('ana');
+  if (!V) return;
+  if (!V.var) { ana.innerHTML = '<div class="bos">SECENGIDA klasöründe Antalya OSB faturası bulunamadı. Masaüstü\\SECENGIDA klasörüne fatura zip / PDF dosyalarını bırakın.</div>'; return; }
+  ana.innerHTML = CIZ[GORUNUM]();
+}
+async function yukle(yeni) {
+  const btn = document.getElementById('btnYenile'); btn.disabled = true;
+  try { V = await (await fetch(yeni ? '/api/aosb/yenile' : '/api/aosb', { method: yeni ? 'POST' : 'GET' })).json(); }
+  catch (e) { document.getElementById('ana').innerHTML = '<div class="bos">Veri alınamadı: ' + kac(e.message) + '</div>'; }
+  btn.disabled = false;
+  if (V && V.var) document.getElementById('ustAlt').textContent = 'SECENGIDA · Antalya OSB 1. Kısım · ' + V.aylar.length + ' fatura (' + ayAd(V.aylar[0].ay) + ' – ' + ayAd(V.aylar[V.aylar.length - 1].ay) + ') · ' + V.ant.length + ' ANT Trafo faturası';
+  ciz();
+}
+const yenile = () => yukle(true);
+
+// ─── Ana sayfa ile ortak arayüz (yazdır / mail / geri) ─────────────────────
+function kontrolDurum() { return { hazir: !!(V && V.var), gorunum: GORUNUM }; }
+function filtreMetni() { return 'AOSB fabrika · tüm aylar'; }
+const sayiMi = v => typeof v === 'number' && isFinite(v);
+function disaRaporlar(idler) {
+  const A = V.aylar, out = [];
+  for (const id of idler) {
+    if (id === 'ozet') out.push({ ad: 'AOSB · Genel özet', satirlar: [['Dönem', 'Fatura no', 'kWh', 'İlave kWh', 'Geçici birim', 'Kesin birim', 'Veriş kWh', 'Mahsup (sonraki) kWh', 'Ödenen TL', 'Sağlama hata']].concat(A.map(a => [ayAd(a.ay), a.faturaNo, a.kwh, a.ilave, a.geciciBirim, a.kesinBirim, a.veris, a.mahsupSonra, a.odenecek, a.saglamaHata])) });
+    if (id === 'ay') out.push({ ad: 'AOSB · Ay bazlı fatura matrisi', satirlar: [['Dönem', 'Fatura no', 'Tarife grubu', 'Faturalanan kWh', 'Ölçülen kWh', 'İlave kWh', 'Gündüz', 'Puant', 'Gece', 'Enerji TL', 'Önceki ay fiyat farkı TL', 'GES mahsup TL', 'İletim+dağıtım TL', 'ETV', 'KDV matrahı', 'KDV', 'Fatura tutarı']].concat(A.map(a => [ayAd(a.ay), a.faturaNo, a.tarifeGrubu, a.kwh, a.olculen, a.ilave, a.gunduz, a.puant, a.gece, a.enerjiTL, a.fiyatFarkiTL, a.uretimMahsupTL, (a.iletimTuketim + a.iletimSabit + a.dagitim + a.digerBedel), a.etv, a.matrah, a.kdv, a.odenecek])) });
+    if (id === 'fiyat') out.push({ ad: 'AOSB · Birim fiyat geçici ↔ kesin', satirlar: [['Dönem', 'kWh', 'Geçici birim', 'Sonraki fark', 'Kesin birim', 'Fark TL', 'PTF', 'YEKDEM', 'PTF+YEKDEM TL/kWh', 'Geçici oran', 'Kesin oran', 'Referans birim']].concat(A.map(a => [ayAd(a.ay), a.kwh, a.geciciBirim, a.sonrakiFark, a.kesinBirim, a.sonrakiFarkTL, a.ptf, a.yekdem, a.ptfYekdem, a.kGecici, a.kKesin, a.refBirim])) });
+    if (id === 'ges') out.push({ ad: 'AOSB · GES veriş ↔ mahsup', satirlar: [['Dönem', 'Rejim', 'Veriş kWh', 'Sonraki faturada mahsup kWh', 'Mahsup edilmeyen kWh', 'Bu faturada mahsup kWh', 'Mahsup birim', 'Mahsup indirimi TL']].concat(A.map(a => [ayAd(a.ay), a.rejim, a.veris, a.mahsupSonra, a.verisFark, a.uretimMahsupKwh, a.uretimMahsupBirim, -a.uretimMahsupTL])) });
+    if (id === 'bedel') out.push({ ad: 'AOSB · Bedeller, reaktif, demand', satirlar: [['Dönem', 'İletim tüketim TL', 'İletim sabit TL', 'Dağıtım TL', 'Diğer TL', 'Demand kW', 'Sözleşme gücü kW', 'Endüktif %', 'Kapasitif %', 'Reaktif TL']].concat(A.map(a => [ayAd(a.ay), a.iletimTuketim, a.iletimSabit, a.dagitim, a.digerBedel, a.demand, a.sozlesmeGucu, a.induktifOran, a.kapasitifOran, a.reaktifTL])) });
+    if (id === 'saglama') out.push({ ad: 'AOSB · Fatura sağlaması', satirlar: [['Dönem', 'Fatura no', 'Kontrol', 'Hesaplanan', 'Faturada', 'Fark', 'Sonuç']].concat(A.flatMap(a => a.saglama.map(k => [ayAd(a.ay), a.faturaNo, k.ad, k.beklenen, k.faturada, k.fark, k.tamam ? '✔' : '✘']))) });
+    if (id === 'trafo') out.push({ ad: 'ANT Trafo hizmet faturaları', satirlar: [['Dönem', 'Fatura no', 'Hizmet', 'Matrah TL', 'KDV TL', 'Toplam TL', 'Ay adedi']].concat(V.ant.map(x => [ayAd(x.ay), x.faturaNo, x.hizmet, x.matrah, x.kdv, x.tutar, x.ayAdedi])) });
+  }
+  for (const r of out) r.satirlar = r.satirlar.map(s => s.map(v => v == null ? '' : sayiMi(v) ? Math.round(v * 1e6) / 1e6 : v));
+  return out;
+}
+yukle(false);
+</script>
+</body>
+</html>

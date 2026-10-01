@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GES Mahsup Kontrolü</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f3f5f9;color:#0b0b0b;font-size:13px}
+.ust{background:#1a3a6b;color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.ust h1{margin:0;font-size:18px;letter-spacing:.3px}
+.ust .alt{font-size:12px;opacity:.85}
+.ust .bosluk{flex:1}
+.ust a{color:#fff;font-size:12px}
+.btn-yenile{background:#e67e22;border:1px solid #d35400;color:#fff;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;box-shadow:0 3px 10px rgba(211,84,0,.45);font-size:13px}
+.btn-yenile:hover{background:#d35400}
+.btn-yenile:disabled{opacity:.6;cursor:wait}
+.btn{background:#fff;border:1px solid #c7cfdc;color:#1a3a6b;font-weight:600;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12.5px}
+.btn:hover{background:#eef2f8}
+.duzen{display:flex;align-items:flex-start;min-height:calc(100vh - 56px)}
+.sol{width:270px;flex:0 0 270px;background:#1e8449;border-right:1px solid #186a3b;color:#fff;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;padding:14px 12px 30px}
+/* Tüm pano kutucuklu: bölüm başlıkları koyu şerit, konular ve filtreler ayrı kutucuk */
+.sol h3{margin:12px 0 6px;padding:5px 10px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.25);border-radius:6px}
+.sol h3:first-child{margin-top:0}
+/* Konu menüsü: her konu ayrı kutucuk */
+.konu{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:0 0 5px;border-radius:7px;cursor:pointer;color:#fff;font-weight:600;font-size:13px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.38);border-left:3px solid rgba(255,255,255,.55);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.konu:hover{background:#239b56;border-color:rgba(255,255,255,.7)}
+.konu.aktif{background:#fff;border-left-color:#e67e22;border-left-width:5px;color:#d35400;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.konu .ik{width:20px;text-align:center}
+.konu .say{margin-left:auto;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;background:#fff;color:#1a3a6b}
+.say.k{background:#c0392b;color:#fff}.say.t{background:#d35400;color:#fff}.say.y{background:#fff;color:#1e8449}.say.m{background:#7d3c98;color:#fff}
+.konu.aktif .say{box-shadow:0 0 0 1px #1e8449}
+.filtre{display:flex;flex-direction:column;gap:4px;margin:0 0 5px;padding:6px 8px;font-size:11.5px;color:#fff;font-weight:600;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.38);border-left:3px solid rgba(255,255,255,.55);border-radius:7px;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.filtre select,.filtre input{padding:6px 8px;border:1px solid #186a3b;color:#0b0b0b;border-radius:5px;font-size:12.5px;width:100%}
+.ana{flex:1;min-width:0;padding:18px 22px 40px}
+.baslik{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.baslik{background:#1a3a6b;color:#fff;padding:10px 14px;border-radius:8px 8px 0 0;margin-bottom:0}
+.baslik h2{margin:0;color:#fff;font-size:19px}
+.baslik .bosluk{flex:1}
+.aciklama{color:#fff;background:#244a84;margin:0 0 12px;padding:8px 14px;line-height:1.55;border-radius:0 0 8px 8px}
+.lejant{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.rozet{display:inline-flex;align-items:center;gap:3px;padding:0 6px;border-radius:10px;font-weight:700;font-size:11px;line-height:18px;white-space:nowrap}
+.lejant .rozet,.bulgu .rozet{padding:2px 10px;font-size:12px}
+.r-ok{background:#e8f6ee;color:#1e8449}.r-fazla{background:#c0392b;color:#fff}.r-eksik{background:#e67e22;color:#fff}.r-incele{background:#7d3c98;color:#fff}.r-gri{background:#eef0f3;color:#5d6673}.r-mavi{background:#e3eaf5;color:#1a3a6b}
+.kartlar{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.kart{background:#1a3a6b;color:#fff;border-radius:8px;padding:12px 14px;border-top:5px solid #5dade2}
+.kart .e{font-size:11.5px;color:#d6e4f5;font-weight:600}
+.kart .d{font-size:21px;font-weight:700;margin-top:4px;color:#fff !important}
+.kart .a{font-size:11.5px;color:#d6e4f5;margin-top:3px}
+.kart.ok{border-top-color:#2ecc71}.kart.eksik{border-top-color:#e67e22}.kart.incele{border-top-color:#af7ac5}
+.kart.fazla{background:#c0392b;border-top-color:#7b241c}.kart.fazla .e,.kart.fazla .a{color:#fdecea}
+.bulgu{background:#1a3a6b;color:#fff;border-left:6px solid #5dade2;border-radius:6px;padding:10px 14px;margin-bottom:8px;line-height:1.55}
+.bulgu a{color:#f9e79f}
+.bulgu.k{background:#c0392b;border-left-color:#7b241c}.bulgu.y{border-left-color:#2ecc71}.bulgu.t{border-left-color:#e67e22}
+.bulgu .rozet{background:#fff}
+.tablo-kap{background:#fff;border:1px solid #dde3ec;border-radius:8px;overflow:auto;max-height:calc(100vh - 250px)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{background:#1a3a6b;color:#fff;padding:4px 5px;line-height:1.2;vertical-align:middle;text-align:center;font-weight:600;position:sticky;top:0;z-index:2;cursor:pointer;white-space:normal;max-width:120px}
+th:hover{background:#244a84}
+td{padding:2px 5px;border-bottom:1px solid #eef0f3;text-align:center;white-space:nowrap;line-height:1.3}
+td.l{text-align:left}td.n{text-align:right;font-variant-numeric:tabular-nums}
+td.acik{white-space:nowrap;text-align:left;max-width:240px;overflow:hidden;text-overflow:ellipsis;color:#3d4652;font-size:12px;cursor:help}
+tr.tik{cursor:pointer}tr.tik:hover td{background:#f5f8fc}
+/* Renkli hücreler satır üzerine gelince rengini korur (beyaz yazı okunur kalsın), biraz koyulaşır */
+tr.tik:hover td.hucre-fazla{background:#a93226}tr.tik:hover td.hucre-eksik{background:#ca6f1e}tr.tik:hover td.hucre-incele{background:#6c3483}
+tr.top td{background:#1a3a6b;color:#fff;font-weight:700;position:sticky;bottom:0}
+.hucre-ok{color:#1e8449;font-weight:700}
+.hucre-fazla{background:#c0392b;color:#fff;font-weight:700}
+.hucre-eksik{background:#e67e22;color:#fff;font-weight:700}
+.hucre-incele{background:#7d3c98;color:#fff;font-weight:700}
+tr.top td.hucre-ok,tr.top td.hucre-fazla,tr.top td.hucre-eksik{color:#fff}
+.yanyana{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #dde3ec;border-radius:8px;overflow:hidden;margin:10px 0}
+.yanyana .kol{padding:12px 14px}
+.yanyana .kol:first-child{background:#f7f9fc;border-right:1px solid #dde3ec}
+.yanyana h4{margin:-12px -14px 8px;padding:8px 14px;background:#1a3a6b;color:#fff;font-size:13.5px}
+.bos{padding:26px;text-align:center;color:#7a8391}
+.modal-arka{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto}
+.modal{background:#fff;border-radius:10px;max-width:980px;width:100%;padding:18px 22px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{margin:-18px -22px 8px;padding:12px 22px;background:#1a3a6b;color:#fff;border-radius:10px 10px 0 0}
+.kapat{float:right;background:none;border:none;font-size:24px;cursor:pointer;color:#fff;position:relative;z-index:2;margin:-8px -8px 0 0}
+#yukleme{position:fixed;inset:0;background:rgba(255,255,255,.75);display:none;align-items:center;justify-content:center;z-index:60;flex-direction:column;gap:10px;font-weight:700;color:#1a3a6b;font-size:15px}
+#yukleme .kum{font-size:46px;animation:don 1.4s linear infinite}
+@keyframes don{0%{transform:rotate(0)}50%{transform:rotate(180deg)}100%{transform:rotate(180deg)}}
+.hizli{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1px solid #dde3ec;border-left:4px solid #e67e22;border-radius:8px;padding:10px 14px;margin-bottom:12px}
+.hizli label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;font-weight:700;color:#1a3a6b}
+.hizli select{padding:7px 10px;border:1px solid #c7cfdc;border-radius:6px;font-size:13px;min-width:230px}
+.hizli .btn{align-self:flex-end}
+.sutun-sec{display:inline-flex;align-items:center;gap:6px;font-size:12px;margin:0 0 6px;color:#1a3a6b;font-weight:700;cursor:pointer}
+.sutun-sec span{font-weight:400;color:#52514e}
+td.lok{max-width:210px;overflow:hidden;text-overflow:ellipsis}
+.not{font-size:12px;color:#52514e;line-height:1.55;margin-top:10px;max-width:1100px}
+@media (max-width:900px){.duzen{flex-direction:column}.sol{position:static;width:100%;flex:none;height:auto;border-right:none;border-bottom:1px solid #dde3ec}.yanyana{grid-template-columns:1fr}.ana{padding:14px}}
+.btn-kaydet{background:#e67e22;border:1px solid #d35400;color:#fff;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;box-shadow:0 3px 10px rgba(211,84,0,.45)}
+</style>
+<style>/* Başlık ve açıklama: küçük yazı, tek satır (uzun açıklama … ile kesilir, tamamı üzerine gelince) */
+.baslik{padding:5px 12px !important;min-height:0}.baslik h2{font-size:15px !important}.baslik .btn{padding:3px 10px;font-size:11.5px}
+.aciklama{font-size:11.5px !important;padding:3px 12px !important;line-height:1.45 !important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help}
+</style>
+</head>
+<body>
+<div id="yukleme"><div class="kum">⏳</div><div id="yuklemeMetin">Yükleniyor…</div></div>
+
+<div class="ust">
+  <div>
+    <h1>☀ GES MAHSUP KONTROLÜ</h1>
+    <div class="alt">GES'lerden üretilen enerjinin mahsubu ve satışı · faturaya yansıyan tutar · aylık ↔ saatlik mahsup · SC Grup</div>
+  </div>
+  <div class="bosluk"></div>
+  <div class="alt" id="ustDurum"></div>
+</div>
+
+<div class="duzen">
+  <aside class="sol">
+    <h3>Sorgulanacak konular</h3>
+    <div id="menu"></div>
+    <h3>Filtreler</h3>
+    <label class="filtre">Yıl<select id="fYil" onchange="ciz()"></select></label>
+    <label class="filtre">Ay<select id="fAy" onchange="ciz()"></select></label>
+    <label class="filtre">Firma<select id="fFirma" onchange="ciz()"></select></label>
+    <label class="filtre">Lokasyon<select id="fLok" onchange="ciz()"></select></label>
+    <label class="filtre">GES türü<select id="fTur" onchange="ciz()"><option value="">Tümü</option><option value="cati">Çatı GES (aynı ölçüm noktası)</option><option value="tarla">Tarla GES (uzaktan mahsup)</option></select></label>
+    <div class="filtre" style="padding:5px 8px"><button class="btn" style="width:100%" onclick="filtreTemizle()">✕ Filtreleri temizle</button></div>
+  </aside>
+  <main class="ana">
+    <div class="baslik"><h2 id="gBaslik"></h2><div class="bosluk"></div><span id="gArac"></span></div>
+    <div class="aciklama" id="gAciklama"></div>
+    <div class="lejant" id="lejant"></div>
+    <div id="gIcerik"></div>
+  </main>
+</div>
+
+<script>
+const API = location.origin;
+let V = null, GORUNUM = 'ozet', SIRALA = null, TABLO = [], SON_DURUM = null;
+const GECMIS = [];
+const AY_AD = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const ayEt = a => { const [y, m] = a.split('-'); return AY_AD[+m - 1] + ' ' + y; };
+const tl = v => v == null ? '—' : Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const tl0 = v => v == null ? '—' : Math.round(v).toLocaleString('tr-TR');
+const kwh = v => v == null ? '—' : Number(v).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+const b4 = v => v == null ? '—' : Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+const isaretli = v => v == null ? '—' : (v > 0 ? '+' : '') + tl(v);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const TUR_AD = { cati: 'Çatı GES', tarla: 'Tarla GES' };
+function yuklemeGoster(m) { document.getElementById('yuklemeMetin').textContent = m || 'Yükleniyor…'; document.getElementById('yukleme').style.display = 'flex'; }
+function yuklemeGizle() { document.getElementById('yukleme').style.display = 'none'; }
+
+const DURUM = {
+  yansimis: { ad: '✔ Yansımış', c: 'r-ok', h: 'hucre-ok' },
+  'yok-mahsup': { ad: '○ Yok', c: 'r-eksik', h: 'hucre-eksik' },
+  fazla: { ad: '✘ Fazla', c: 'r-fazla', h: 'hucre-fazla' },
+  yok: { ad: '＋ Ek', c: 'r-mavi', h: '' },
+};
+const KONULAR = [
+  ['ozet', '📊', 'Genel özet'],
+  ['matris', '🗓', 'Lokasyon × ay mahsup tablosu'],
+  ['ay', '📅', 'Ay bazlı mahsup'],
+  ['fatura', '🧾', 'Fatura bazlı mahsup'],
+  ['fazla', '✘', 'Fazla ödenen aylar', 'k'],
+  ['sayac', '⏱', 'Saatlik sayaç · aylık ↔ saatlik mahsup'],
+  ['ayar', '⚙', 'Tarla / çatı ayarları'],
+  ['yontem', 'ℹ', 'Nasıl hesaplandı?'],
+];
+
+function filtreli() {
+  if (!V || !V.var) return [];
+  const y = fYil.value, a = fAy.value, lk = fLok.value, tr = fTur.value, fr = fFirma.value;
+  return V.satirlar.filter(s => (!y || s.donem.startsWith(y)) && (!a || s.donem.slice(5) === a) && (!lk || s.sozlesmeNo === lk) && (!tr || s.tur === tr) && (!fr || s.firma === fr));
+}
+function sayacFiltreli() {
+  const y = fYil.value, a = fAy.value;
+  return (V.sayac || []).filter(s => (!y || s.ay.startsWith(y)) && (!a || s.ay.slice(5) === a));
+}
+function secimler() {
+  const doldur = (el, liste, etiket) => { const o = el.value; el.innerHTML = '<option value="">Tümü</option>' + liste.map(x => '<option value="' + esc(x) + '">' + esc(etiket ? etiket(x) : x) + '</option>').join(''); if (liste.includes(o)) el.value = o; };
+  doldur(fYil, [...new Set(V.satirlar.map(s => s.donem.slice(0, 4)))].sort());
+  doldur(fAy, ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], m => AY_AD[+m - 1]);
+  doldur(fFirma, [...new Set(V.tesisler.map(t => t.firma))].sort((a, b) => a.localeCompare(b, 'tr')));
+  doldur(fLok, V.tesisler.map(t => t.sozlesmeNo), no => { const t = V.tesisler.find(x => x.sozlesmeNo === no); return t.lokasyon + ' · ' + TUR_AD[t.tur]; });
+}
+function filtreTemizle() { fYil.value = ''; fAy.value = ''; fLok.value = ''; fTur.value = ''; fFirma.value = ''; ciz(); }
+function hizliBar() {
+  const donemler = [...new Set(V.satirlar.map(s => s.donem))].sort().reverse();
+  const sec = fYil.value && fAy.value ? fYil.value + '-' + fAy.value : '';
+  return '<div class="hizli"><label>📅 Ay seçin<select onchange="hizliDonem(this.value)"><option value="">Tüm aylar</option>' + donemler.map(d => '<option value="' + d + '"' + (d === sec ? ' selected' : '') + '>' + ayEt(d) + '</option>').join('') + '</select></label>'
+    + '<label>📍 Lokasyon seçin<select onchange="fLok.value=this.value;ciz()"><option value="">Tüm GES lokasyonları</option>' + V.tesisler.map(t => '<option value="' + t.sozlesmeNo + '"' + (t.sozlesmeNo === fLok.value ? ' selected' : '') + '>' + esc(t.lokasyon) + ' · ' + TUR_AD[t.tur] + '</option>').join('') + '</select></label>'
+    + ((fYil.value || fAy.value || fLok.value) ? '<button class="btn" onclick="secimKaldir()">✕ Seçimi kaldır</button>' : '') + '</div>';
+}
+function hizliDonem(v) { fYil.value = v ? v.slice(0, 4) : ''; fAy.value = v ? v.slice(5) : ''; ciz(); }
+function secimKaldir() { fYil.value = ''; fAy.value = ''; fLok.value = ''; ciz(); }
+
+const durumAnlik = () => ({ g: GORUNUM, y: fYil.value, a: fAy.value, lk: fLok.value, tr: fTur.value });
+function git(id) { if (SON_DURUM) GECMIS.push(SON_DURUM); GORUNUM = id; SIRALA = null; try { history.replaceState(null, '', '#' + id); } catch (e) { } ciz(); window.scrollTo(0, 0); }
+function geri() {
+  const d = GECMIS.pop(); if (!d) return false;
+  GORUNUM = d.g; fYil.value = d.y; fAy.value = d.a; fLok.value = d.lk; fTur.value = d.tr; SIRALA = null;
+  try { history.replaceState(null, '', '#' + d.g); } catch (e) { }
+  ciz(); window.scrollTo(0, 0); return true;
+}
+function menuCiz(F) {
+  const n = { fatura: F.length, fazla: F.filter(s => s.durum === 'fazla').length, sayac: sayacFiltreli().length, ayar: V.tesisler.length };
+  document.getElementById('menu').innerHTML = KONULAR.map(([id, ik, ad, renk]) => '<div class="konu' + (GORUNUM === id ? ' aktif' : '') + '" onclick="git(\'' + id + '\')"><span class="ik">' + ik + '</span>' + ad + (n[id] != null ? '<span class="say ' + (n[id] ? (renk || '') : 'y') + '">' + n[id].toLocaleString('tr-TR') + '</span>' : '') + '</div>').join('');
+}
+
+// Her tablonun üstünde: verinin ne zaman okunduğu / değiştiği (ekranda, yazdırmada görünür)
+// Şeritteki "ayrıntı": Referans sekmesini açar (çerçevedeyse ana sayfada)
+function referansAc() { try { if (window.top !== window && window.top.sekmeAc) return window.top.sekmeAc('referans'); } catch (e) { } if (typeof sekmeAc === 'function' && document.getElementById('sekmeReferans')) return sekmeAc('referans'); location.href = '/#referans'; }
+function veriZamani() {
+  if (!V || !V.var) return '';
+  const e = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const bugun = new Date().toDateString();
+  const kisa = iso => { if (!iso) return '—'; const d = new Date(iso); return (d.toDateString() === bugun ? '' : d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ' ') + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); };
+  const uzun = iso => iso ? new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  const dk = iso => iso ? (Date.now() - new Date(iso)) / 60000 : Infinity;
+  const isaret = (iso, sinir, hata) => sinir == null ? '' : hata ? '⚠️' : dk(iso) <= sinir ? '✅' : '⏳';
+  const adr = a => String(a || '').replace(/^https?:\/\//, '').replace(/:8010$/, '');
+  const lj = (isaret, metin) => '<span class="vz-i">' + isaret + '</span><span>' + metin + '</span>';
+  const MAHSUP_CIP = '<span title="MAHSUP: GES’in ürettiği elektrik, tüketilen elektrikten düşülür; faturaya yalnızca fark yansır. Üretim tüketimi aşarsa artan kısım ihtiyaç fazlası olarak satılır (alacak).&#10;• ÇA Çatı GES: aynı ölçüm noktası; mahsuplaşan kWh tam perakende fiyat değerinde.&#10;• TA Tarla GES: uzaktan mahsup; yalnız enerji bedeli düşer, dağıtım bedeli yine ödenir.&#10;• Aylık kural (Nisan 2026’ya kadar): ay toplamı netleşir. Saatlik kural (01.05.2026’dan): her saat ayrı netleşir.&#10;• Yansıyan mahsup = mahsupsuz tutar (kWh × emsal birim) − ödenen. Artı: indirim yansımış; eksi: mahsupsuz fiyattan bile fazla ödenmiş.&#10;• Dikkat: panel faturadan yalnız kWh ve tutarı okur; çekiş / veriş / mahsup satırları okunmadığı için sonuç yaklaşıktır." style="cursor:help;background:#e3f4ea;color:#1e7045;border:1px solid #a9dcbf;border-radius:5px;padding:0 6px;font-weight:700">☀ Mahsup = GES üretimi tüketimden düşülür ⓘ</span>';
+  const serit = satirlar => '<div class="veri-zaman"><style>'
+    + '.veri-zaman{background:#fff4e0;border:1px solid #f0c27a;border-left:4px solid #e67e22;border-radius:5px;padding:2px 8px;margin:0 0 6px;color:#5a3b00;font-size:11px;line-height:18px}'
+    + '.veri-zaman .vz-ust{display:flex;flex-wrap:wrap;gap:0 10px;align-items:center}'
+    + '.veri-zaman .vz-ust b{font-weight:700}.veri-zaman .vz-ac{margin-left:auto;color:#b35a0c;font-weight:700}.veri-zaman a.vz-ac{text-decoration:none;cursor:pointer}.veri-zaman a.vz-ac:hover{text-decoration:underline}'
+    + '.veri-zaman table.vz{border-collapse:collapse;width:auto;font-size:11px;margin:3px 0 2px}.veri-zaman .vz th{position:static;background:#f6d9a8;color:#5a3b00;padding:1px 8px;font-size:10.5px;max-width:none;cursor:default}'
+    + '.veri-zaman .vz td{padding:1px 8px;border-bottom:1px solid #f3dcb6;white-space:nowrap;text-align:left;font-size:11px;background:transparent;color:#5a3b00;line-height:16px}'
+    + '.veri-zaman .vz-cip{display:inline-block;padding:0 5px;border-radius:5px;font-size:10px;font-weight:700;line-height:14px;margin:0 2px 0 0;border:1px solid}'
+    + '.veri-zaman .vz-ok{background:#e3f4ea;color:#1e7045;border-color:#a9dcbf}.veri-zaman .vz-kapali{background:#fdecea;color:#a93226;border-color:#f1a9a0}'
+    + '.veri-zaman .vz-ic{display:flex;align-items:stretch;margin:3px 0 2px}.veri-zaman .vz-sol{flex:1 1 50%;min-width:0;padding-right:12px;border-right:2px solid #f0c27a;overflow:auto}.veri-zaman .vz-sag{flex:1 1 50%;min-width:0;padding-left:12px}'
+    + '.veri-zaman .vz-lb{font-weight:800;margin:2px 0 3px;font-size:11.5px}.veri-zaman .vz-lj{display:grid;grid-template-columns:22px 1fr;gap:1px 6px;font-size:11px;margin-bottom:5px}.veri-zaman .vz-i{text-align:center;font-weight:800}'
+    + '</style><div class="vz-ust"><span>🕒</span>'
+    + satirlar.map(r => '<span title="' + e(r.ad + ' · ' + r.siklik + ' · ' + uzun(r.iso)) + '">' + r.kisa + ' ' + isaret(r.iso, r.sinir, r.hata) + ' <b>' + (r.iso === undefined ? r.ekKisa || '' : kisa(r.iso)) + '</b>' + (r.ekKisa && r.iso !== undefined ? ' ' + r.ekKisa : '') + '</span>').join('<span>·</span>')
+    + '<span>·</span>' + MAHSUP_CIP + '<a class="vz-ac" href="#referans" onclick="referansAc();return false" title="Veri güncelleme ayrıntısı, dönem özeti, mahsup ve işaret açıklamaları Referans sekmesinde">📘 ayrıntı · Referans ▸</a></div></div>';
+  const panelSatiri = (P, bulut) => {
+    const ok = P.paneller || [], kapali = P.okunamayan || [];
+    const ek = ok.map(x => '<span class="vz-cip vz-ok">✅ ' + e(adr(x.adres)) + ' · ' + x.fatura + ' fatura</span>').join('')
+      + kapali.map(x => '<span class="vz-cip vz-kapali" title="' + e(x) + '">⛔ ' + e(adr(x.split(': ')[0])) + ' · ' + (/kapalı/.test(x) ? 'kapalı' : 'okunamadı') + '</span>').join('')
+      + (bulut && P.adres ? '<span class="vz-cip vz-ok">☁ ' + e(P.adres) + '</span>' : '');
+    const ekKisa = bulut ? '(Supabase)' : ok.length || kapali.length ? '(' + ok.length + ' panel' + (kapali.length ? ', ' + kapali.length + ' kapalı' : '') + ')' : '';
+    return { ad: 'Panel faturaları', kisa: 'Panel', siklik: bulut ? 'Supabase\'den, 30 dakikada bir (masaüstü panelleri okur)' : '30 dakikada bir · ağdaki tüm paneller', iso: P.sonBasari, sinir: 45, hata: P.hata, ek, ekKisa };
+  };
+  const P = V.panel || {}, bulut = V.bulut || /^Supabase/.test(P.adres || '');
+  const S = [{ ...panelSatiri(P, bulut), iso: P.sonBasari || V.alinma }, { ad: 'Son fatura değişikliği', kisa: 'Son değişiklik', siklik: 'yeni / değişen fatura geldikçe', iso: V.sonDegisiklik, sinir: null }];
+  if (V.ptf) S.push({ ad: 'EPİAŞ PTF', kisa: 'PTF', siklik: 'her saat', iso: V.ptf.son, sinir: 90, hata: V.ptf.hata });
+  if (V.yekdem) S.push({ ad: 'YEKDEM', kisa: 'YEKDEM', siklik: 'günde bir + her açılışta', iso: V.yekdem.son, sinir: 26 * 60, hata: V.yekdem.hata });
+  S.push({ ad: 'Bu sayfa', kisa: 'Sayfa', siklik: '5 dakikada bir kendini yeniler', iso: SAYFA_YENILEME, sinir: 7, ek: 'Görüntülenme: ' + uzun(new Date().toISOString()) });
+  return serit(S);
+}
+// 5 dakikada bir sessiz yenileme: veri değiştiyse ekran yeniden çizilir; ayar ekranında, bir kutuya yazarken
+// ya da sekme arka plandayken beklenir (girilen değerler kaybolmasın)
+let SAYFA_YENILEME = new Date().toISOString();
+setInterval(async () => {
+  try {
+    if (document.hidden || !V) return;
+    const a = document.activeElement;
+    if (['firmaEs', 'ayar'].includes(GORUNUM) || (a && /INPUT|SELECT|TEXTAREA/.test(a.tagName) && a.closest('#gIcerik'))) return;
+    const Y = await (await fetch(API + '/api/ges-mahsup')).json();
+    SAYFA_YENILEME = new Date().toISOString();
+    const imza = x => x ? [x.var, x.alinma, x.sonDegisiklik, x.yekdem && x.yekdem.son, x.ptf && x.ptf.son, (x.satirlar || []).length].join('|') : '';
+    const degisti = imza(Y) !== imza(V);
+    V = Y; if (V.var) secimler(); ustDurum();
+    if (degisti) ciz(); else { const s = document.querySelector('.veri-zaman'); if (s) s.outerHTML = veriZamani(); }
+  } catch (e) { }
+}, 5 * 60 * 1000);
+
+// Excel / mail eki için aynı bilginin düz metni
+function veriZamaniMetni() {
+  if (!V || !V.var) return '';
+  const t = iso => iso ? new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  return 'Veri güncelleme · Son panel okuması: ' + t(V.alinma) + ' · Son fatura değişikliği: ' + t(V.sonDegisiklik) + (V.yekdem && V.yekdem.son ? ' · PTF / YEKDEM: ' + t(V.yekdem.son) : '') + ' · Rapor: ' + t(new Date().toISOString());
+}
+function sayfa(baslik, aciklama, html, lej) {
+  document.getElementById('gBaslik').textContent = baslik;
+  document.getElementById('gAciklama').innerHTML = aciklama; document.getElementById('gAciklama').title = document.getElementById('gAciklama').textContent;
+  document.getElementById('gArac').innerHTML = TABLO.length ? '<button class="btn" onclick="excel()">⬇ Excel\'e aktar</button> <button class="btn" onclick="kopyala()">⧉ Kopyala → Excel\'e yapıştır</button>' : '';
+  document.getElementById('lejant').innerHTML = lej ? '<span class="rozet r-ok">✔ Mahsup / alacak faturaya yansımış</span><span class="rozet r-eksik">○ Mahsup görünmüyor (normal fiyat)</span><span class="rozet r-fazla">✘ Normal fiyattan bile fazla ödenmiş</span>' : '';
+  document.getElementById('gIcerik').innerHTML = veriZamani() + (!['yontem', 'ayar'].includes(GORUNUM) && V && V.var ? hizliBar() : '') + html;
+}
+// Ekrana sığsın diye bazı sütunlar ekranda gizlenir (Excel, mail ve yazdırmada her zaman vardır)
+const EKRAN_GIZLI = new Set(['Emsal birim (TL/kWh)']);
+function tumSutun() { try { return localStorage.getItem('elk_tum_sutun') === '1'; } catch (e) { return false; } }
+function tumSutunDegis(v) { try { localStorage.setItem('elk_tum_sutun', v ? '1' : '0'); } catch (e) { } ciz(); }
+function tabloCiz(kolonlar, satirlar, opt = {}) {
+  if (SIRALA) { const [i, yon] = SIRALA; const f = kolonlar[i][1]; satirlar = satirlar.slice().sort((a, b) => { const x = f(a), y = f(b); return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'tr')) * yon; }); }
+  TABLO = [kolonlar.map(k => k[0]), ...satirlar.map(s => kolonlar.map(k => (k[4] || k[1])(s)))];
+  if (opt.toplam) TABLO.push(opt.toplam.map(x => x == null ? '' : x.v));
+  const gor = kolonlar.map(k => tumSutun() || !EKRAN_GIZLI.has(k[0])), gizli = gor.filter(x => !x).length;
+  const ust = kolonlar.some(k => EKRAN_GIZLI.has(k[0])) ? '<label class="sutun-sec"><input type="checkbox"' + (tumSutun() ? ' checked' : '') + ' onchange="tumSutunDegis(this.checked)"> Tüm sütunları göster' + (gizli ? ' <span>(' + gizli + ' sütun ekranda gizli · Excel, mail ve yazdırmada var)</span>' : '') + '</label>' : '';
+  if (!satirlar.length) return ust + '<div class="tablo-kap"><div class="bos">Seçime uyan kayıt yok.</div></div>';
+  let h = ust + '<div class="tablo-kap"><table><tr>' + kolonlar.map((k, i) => gor[i] ? '<th onclick="sirala(' + i + ')" title="Sıralamak için tıklayın">' + k[0] + (SIRALA && SIRALA[0] === i ? (SIRALA[1] > 0 ? ' ▲' : ' ▼') : '') + '</th>' : '').join('') + '</tr>';
+  for (const s of satirlar) h += '<tr' + (opt.tik ? ' class="tik" onclick="' + opt.tik(s) + '"' : '') + '>' + kolonlar.map((k, i) => { if (!gor[i]) return ''; const v = k[1](s); const cl = k[3] ? k[3](v, s) : ''; return '<td class="' + cl + '"' + (/acik|lok/.test(cl) ? ' title="' + esc(v) + '"' : '') + '>' + (k[2] ? k[2](v, s) : esc(v)) + '</td>'; }).join('') + '</tr>';
+  if (opt.toplam) h += '<tr class="top">' + opt.toplam.map((x, i) => gor[i] ? '<td class="' + (x && x.c || '') + '">' + (x ? x.h : '') + '</td>' : '').join('') + '</tr>';
+  return h + '</table></div>';
+}
+function sirala(i) { SIRALA = SIRALA && SIRALA[0] === i ? [i, -SIRALA[1]] : [i, -1]; ciz(); }
+const mahsupSinif = v => v == null ? 'n' : 'n ' + (v > 0 ? 'hucre-ok' : v < 0 ? 'hucre-fazla' : '');
+
+function ciz() {
+  if (!V) return;
+  if (!V.var) { sayfa('Veri yok', 'Önce Fatura Kontrol sekmesinden "Veriyi yenile" ile panel verisini alın.', ''); return; }
+  const F = filtreli();
+  SON_DURUM = durumAnlik();
+  menuCiz(F);
+  TABLO = [];
+  ({ ozet, matris, ay: ayBazli, fatura: () => faturaBazli(F, false), fazla: () => faturaBazli(F, true), sayac, ayar, yontem })[GORUNUM](F);
+}
+
+// ─── Genel özetin en üstü: ay bazlı fatura ve GES mahsubu matrisi (hepsi KDV + vergiler dahil) ───────────
+// Mahsupsuz olsaydı = kWh × ayın emsal birim fiyatı + faturadaki enerji dışı kalemler (güç bedeli, trafo kaybı, güvence; PDF'ten)
+// Faturada ödenen   = faturanın ödenecek tutarı · Mahsup edilen GES bedeli = mahsupsuz − ödenen (+ firma kazancı, − ek ödeme)
+// kWh'siz ek faturalar mahsupsuz ve ödenen tarafına aynen eklenir (mahsubu etkilemez). Ay filtresi sütunu vurgular.
+function mahsupMatrisi() {
+  if (!V || !V.var) return '';
+  const y = fYil.value, lk = fLok.value, tr = fTur.value, fr = fFirma.value;
+  const L = V.satirlar.filter(s => (!y || s.donem.startsWith(y)) && (!lk || s.sozlesmeNo === lk) && (!tr || s.tur === tr) && (!fr || s.firma === fr));
+  const aylar = [...new Set(L.map(s => s.donem))].sort();
+  if (!aylar.length) return '';
+  const disi = s => s.pdf ? s.pdf.enerjiDisi || 0 : 0;
+  const M = {};
+  for (const m of [...aylar, 'T']) M[m] = { n: 0, pdf: 0, od: 0, msz: 0, dus: 0, dusVar: false };
+  for (const s of L) for (const m of [s.donem, 'T']) {
+    const a = M[m];
+    a.n++; a.od += s.odenen || 0;
+    a.msz += s.mahsupTL != null && s.brut != null ? s.brut + disi(s) : (s.odenen || 0);
+    if (s.pdf) { a.pdf++; if (s.pdf.dusulenKdvDahil) { a.dus += s.pdf.dusulenKdvDahil; a.dusVar = true; } }
+  }
+  const kol = [...aylar, 'T'], sec = fAy.value && y ? y + '-' + fAy.value : '';
+  const para = v => tl0(v), ayK = m => m === 'T' ? 'TOPLAM' : AY_AD[+m.slice(5) - 1].slice(0, 3) + ' ' + m.slice(2, 4);
+  const hc = m => ' style="' + (m === sec ? 'background:#fff1c9;' : '') + (m === 'T' ? 'font-weight:800;border-left:2px solid #1a3a6b;' : '') + '"';
+  const satir = (ad, f, ekStil) => '<tr' + (ekStil || '') + '><td class="l" style="font-weight:700;white-space:nowrap">' + ad + '</td>' + kol.map(m => '<td class="n"' + hc(m) + '>' + f(M[m], m) + '</td>').join('') + '</tr>';
+  const kutu = v => { const r = v > 0.5 ? ['#1e8449', '+'] : v < -0.5 ? ['#c0392b', ''] : ['#7f8c8d', '']; return '<span style="display:inline-block;min-width:78px;padding:2px 8px;border-radius:6px;background:' + r[0] + ';color:#fff;font-weight:800">' + r[1] + tl0(v) + '</span>'; };
+  // Kontrol: aylar toplamı = TOPLAM sütunu ve ödenen + mahsup = mahsupsuz (her sütunda)
+  const topAy = f => aylar.reduce((t, m) => t + f(M[m]), 0);
+  const kontrolOk = Math.abs(topAy(a => a.od) - M.T.od) < 0.5 && Math.abs(topAy(a => a.msz) - M.T.msz) < 0.5 && kol.every(m => Math.abs(M[m].od + (M[m].msz - M[m].od) - M[m].msz) < 0.01);
+  let h = '<div style="background:#fff;border:1px solid #dde3ec;border-top:5px solid #1e8449;border-radius:8px;padding:8px 10px;margin:0 0 12px">'
+    + '<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:6px"><b style="font-size:15px;color:#1a3a6b">📊 Ay bazlı fatura ve GES mahsubu</b><span style="font-size:12px;color:#5d6673">KDV ve vergiler dahil · ' + (lk ? esc((V.tesisler.find(t => t.sozlesmeNo === lk) || {}).lokasyon || lk) : 'tüm GES lokasyonları') + (y ? ' · ' + y : '') + '</span>'
+    + '<span style="margin-left:auto;font-size:11.5px;padding:1px 8px;border-radius:6px;' + (kontrolOk ? 'background:#e3f4ea;color:#1e7045;border:1px solid #a9dcbf">🧮 Kontrol ✔ aylar toplamı = TOPLAM · ödenen + mahsup = mahsupsuz' : 'background:#fdecea;color:#a93226;border:1px solid #f1a9a0">🧮 Kontrol ⚠ toplamlar tutmuyor') + '</span></div>'
+    + '<div class="tablo-kap" style="max-height:none"><table><tr><th style="text-align:left">Kalem (TL)</th>' + kol.map(m => '<th' + (m === sec ? ' style="background:#e67e22"' : m === 'T' ? ' style="background:#0f2748"' : '') + '>' + ayK(m) + '</th>').join('') + '</tr>'
+    + satir('Mahsupsuz olsaydı ödenecek', a => para(a.msz))
+    + satir('Faturada ödenen', a => '<b>' + para(a.od) + '</b>')
+    + satir('☀ Mahsup edilen GES bedeli · firma kazancı (+) / ek ödeme (−)', a => kutu(a.msz - a.od), ' style="background:#f3fbf6"')
+    + satir('Kazanç oranı (mahsup / mahsupsuz)', a => a.msz ? ((a.msz - a.od) / a.msz * 100).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + '%' : '—')
+    + satir('Faturada görünen düşülen satırlar (PDF)', a => a.dusVar ? '<span style="color:#1e7045;font-weight:700">' + tl0(a.dus) + '</span>' : '<span style="color:#9aa3b2">—</span>')
+    + satir('Fatura sayısı · PDF okunan', a => a.n + ' · 🧾' + a.pdf, ' style="color:#5d6673"')
+    + '</table></div>'
+    + '<div style="font-size:11.5px;color:#5d6673;line-height:1.5;margin-top:5px"><b>Mahsupsuz olsaydı</b> = kWh × ayın emsal birim fiyatı (KDV ve ETV dahil) + faturadaki enerji dışı kalemler (güç bedeli, trafo kaybı, güvence; fatura PDF’inden). <b>Mahsup edilen GES bedeli</b> = mahsupsuz − ödenen: <span style="color:#1e8449;font-weight:700">yeşil (+)</span> firmanın GES sayesinde ödemediği tutar (kazanç), <span style="color:#c0392b;font-weight:700">kırmızı (−)</span> mahsupsuz fiyattan bile fazla ödenen. <b>Düşülen satırlar</b>: faturada eksi olarak görünen kalemler (KDV dahil), kontrol içindir. İhtiyaç fazlası satış geliri bu tabloya dahil değildir.</div></div>';
+  return h;
+}
+function ozet(F) {
+  const K = F.filter(s => s.mahsupTL != null);
+  const yans = K.filter(s => s.durum === 'yansimis'), faz = K.filter(s => s.durum === 'fazla'), yok = K.filter(s => s.durum === 'yok-mahsup');
+  const top = (L, f) => L.reduce((t, s) => t + (+f(s) || 0), 0);
+  const S = sayacFiltreli(), saatlikDonem = S.filter(a => a.rejim === 'Saatlik');
+  let h = mahsupMatrisi() + '<div class="kartlar">';
+  h += '<div class="kart"><div class="e">GES lokasyonu</div><div class="d">' + V.tesisler.length + '</div><div class="a">' + V.tesisler.filter(t => t.tur === 'cati').length + ' çatı · ' + V.tesisler.filter(t => t.tur === 'tarla').length + ' tarla</div></div>';
+  h += '<div class="kart"><div class="e">Faturada ödenen (GES lokasyonları)</div><div class="d">' + tl0(top(K, s => s.odenen)) + ' TL</div><div class="a">Mahsupsuz olsaydı: ' + tl0(top(K, s => s.brut + (s.pdf ? s.pdf.enerjiDisi || 0 : 0))) + ' TL</div></div>';
+  h += '<div class="kart ok"><div class="e">✔ Faturaya yansıyan mahsup / alacak</div><div class="d">' + tl0(top(yans, s => s.mahsupTL)) + ' TL</div><div class="a">' + yans.length + ' fatura-ayında indirim görüldü</div></div>';
+  h += '<div class="kart fazla"><div class="e">✘ Normal fiyattan bile fazla ödenen</div><div class="d">' + tl0(-top(faz, s => s.mahsupTL)) + ' TL</div><div class="a">' + faz.length + ' fatura-ayında · mahsup yansımamış şüphesi</div></div>';
+  h += '<div class="kart eksik"><div class="e">○ Mahsup görünmeyen</div><div class="d">' + yok.length + '</div><div class="a">fatura-ayı normal birim fiyattan</div></div>';
+  if (saatlikDonem.length) h += '<div class="kart fazla"><div class="e">⏱ Saatlik mahsubun ek maliyeti (sayaç)</div><div class="d">' + tl0(top(saatlikDonem, a => a.rejimEtkisiTL)) + ' TL</div><div class="a">' + saatlikDonem.map(a => AY_AD[+a.ay.slice(5) - 1]).join(', ') + ' · aylık mahsuba göre</div></div>';
+  h += '</div>';
+  // Tesis bazlı: 2026 Nisan öncesi / sonrası karşılaştırma
+  const b = [];
+  for (const t of V.tesisler) {
+    const L = K.filter(s => s.sozlesmeNo === t.sozlesmeNo);
+    if (!L.length) continue;
+    const once = L.filter(s => s.donem < '2026-04'), sonra = L.filter(s => s.donem >= '2026-04');
+    const ort = X => X.length ? top(X, s => s.mahsupTL) / X.length : null;
+    const o1 = ort(once), o2 = ort(sonra);
+    const kotu = o2 != null && o2 < 0 && (o1 == null || o1 > o2);
+    b.push([kotu ? 'k' : 'y', '<b>' + esc(t.lokasyon) + '</b> (' + TUR_AD[t.tur] + '): Mart 2026\'ya kadar aylık ortalama ' + (o1 == null ? '—' : isaretli(Math.round(o1)) + ' TL') + ' mahsup; Nisan 2026\'dan itibaren ' + (o2 == null ? '—' : isaretli(Math.round(o2)) + ' TL') + '. ' + (kotu ? (o1 != null && o1 < 0 ? '2026 başından beri mahsup indirimi <b>hiç görünmüyor</b>, Nisan 2026\'dan itibaren fazla ödeme <b>büyümüş</b>.' : 'Nisan 2026\'dan beri mahsup indirimi <b>kaybolmuş</b>, normal fiyatın üstünde ödeniyor.') + ' Fatura PDF\'lerinde mahsup (veriş) satırı kontrol edilmeli ve EDAŞ / tedarikçiye sorulmalı.' : 'Mahsup faturaya düzenli yansıyor.') + ' <a href="#" onclick="fLok.value=\'' + t.sozlesmeNo + '\';git(\'fatura\');return false">Aylara bak →</a>']);
+  }
+  if (saatlikDonem.length) b.push(['t', '<b>Saatlik mahsup etkisi:</b> Panelin GES sayacında Mayıs 2026\'dan itibaren saatlik mahsup, aylık mahsuba göre mahsuplaşan enerjiyi yaklaşık yarıya düşürüyor. Bu tek sayaçta aylık ek maliyet ' + saatlikDonem.map(a => AY_AD[+a.ay.slice(5) - 1] + ' ' + tl0(a.rejimEtkisiTL) + ' TL').join(', ') + '. Faturalardaki mahsup kaybının bir kısmı bu kural değişikliğinden kaynaklanabilir. Kalan fark hata şüphesidir. <a href="#" onclick="git(\'sayac\');return false">Sayaç tablosu →</a>']);
+  TABLO = [['Gösterge', 'Tutar (TL)', 'Adet'], ['Faturada ödenen', top(K, s => s.odenen), K.length], ['Mahsupsuz brüt', top(K, s => s.brut), K.length], ['Yansıyan mahsup / alacak', top(yans, s => s.mahsupTL), yans.length], ['Normal fiyattan fazla ödenen', -top(faz, s => s.mahsupTL), faz.length], ['Mahsup görünmeyen', null, yok.length], ['Saatlik mahsubun ek maliyeti (sayaç)', top(saatlikDonem, a => a.rejimEtkisiTL), saatlikDonem.length]];
+  sayfa('Genel özet', 'GES\'li lokasyonların faturalarında mahsup ve ihtiyaç fazlası alacağının ne kadar yansıdığı. "Mahsupsuz brüt" aynı kWh\'nin o ay diğer dükkânlara uygulanan birim fiyatla tutarıdır. Aradaki fark faturaya yansıyan mahsuptur.', h + b.map(([c, t]) => '<div class="bulgu ' + c + '">' + t + '</div>').join(''), false);
+}
+
+function matris(F) {
+  const aylar = [...new Set(F.map(s => s.donem))].sort();
+  const T = V.tesisler.filter(t => F.some(s => s.sozlesmeNo === t.sozlesmeNo));
+  const hucre = (no, ay) => { const L = F.filter(s => s.sozlesmeNo === no && s.donem === ay && s.mahsupTL != null); return L.length ? L.reduce((t, s) => t + s.mahsupTL, 0) : null; };
+  let h = '<div class="tablo-kap"><table><tr><th>Lokasyon</th><th>Tür</th>' + aylar.map(a => '<th>' + AY_AD[+a.slice(5) - 1].slice(0, 3) + ' ' + a.slice(2, 4) + '</th>').join('') + '<th>TOPLAM</th></tr>';
+  TABLO = [['Lokasyon', 'Tür', ...aylar.map(ayEt), 'TOPLAM']];
+  const ayTop = aylar.map(() => 0);
+  for (const t of T) {
+    let top = 0; const deg = aylar.map((a, i) => { const v = hucre(t.sozlesmeNo, a); if (v != null) { top += v; ayTop[i] += v; } return v; });
+    h += '<tr><td class="l tik" style="cursor:pointer;font-weight:700" onclick="fLok.value=\'' + t.sozlesmeNo + '\';git(\'fatura\')">' + esc(t.lokasyon) + '</td><td>' + TUR_AD[t.tur] + '</td>' + deg.map((v, i) => '<td class="' + mahsupSinif(v) + '" style="cursor:pointer" onclick="fLok.value=\'' + t.sozlesmeNo + '\';hizliDonemGit(\'' + aylar[i] + '\')">' + (v == null ? '—' : isaretli(Math.round(v))) + '</td>').join('') + '<td class="' + mahsupSinif(top) + '">' + isaretli(Math.round(top)) + '</td></tr>';
+    TABLO.push([t.lokasyon, TUR_AD[t.tur], ...deg.map(v => v == null ? null : Math.round(v * 100) / 100), Math.round(top * 100) / 100]);
+  }
+  const gt = ayTop.reduce((a, b) => a + b, 0);
+  h += '<tr class="top"><td class="l">TOPLAM</td><td></td>' + ayTop.map(v => '<td class="n">' + isaretli(Math.round(v)) + '</td>').join('') + '<td class="n">' + isaretli(Math.round(gt)) + '</td></tr></table></div>';
+  TABLO.push(['TOPLAM', '', ...ayTop.map(v => Math.round(v * 100) / 100), Math.round(gt * 100) / 100]);
+  h += '<div class="not">Hücre = o ay faturaya yansıyan mahsup / alacak tutarı (TL). <b style="color:#1e8449">Artı</b>: indirim yansımış. <b style="color:#c0392b">Eksi (kırmızı)</b>: normal fiyattan bile fazla ödenmiş. Hücreye tıklayınca o ayın faturası açılır.</div>';
+  sayfa('Lokasyon × ay mahsup tablosu', 'Her GES lokasyonu için ay ay faturaya yansıyan mahsup tutarı. Kırmızı hücreler mahsubun yansımadığı ya da ters uygulandığı şüpheli aylardır.', h, true);
+}
+function hizliDonemGit(ay) { if (SON_DURUM) GECMIS.push(SON_DURUM); fYil.value = ay.slice(0, 4); fAy.value = ay.slice(5); GORUNUM = 'fatura'; SIRALA = null; ciz(); }
+
+// ✔ ○ ✘ sütunlarının anlamı + seçili dönemin sayıları ve tek cümlelik yorum (tablonun hemen üstünde, vurgulu)
+// Tablo üstü açıklama kutuları: "✕ Kapat" ile gizlenir, tercih hatırlanır; yerine küçük "ℹ️ Açıklamayı göster" kalır
+function kapatilabilir(k, html) {
+  let kapali = false; try { kapali = localStorage.getItem('kapali_' + k) === '1'; } catch (e) { }
+  if (kapali) return '<div style="margin:0 0 6px"><a href="#" onclick="try{localStorage.removeItem(\'kapali_' + k + '\')}catch(e){};ciz();return false" style="font-size:11.5px;color:#b35a0c;font-weight:600">ℹ️ Açıklamayı göster</a></div>';
+  return '<div style="position:relative"><button type="button" title="Bu açıklamayı gizle" onclick="try{localStorage.setItem(\'kapali_' + k + '\',\'1\')}catch(e){};ciz()" style="position:absolute;top:6px;right:8px;z-index:1;background:#e67e22;color:#fff;border:1px solid #d35400;border-radius:5px;padding:2px 10px;font-size:11.5px;font-weight:700;cursor:pointer">✕ Kapat</button>' + html + '</div>';
+}
+function mahsupAciklamasi(F) { return kapatilabilir('mahsup', mahsupAciklamasiIc(F)); }
+function mahsupAciklamasiIc(F) {
+  const y = F.filter(s => s.durum === 'yansimis').length, o = F.filter(s => s.durum === 'yok-mahsup').length, f = F.filter(s => s.durum === 'fazla').length;
+  const m = F.reduce((t, s) => t + (s.mahsupTL != null ? s.mahsupTL : 0), 0);
+  const donem = fAy.value && fYil.value ? AY_AD[+fAy.value - 1] + ' ' + fYil.value : fYil.value ? fYil.value + ' yılı' : 'Seçili dönem';
+  const satir = (simge, sinif, ad, n) => '<tr><td style="text-align:center"><span class="rozet ' + sinif + '">' + simge + '</span></td><td style="text-align:left">' + ad + '</td><td style="text-align:right"><b>' + n + ' fatura</b></td></tr>';
+  let yorum = '<b>' + donem + '</b>: ' + F.length + ' GES faturasından <b>' + y + '</b> tanesinde mahsup doğru yansımış, <b>' + o + '</b> tanesinde mahsup görünmüyor, <b>' + f + '</b> tanesinde mahsupsuz fiyattan bile fazla ödenmiş.';
+  if (m < 0) yorum += ' <b style="color:#a93226">Yansıyan mahsup ' + isaretli(m) + ' TL</b>: eksi olması, bu faturalarda mahsup yerine fazla ödeme olduğunu gösterir.';
+  else if (m > 0) yorum += ' Yansıyan mahsup <b style="color:#1e7045">' + isaretli(m) + ' TL</b>.';
+  if (f) yorum += ' <button class="btn" style="margin-left:4px;padding:2px 10px" onclick="git(\'fazla\')">✘ Fazla ödenen faturaları göster</button>';
+  return '<div style="background:#fff4e0;border:1px solid #f0c27a;border-left:6px solid #e67e22;border-radius:7px;padding:8px 12px;margin:0 0 10px;color:#5a3b00;font-size:12.5px">'
+    + '<div style="font-weight:800;font-size:13.5px;margin-bottom:4px">ℹ️ ✔ ○ ✘ sütunları ne anlama geliyor?</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px 18px;align-items:flex-start"><table style="border-collapse:collapse;width:auto;font-size:12px;background:#fff;border-radius:6px"><tr><th style="position:static;background:#f6d9a8;color:#5a3b00;padding:3px 10px">Sütun</th><th style="position:static;background:#f6d9a8;color:#5a3b00;padding:3px 10px;max-width:none">Anlamı</th><th style="position:static;background:#f6d9a8;color:#5a3b00;padding:3px 10px">' + donem + '</th></tr>'
+    + satir('✔', 'r-ok', 'Mahsup / alacak faturaya yansımış (doğru)', y)
+    + satir('○', 'r-eksik', 'Mahsup görünmüyor, normal fiyattan faturalanmış', o)
+    + satir('✘', 'r-fazla', 'Normal (mahsupsuz) fiyattan bile fazla ödenmiş', f)
+    + '</table><div style="flex:1;min-width:260px;line-height:1.55">' + yorum + '</div></div></div>';
+}
+function ayBazli(F) {
+  const A = {};
+  for (const s of F) {
+    const a = (A[s.donem] = A[s.donem] || { ay: s.donem, rejim: s.rejim, adet: 0, kwh: 0, odenen: 0, brut: 0, mahsup: 0, y: 0, o: 0, f: 0 });
+    a.adet++; a.kwh += s.kwh || 0; a.odenen += s.odenen || 0;
+    if (s.mahsupTL != null) { a.brut += s.brut; a.mahsup += s.mahsupTL; }
+    if (s.durum === 'yansimis') a.y++; else if (s.durum === 'yok-mahsup') a.o++; else if (s.durum === 'fazla') a.f++;
+  }
+  const say = Object.fromEntries((V.sayac || []).map(a => [a.ay, a]));
+  const L = Object.values(A).sort((x, y) => x.ay.localeCompare(y.ay)).map(a => ({ ...a, birim: (V.birim[a.ay] || {}).cati, etki: say[a.ay] ? say[a.ay].rejimEtkisiTL : null }));
+  const kol = [
+    ['Ay', a => a.ay, v => '<b>' + ayEt(v) + '</b>', () => 'l', a => ayEt(a.ay)],
+    ['Mahsup kuralı', a => a.rejim],
+    ['Fatura', a => a.adet],
+    ['Tüketim (kWh)', a => a.kwh, v => kwh(v), () => 'n'],
+    ['Faturada ödenen (TL)', a => a.odenen, v => tl(v), () => 'n'],
+    ['Emsal birim (TL/kWh)', a => a.birim, v => b4(v), () => 'n'],
+    ['Mahsupsuz brüt (TL)', a => a.brut, v => tl(v), () => 'n'],
+    ['Yansıyan mahsup (TL)', a => a.mahsup, v => isaretli(v), mahsupSinif],
+    ['✔ Yansımış', a => a.y, v => v ? '<span title="' + v + ' fatura: mahsup / alacak faturaya yansımış" style="cursor:help">' + v + '</span>' : v, v => v ? 'hucre-ok' : ''], ['○ Görünmüyor', a => a.o, v => v ? '<span title="' + v + ' fatura: mahsup görünmüyor, normal fiyattan faturalanmış" style="cursor:help">' + v + '</span>' : v, v => v ? 'hucre-eksik' : ''], ['✘ Fazla ödenmiş', a => a.f, v => v ? '<span title="' + v + ' fatura: normal fiyattan bile fazla ödenmiş" style="cursor:help">' + v + '</span>' : v, v => v ? 'hucre-fazla' : ''],
+    ['Sayaçta saatlik mahsubun ek maliyeti (TL)', a => a.etki, v => v == null ? '—' : isaretli(v), v => v > 0 ? 'n hucre-fazla' : 'n'],
+  ];
+  const t = L.reduce((x, a) => { x.adet += a.adet; x.kwh += a.kwh; x.o += a.odenen; x.b += a.brut; x.m += a.mahsup; return x; }, { adet: 0, kwh: 0, o: 0, b: 0, m: 0 });
+  sayfa('Ay bazlı mahsup', 'Seçili GES lokasyonlarının her ay faturada ödenen toplamı, mahsupsuz olsaydı ödenecek tutar ve aradaki mahsup. Mayıs 2026\'dan itibaren saatlik mahsup kuralı geçerlidir.',
+    mahsupAciklamasi(F) + tabloCiz(kol, L, { tik: a => 'hizliDonemGit(\'' + a.ay + '\')', toplam: [{ h: 'TOPLAM', v: 'TOPLAM', c: 'l' }, null, { h: t.adet, v: t.adet }, { h: kwh(t.kwh), v: t.kwh, c: 'n' }, { h: tl(t.o), v: t.o, c: 'n' }, null, { h: tl(t.b), v: t.b, c: 'n' }, { h: isaretli(t.m), v: t.m, c: 'n' }, null, null, null, null] }), true);
+}
+
+function faturaBazli(F, sadeceFazla) {
+  let L = sadeceFazla ? F.filter(s => s.durum === 'fazla') : F;
+  if (!SIRALA && sadeceFazla) SIRALA = [10, 1];
+  const kol = [
+    ['Durum', s => (DURUM[s.durum] || DURUM.yok).ad, (v, s) => '<span class="rozet ' + (DURUM[s.durum] || DURUM.yok).c + '">' + v + '</span>'],
+    ['Dönem', s => s.donem, v => ayEt(v), null, s => ayEt(s.donem)],
+    ['Lokasyon', s => s.lokasyon, null, () => 'l lok'],
+    ['Firma', s => s.firma, null, () => 'l'],
+    ['Tür', s => TUR_AD[s.tur]],
+    ['Mahsup kuralı', s => s.rejim],
+    ['Fatura no', s => s.faturaNo, v => faturaNoBag(v)],
+    ['Tüketim (kWh)', s => s.kwh, v => kwh(v), () => 'n'],
+    ['Faturada ödenen (TL)', s => s.odenen, v => tl(v), () => 'n'],
+    ['Mahsupsuz brüt (TL)', s => s.brut, v => tl(v), () => 'n'],
+    ['Yansıyan mahsup (TL)', s => s.mahsupTL, v => isaretli(v), mahsupSinif],
+    ['Ödenen birim (TL/kWh)', s => s.efektifBirim, v => b4(v), (v, s) => 'n' + (s.durum === 'fazla' ? ' hucre-fazla' : '')],
+    ['Emsal birim (TL/kWh)', s => s.emsalBirim, v => b4(v), () => 'n'],
+    ['Açıklama', s => s.aciklama || '', null, () => 'acik'],
+  ];
+  const t = L.reduce((x, s) => { x.k += s.kwh || 0; x.o += s.odenen || 0; if (s.mahsupTL != null) { x.b += s.brut; x.m += s.mahsupTL; } return x; }, { k: 0, o: 0, b: 0, m: 0 });
+  sayfa(sadeceFazla ? 'Fazla ödenen aylar' : 'Fatura bazlı mahsup', sadeceFazla ? 'Normal birim fiyatla hesaplanandan bile fazla ödenen GES faturaları, en büyük farktan başlayarak. Bu aylarda mahsup faturaya yansımamış ya da ters uygulanmış olabilir. Fatura PDF\'indeki "veriş / ihtiyaç fazlası / mahsup" satırlarına bakılmalı.' : 'Her GES faturası: ödenen tutar, aynı kWh\'nin mahsupsuz tutarı ve aradaki mahsup yan yana.',
+    (sadeceFazla ? '' : mahsupAciklamasi(F)) + tabloCiz(kol, L, { toplam: [{ h: 'TOPLAM', v: 'TOPLAM' }, null, { h: L.length + ' fatura', v: L.length + ' fatura', c: 'l' }, null, null, null, null, { h: kwh(t.k), v: t.k, c: 'n' }, { h: tl(t.o), v: t.o, c: 'n' }, { h: tl(t.b), v: t.b, c: 'n' }, { h: isaretli(t.m), v: t.m, c: 'n' }, null, null, null] }), true);
+}
+
+function sayacTurDegis(tur, acik) {
+  let t; try { t = JSON.parse(localStorage.getItem('ges_sayac_turler') || 'null'); } catch (e) { }
+  t = Array.isArray(t) && t.length ? t : ['cati', 'tarla'];
+  t = acik ? [...new Set([...t, tur])] : t.filter(x => x !== tur);
+  if (!t.length) t = [tur === 'cati' ? 'tarla' : 'cati'];
+  try { localStorage.setItem('ges_sayac_turler', JSON.stringify(t)); } catch (e) { }
+  ciz();
+}
+function sayac() {
+  const S = sayacFiltreli();
+  // Çatı (ÇA) ve tarla (TA) satırları birlikte; üstteki küçük seçimle biri gizlenebilir (varsayılan: ikisi de)
+  const turler = (() => { try { const t = JSON.parse(localStorage.getItem('ges_sayac_turler') || 'null'); return Array.isArray(t) && t.length ? t : ['cati', 'tarla']; } catch (e) { return ['cati', 'tarla']; } })();
+  // Tarla GES'te mahsuplaşan kWh için dağıtım bedeli yine ödenir: net maliyete mahsup × (çatı birimi − tarla birimi) eklenir
+  const R = [];
+  for (const a of S) for (const tur of ['cati', 'tarla']) {
+    if (!turler.includes(tur)) continue;
+    const dag = tur === 'tarla' && a.birimCati != null && a.birimTarla != null ? a.birimCati - a.birimTarla : 0;
+    const aylikNet = a.aylikNetTL == null ? null : a.aylikNetTL + (a.aylikMahsup || 0) * dag, saatlikNet = a.saatlikNetTL == null ? null : a.saatlikNetTL + (a.saatlikMahsup || 0) * dag;
+    R.push({ ...a, tur, mahsupAylikTL: tur === 'cati' ? a.mahsupDegeriCatiAylik : a.mahsupDegeriTarlaAylik, mahsupSaatlikTL: tur === 'cati' ? a.mahsupDegeriCatiSaatlik : a.mahsupDegeriTarlaSaatlik, aylikNet, saatlikNet, ek: aylikNet == null || saatlikNet == null ? null : saatlikNet - aylikNet });
+  }
+  const IKON = { cati: '<span class="tur-ik tur-ca" title="Çatı GES · aynı ölçüm noktası · mahsup = tam perakende fiyat">ÇA</span>', tarla: '<span class="tur-ik tur-ta" title="Tarla GES · uzaktan mahsup · mahsup = enerji bedeli (dağıtım hariç)">TA</span>' };
+  const kol = [
+    ['Tür', a => a.tur === 'cati' ? 'Çatı' : 'Tarla', (v, a) => IKON[a.tur]],
+    ['Ay', a => a.ay, v => '<b>' + ayEt(v) + '</b>', () => 'l', a => ayEt(a.ay)],
+    ['Geçerli kural', a => a.rejim, (v, a) => '<b>' + v + '</b>'],
+    ['Üretim (kWh)', a => a.uretim, v => kwh(v), () => 'n'],
+    ['Tüketim (kWh)', a => a.tuketim, v => kwh(v), () => 'n'],
+    ['Aylık · mahsup (kWh)', a => a.aylikMahsup, v => kwh(v), (v, a) => 'n' + (a.rejim === 'Aylık' ? ' hucre-ok' : '')],
+    ['Saatlik · mahsup (kWh)', a => a.saatlikMahsup, v => kwh(v), (v, a) => 'n' + (a.rejim === 'Saatlik' ? ' hucre-ok' : '')],
+    ['Aylık · faturalanacak (kWh)', a => a.aylikFaturalanacak, v => kwh(v), () => 'n'],
+    ['Saatlik · faturalanacak (kWh)', a => a.saatlikFaturalanacak, v => kwh(v), () => 'n'],
+    ['Aylık · ihtiyaç fazlası (kWh)', a => a.aylikFazla, v => kwh(v), () => 'n'],
+    ['Saatlik · ihtiyaç fazlası (kWh)', a => a.saatlikFazla, v => kwh(v), () => 'n'],
+    ['Mahsup değeri · aylık (TL)', a => a.mahsupAylikTL, v => tl0(v), () => 'n'],
+    ['Mahsup değeri · saatlik (TL)', a => a.mahsupSaatlikTL, v => tl0(v), () => 'n'],
+    ['Fazla satış · aylık (TL)', a => a.fazlaSatisAylik, v => tl0(v), () => 'n'],
+    ['Fazla satış · saatlik (TL)', a => a.fazlaSatisSaatlik, v => tl0(v), () => 'n'],
+    ['Net maliyet · aylık (TL)', a => a.aylikNet, v => tl0(v), () => 'n'],
+    ['Net maliyet · saatlik (TL)', a => a.saatlikNet, v => tl0(v), () => 'n'],
+    ['Saatlik mahsubun ek maliyeti (TL)', a => a.ek, v => isaretli(v), v => v > 0 ? 'n hucre-fazla' : 'n hucre-ok'],
+  ];
+  const cip = (tur, ad) => '<label class="tur-sec' + (turler.includes(tur) ? ' acik' : '') + '"><input type="checkbox"' + (turler.includes(tur) ? ' checked' : '') + ' onchange="sayacTurDegis(\'' + tur + '\', this.checked)">' + IKON[tur] + ' ' + ad + '</label>';
+  const secim = '<style>.tur-ik{display:inline-block;min-width:22px;padding:0 4px;border-radius:5px;font-size:10px;font-weight:800;line-height:16px;text-align:center;color:#fff;letter-spacing:.3px}.tur-ca{background:#d68910}.tur-ta{background:#1e8449}'
+    + '.tur-sec{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;margin-right:6px;border:1px solid #c7cfdc;border-radius:12px;font-size:11.5px;font-weight:600;cursor:pointer;background:#fff;color:#5d6673}.tur-sec.acik{border-color:#1a3a6b;color:#1a3a6b}.tur-sec input{margin:0}</style>'
+    + '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:0 0 6px;font-size:11.5px;color:#1a3a6b"><b style="margin-right:4px">☀ GES türü:</b>' + cip('cati', 'Çatı · mahsup = tam perakende fiyat') + cip('tarla', 'Tarla · mahsup = enerji bedeli (dağıtım hariç)') + '</div>';
+  const html = secim + tabloCiz(kol, R)
+    + kapatilabilir('ekmaliyet', '<div style="background:#fff4e0;border:1px solid #f0c27a;border-left:6px solid #e67e22;border-radius:7px;padding:6px 12px;margin:8px 0 4px;color:#5a3b00;font-size:12px;line-height:1.55">'
+    + '<b>⏱ Saatlik mahsubun ek maliyeti</b> = <b>Net maliyet · saatlik − Net maliyet · aylık</b>. Aynı sayaç verisi saatlik mahsup kuralıyla, aylık kurala göre ne kadar <b>daha pahalıya</b> geliyor onu gösterir. '
+    + '<b style="color:#a93226">Kırmızı (+)</b>: saatlik kural daha pahalı. Gündüz fazla üretim geceki tüketimi kapatamaz; fazla üretim düşük fiyattan satılır, gece tüketimi tam fiyattan faturalanır. '
+    + 'Saatlik kural 01.05.2026’dan itibaren geçerlidir; önceki aylardaki değer bilgi amaçlıdır: “saatlik kural o ay uygulansaydı bu kadar ek maliyet olurdu”.</div>')
+    + '<div class="not">Kaynak: Elektrik Fatura Paneli\'nin GES klasöründeki saatlik sayaç verisi (üretim = şebekeye veriş, tüketim = şebekeden çekiş). <b>Aylık mahsup</b>: ay boyunca toplam üretim ile toplam tüketim netleşir. <b>Saatlik mahsup</b> (01.05.2026\'dan itibaren, RG 33212): her saat kendi içinde netleşir. Gündüz fazla üretim, gece tüketimini kapatamaz ve fazla olarak satılır. Geçerli kuralın mahsup sütunu yeşil gösterilir. Net maliyet = faturalanacak kWh × emsal birim − ihtiyaç fazlası × satış birimi (KDV dahil). <b>TA</b> (tarla) satırlarında mahsuplaşan kWh için dağıtım bedeli yine ödendiğinden net maliyete eklenir; <b>ÇA</b> (çatı) satırlarında mahsup tam perakende fiyat değerindedir. Bu sayaç panelde bir sözleşmeye bağlı değil. Fatura eşleştirmesi için sözleşme numarası gerekir.</div>';
+  sayfa('Saatlik sayaç · aylık ↔ saatlik mahsup', 'Aynı sayaç verisiyle iki kural yan yana: mahsup edilen kWh, faturalanacak kWh, ihtiyaç fazlası ve TL karşılıkları. Son sütun, saatlik kuralın aylık kurala göre ek maliyetidir.', html, false);
+}
+
+function ayar() {
+  const satir = t => '<tr><td class="l"><b>' + esc(t.lokasyon) + '</b></td><td>' + t.sozlesmeNo + '</td><td>' + esc(t.grup) + '</td><td><select data-no="' + t.sozlesmeNo + '" class="turSec" style="padding:6px 8px;border-radius:5px;border:1px solid #c7cfdc"><option value="cati"' + (t.tur === 'cati' ? ' selected' : '') + '>Çatı GES (aynı ölçüm noktası)</option><option value="tarla"' + (t.tur === 'tarla' ? ' selected' : '') + '>Tarla GES (uzaktan mahsup)</option></select></td><td>' + (t.turVarsayilan ? '<span class="rozet r-eksik" title="Uygulamanın yorumu ile uygulanıyor; değiştirip kaydedebilirsiniz">Otomatik yorum · düzeltilebilir</span>' : '<span class="rozet r-ok">Sizin seçiminiz</span>') + '</td><td class="acik">' + esc(t.turVarsayilan ? t.neden : 'Sizin kaydettiğiniz tür kullanılıyor.') + '</td><td>' + ((!t.turVarsayilan ? '<button class="btn" onclick="otomatigeDondur(\'' + t.sozlesmeNo + '\')">Otomatiğe döndür</button> ' : '') + ((V.ayar.ekSozlesmeler || []).includes(t.sozlesmeNo) ? '<button class="btn" onclick="ekCikar(\'' + t.sozlesmeNo + '\')">Listeden çıkar</button>' : '')) + '</td></tr>';
+  const ekler = V.tumLokasyonlar.filter(l => !V.tesisler.some(t => t.sozlesmeNo === l.no));
+  const html = '<div class="tablo-kap" style="max-height:none"><table><tr><th>Lokasyon</th><th>Sözleşme no</th><th>Panel grubu</th><th>GES türü</th><th>Durum</th><th>Gerekçe</th><th></th></tr>' + V.tesisler.map(satir).join('') + '</table></div>'
+    + '<div class="hizli" style="margin-top:12px"><label>➕ GES\'li başka bir lokasyon ekle<select id="ekSec"><option value="">Seçin…</option>' + ekler.map(l => '<option value="' + l.no + '">' + esc(l.ad) + ' · ' + l.no + '</option>').join('') + '</select></label><button class="btn" onclick="ekEkle()">Ekle</button><span class="bosluk" style="flex:1"></span><button class="btn-kaydet" onclick="ayarKaydet()">💾 Türleri kaydet</button></div>'
+    + '<div class="not"><b>Neden önemli?</b> Çatı GES\'te mahsup edilen her kWh, o kWh için ödenecek tam perakende fiyat (enerji + dağıtım + vergiler) kadar tasarruf sağlar. Tarla GES\'te üretim başka bir noktada olduğundan tüketim noktasında dağıtım bedeli yine ödenir. Mahsup edilen kWh yalnızca enerji bedeli kadar değerlidir. İhtiyaç fazlası satış fiyatı ikisinde de aynıdır: tek zamanlı aktif enerji bedeli − LÜ-2 veriş bedeli. "Otomatik yorum" yazan türler uygulamanın yorumuyla hesaplara şu an uygulanıyor; gerekçesi yanında yazılı. İncelediğinizde farklıysa türü değiştirip "Türleri kaydet"e basmanız yeterli, tüm tablolar hemen yeniden hesaplanır. Kaydettiğiniz bir türü yeniden otomatiğe döndürmek için "Otomatiğe döndür" düğmesini kullanın.</div>';
+  sayfa('Tarla / çatı ayarları', 'Her GES lokasyonunun türünü belirleyin. Adında GES geçmeyen ama GES\'i olan bir tüketim noktası varsa listeye ekleyin.', html, false);
+}
+async function ayarGonder(b) {
+  yuklemeGoster('Kaydediliyor…');
+  try { V = await (await fetch(API + '/api/ges-mahsup/ayar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) })).json(); secimler(); ciz(); }
+  catch (e) { alert('Kaydedilemedi: ' + e.message); } finally { yuklemeGizle(); }
+}
+function otomatigeDondur(no) { const tur = {}; tur[no] = ''; ayarGonder({ tur }); }
+function ayarKaydet() { const tur = {}; document.querySelectorAll('.turSec').forEach(s => tur[s.dataset.no] = s.value); ayarGonder({ tur }); }
+function ekEkle() { const no = document.getElementById('ekSec').value; if (!no) return; ayarGonder({ ekSozlesmeler: [...(V.ayar.ekSozlesmeler || []), no] }); }
+function ekCikar(no) { ayarGonder({ ekSozlesmeler: (V.ayar.ekSozlesmeler || []).filter(x => x !== no) }); }
+
+function yontem() {
+  const b = Object.entries(V.birim).sort().map(([ay, x]) => '<tr><td class="l">' + ayEt(ay) + '</td><td class="n">' + b4(x.cati) + '</td><td class="n">' + b4(x.tarla) + '</td><td class="n">' + b4(x.dagitim) + '</td><td class="n">' + b4(x.fazla) + '</td><td>' + (x.tarife || '').split('-').reverse().join('.') + '</td><td>' + x.ornek + '</td></tr>').join('');
+  TABLO = [];
+  const html = `
+  <div class="bulgu"><b>1 · Faturaya yansıyan mahsup.</b> Panel GES'li lokasyonların faturalarında sadece kWh ve ödenen tutarı veriyor. Aynı kWh, o ay diğer dükkânlara uygulanan <b>emsal birim fiyatla</b> çarpılınca "mahsupsuz brüt" tutar bulunur. Bu fiyat, aynı ayın ikili anlaşmalı ticarethane faturalarının ortancasıdır ve vergileri içerir. Brüt − ödenen = faturaya yansıyan mahsup / ihtiyaç fazlası alacağıdır.</div>
+  <div class="bulgu"><b>2 · Değerlendirme.</b> Fark brütün %3'ünden büyük ve artıysa <span class="rozet r-ok">✔ Mahsup yansımış</span>, ±%3 içindeyse <span class="rozet r-eksik">○ Mahsup görünmüyor</span>, eksiyse <span class="rozet r-fazla">✘ Fazla ödenmiş</span>. Fazla ödenmiş aylarda ihtiyaç fazlası tüketim gibi faturalanmış, mahsup hiç yapılmamış ya da faturaya önceki dönem farkı eklenmiş olabilir. Kesin sebep fatura PDF'indeki veriş ve mahsup satırlarındadır.</div>
+  <div class="bulgu"><b>3 · Aylık ↔ saatlik mahsup.</b> 01.05.2026'dan itibaren (RG 02.04.2026 / 33212, mesken hariç) mahsup her saat için ayrı yapılır. Saatlik sayaç verisiyle iki kural da hesaplanır ve farkı TL olarak gösterilir.</div>
+  <div class="bulgu"><b>4 · Tarla / çatı.</b> Çatı GES'te mahsup değeri = tam perakende birim. Tarla GES'te = birim − dağıtım × 1,2 (dağıtım tüketim noktasında ödenmeye devam eder). İhtiyaç fazlası satış birimi = tek zamanlı aktif enerji bedeli − LÜ-2 (vergiler hariç, KDV ayrıca).</div>
+  <h3 style="color:#fff;background:#1a3a6b;margin:16px 0 0;padding:8px 12px;font-size:14px;border-radius:6px 6px 0 0">Kullanılan aylık birimler (TL/kWh)</h3>
+  <div class="tablo-kap" style="max-height:none"><table><tr><th>Ay</th><th>Emsal birim · çatı (vergili)</th><th>Tarla (dağıtım hariç)</th><th>Dağıtım (vergisiz)</th><th>İhtiyaç fazlası satış (vergisiz)</th><th>Tarife tablosu</th><th>Emsal fatura sayısı</th></tr>${b}</table></div>`;
+  sayfa('Nasıl hesaplandı?', 'GES mahsup kontrolünün yöntemi ve kullanılan birim fiyatlar.', html, false);
+}
+
+async function excel() {
+  const ad = 'GES Mahsup · ' + (KONULAR.find(k => k[0] === GORUNUM) || [0, 0, ''])[2];
+  try {
+    yuklemeGoster('Excel hazırlanıyor…');
+    const r = await fetch(API + '/api/excel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ad: ad.slice(0, 31), satirlar: TABLO, bilgi: veriZamaniMetni() }) });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(await r.blob()); a.download = 'ELEKTRİK ' + ad + '.xlsx'; a.click();
+  } catch (e) { alert('Excel oluşturulamadı: ' + e.message); } finally { yuklemeGizle(); }
+}
+function kopyala() {
+  const tsv = TABLO.map(r => r.map(v => typeof v === 'number' ? String(v).replace('.', ',') : (v == null ? '' : String(v))).join('\t')).join('\r\n');
+  navigator.clipboard.writeText(tsv).then(() => alert('Tablo kopyalandı. Excel\'de bir hücreye tıklayıp Ctrl+V ile yapıştırın.'), () => alert('Kopyalanamadı.'));
+}
+// Ana sayfanın yazdır / mail pencereleri için
+function kontrolDurum() { return { hazir: !!(V && V.var), gorunum: GORUNUM }; }
+function filtreMetni() {
+  const p = [];
+  if (fYil.value) p.push(fYil.value); if (fAy.value) p.push(AY_AD[+fAy.value - 1]);
+  if (fLok.value) { const t = V.tesisler.find(x => x.sozlesmeNo === fLok.value); p.push(t ? t.lokasyon : fLok.value); }
+  if (fTur.value) p.push(TUR_AD[fTur.value]); if (fFirma.value) p.push('Firma: ' + fFirma.value);
+  return p.length ? 'Filtre: ' + p.join(' · ') : 'Filtre: tüm GES lokasyonları';
+}
+function disaRaporlar(idler) {
+  if (!V || !V.var) return [];
+  const eskiG = GORUNUM, eskiS = SIRALA, sonuc = [];
+  for (const [id, , ad] of KONULAR) {
+    if (['ayar', 'yontem'].includes(id) || (idler && !idler.includes(id))) continue;
+    GORUNUM = id; SIRALA = null; ciz();
+    sonuc.push({ id, ad: 'GES Mahsup · ' + ad, satirlar: TABLO.map(r => r.slice()), bilgi: veriZamaniMetni() });
+  }
+  GORUNUM = eskiG; SIRALA = eskiS; ciz();
+  return sonuc;
+}
+function ustDurum() { document.getElementById('ustDurum').innerHTML = V.var ? 'GES lokasyonu: <b>' + V.tesisler.length + '</b> · son panel verisi: ' + new Date(V.alinma).toLocaleString('tr-TR') : ''; }
+async function yukle() {
+  yuklemeGoster('GES mahsubu hesaplanıyor…');
+  try { V = await (await fetch(API + '/api/ges-mahsup')).json(); if (V.var) secimler(); ustDurum(); ciz(); }
+  catch (e) { sayfa('Sunucuya ulaşılamadı', 'ELEKTRİK ANALİZİ sunucusu çalışmıyor olabilir. Hata: ' + esc(e.message), ''); }
+  finally { yuklemeGizle(); }
+}
+const fFirma = document.getElementById('fFirma'), fYil = document.getElementById('fYil'), fAy = document.getElementById('fAy'), fLok = document.getElementById('fLok'), fTur = document.getElementById('fTur');
+if (KONULAR.some(k => k[0] === location.hash.slice(1))) GORUNUM = location.hash.slice(1);
+yukle();
+</script>
+<script src="/pdf-serit.js"></script>
+</body>
+</html>

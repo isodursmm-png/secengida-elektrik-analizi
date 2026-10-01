@@ -1,0 +1,51 @@
+# Render Blueprint · ELEKTRİK ANALİZİ
+# Render → New → Blueprint → bu depoyu seçin. Şifreler (sync: false) kurulumda sorulur.
+services:
+  - type: web
+    name: elektrik-analizi
+    runtime: node
+    region: frankfurt
+    # Kalıcı disk (fatura verisi, PTF önbelleği, ayarlar) Starter ve üstü planlarda vardır.
+    # Free plan kullanılırsa "disk" bölümünü silin: veriler her yeniden başlatmada sıfırlanır,
+    # PANEL_SENKRON.bat ile yeniden gönderilir.
+    plan: starter
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /saglik
+    autoDeploy: true
+    disk:
+      name: elektrik-veri
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATA_DIR
+        value: /var/data
+      - key: BULUT
+        value: "1"
+      - key: APP_KULLANICI
+        value: secen
+      - key: APP_SIFRE
+        sync: false
+      - key: EPIAS_KULLANICI
+        sync: false
+      - key: EPIAS_SIFRE
+        sync: false
+      # Supabase: fatura/GES verisi buradan okunur (masaüstü sunucusu yazar)
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SENKRON_ANAHTARI
+        generateValue: true
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_KULLANICI
+        sync: false
+      - key: SMTP_SIFRE
+        sync: false
+      - key: SMTP_GONDEREN
+        sync: false

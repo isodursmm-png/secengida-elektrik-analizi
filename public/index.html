@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SECENGIDA Elektrik Analizi</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6fa;color:#0b0b0b;font:13px/1.45 "Segoe UI",Arial,sans-serif}
+header{background:#1a3a6b;color:#fff;padding:14px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:14px;border-bottom:4px solid #c0392b}
+header h1{margin:0;font-size:20px;letter-spacing:.5px}
+header .alt{font-size:11.5px;opacity:.85}
+header .sag{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn-yenile{background:#e67e22;border:1px solid #d35400;color:#fff;font-weight:700;padding:8px 16px;border-radius:6px;cursor:pointer;box-shadow:0 3px 10px rgba(211,84,0,.45);font-size:13px}
+.btn-yenile:hover{background:#d35400}
+.btn-yenile:disabled{opacity:.6;cursor:wait}
+.btn{background:#fff;border:1px solid #c7cfdc;color:#1a3a6b;font-weight:600;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.btn:hover{background:#eef2f8}
+header .btn{background:transparent;color:#fff;border-color:#ffffff88}
+header .btn:hover{background:#ffffff22}
+main{padding:18px 22px 40px;max-width:1600px;margin:0 auto}
+.durum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.rozet{background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:6px 10px;font-size:12px}
+.rozet b{color:#1a3a6b}
+.rozet.hata{border-color:#c0392b;color:#fff;background:#c0392b;font-weight:700}
+.rozet.hata b{color:#fff}
+.rozet.ok{border-color:#1e8449}
+.panel{background:#fff;border:1px solid #dde3ec;border-radius:10px;padding:16px 18px;margin-bottom:18px}
+.panel h2{margin:-16px -18px 0;padding:10px 18px;font-size:16px;color:#fff;background:#1a3a6b;border-radius:10px 10px 0 0}
+.panel .aciklama{margin:0 -18px 12px;padding:7px 18px;color:#fff;background:#244a84;font-size:12px}
+.parametreler{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end}
+.parametreler label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:#52514e;font-weight:600}
+.parametreler select{padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;font-size:12.5px;min-width:180px}
+.parametreler .kutu{flex-direction:row;align-items:center;gap:6px;font-size:12.5px;color:#0b0b0b}
+.arac{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.arac .bosluk{flex:1}
+.tablo-kap{overflow-x:auto;border:1px solid #dde3ec;border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:12px;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid #eceff4;white-space:nowrap}
+th{background:#1a3a6b;color:#fff;font-weight:600;text-align:center;position:sticky;top:0}
+th.grp{background:#24497f;font-size:11px}
+td.n{text-align:right}
+td.l{text-align:left;font-weight:600;color:#1a3a6b}
+tr:nth-child(even) td{background:#fafbfd}
+tr.ozet td{background:#1a3a6b;color:#fff;font-weight:700;border-top:2px solid #1a3a6b}
+td.bos{color:#9aa3b2;text-align:center}
+.not{font-size:11.5px;color:#52514e;margin-top:8px}
+.grafik{position:relative;margin-top:14px}
+.grafik svg{width:100%;height:auto;display:block}
+.lejant{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-top:6px}
+.lejant span{display:inline-flex;align-items:center;gap:6px}
+.lejant i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.ipucu{position:absolute;pointer-events:none;background:#fff;border:1px solid #c7cfdc;border-radius:6px;padding:7px 10px;font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.12);display:none;min-width:190px;z-index:5}
+.ipucu .bas{font-weight:700;margin-bottom:4px;color:#1a3a6b}
+.ipucu .sat{display:flex;justify-content:space-between;gap:12px}
+.ipucu .sat i{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:6px;vertical-align:-1px}
+.iki{display:grid;grid-template-columns:1fr;gap:18px}
+.modal-arka{position:fixed;inset:0;background:rgba(10,20,40,.55);display:none;align-items:center;justify-content:center;z-index:50}
+.modal{background:#fff;border-radius:10px;padding:20px 22px;width:min(440px,92vw);border-top:4px solid #1a3a6b}
+.modal h3{margin:0 0 6px;color:#1a3a6b}
+.modal input{width:100%;padding:8px 10px;border:1px solid #c7cfdc;border-radius:5px;margin:4px 0 10px;font-size:13px}
+.modal .sonuc{font-size:12px;margin-top:6px;min-height:16px}
+#yukleme{position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:60;font-size:15px;color:#1a3a6b;font-weight:700}
+#yukleme .kum{font-size:44px;display:block;text-align:center;animation:don 1.6s linear infinite}
+@keyframes don{0%{transform:rotate(0)}50%{transform:rotate(180deg)}100%{transform:rotate(180deg)}}
+.isi{color:#0b0b0b}
+@media(max-width:700px){main{padding:12px}header{padding:12px}}
+.sekmeler{display:flex;gap:4px;background:#1a3a6b;padding:0 22px;position:sticky;top:0;z-index:30;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.sekme{background:#2c5190;color:#dfe7f3;border:none;border-radius:7px 7px 0 0;padding:9px 20px;font:600 13.5px "Segoe UI",Arial,sans-serif;cursor:pointer;margin-top:6px}
+.sekme:hover{background:#355d9e;color:#fff}
+.sekme.aktif{background:#f4f6fa;color:#1a3a6b}
+#sekmeKontrol{display:none}
+.sekme-arac{margin-left:auto;display:flex;gap:6px;align-items:center;padding:5px 0}
+.sekme-arac button{background:#fff;color:#1a3a6b;border:1px solid #fff;border-radius:6px;padding:6px 12px;font:700 12.5px "Segoe UI",Arial,sans-serif;cursor:pointer}
+.sekme-arac button:hover{background:#dfe7f3}
+.sekme-arac button.mail{background:#1e8449;color:#fff;border-color:#1e8449}
+.sekme-arac button.mail:hover{background:#196f3d}
+.sekme-arac button.geri{background:#e67e22;color:#fff;border-color:#e67e22}
+.sekme-arac button.geri:hover{background:#ca6f1e;border-color:#ca6f1e}
+.durum{display:block}
+.tam-modal{position:fixed;inset:0;background:rgba(10,20,40,.6);display:none;z-index:70}
+.tam-modal .kutu2{position:absolute;inset:18px;background:#fff;border-radius:10px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.tam-modal .bas2{background:#1a3a6b;color:#fff;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.tam-modal .bas2 h3{margin:0;font-size:16px}
+.tam-modal .bas2 .x{margin-left:auto;background:none;border:none;color:#fff;font-size:26px;cursor:pointer;line-height:1}
+.tam-modal .govde2{flex:1;display:flex;min-height:0}
+.tam-modal .secenek{width:320px;flex:0 0 320px;background:#1e8449;color:#fff;padding:12px 14px;overflow-y:auto}
+.tam-modal .secenek h4{margin:10px 0 6px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#d5f5e3}
+.tam-modal .secenek label{display:flex;gap:7px;align-items:flex-start;font-size:12.5px;padding:3px 0;cursor:pointer}
+.tam-modal .secenek select{width:100%;padding:6px 8px;border-radius:5px;border:1px solid #186a3b;font-size:12.5px;color:#0b0b0b}
+.tam-modal .secenek .grup-bas{font-weight:700;margin-top:6px;color:#fff;border-bottom:1px solid #ffffff55;padding-bottom:2px}
+.tam-modal .dugmeler{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.tam-modal .dugmeler button{padding:9px 12px;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;border:1px solid #fff}
+.d-ana{background:#fff;color:#1e8449}.d-ana:hover{background:#eafaf1}
+.d-mavi{background:#1a3a6b;color:#fff;border-color:#1a3a6b !important}
+.d-kirmizi{background:#c0392b;color:#fff;border-color:#c0392b !important}
+.d-sade{background:transparent;color:#fff}
+.pv-alan{flex:1;background:#6b7280;overflow:auto;padding:18px}
+.pv-bilgi{color:#fff;font-size:12px;margin-bottom:10px}
+#pvSayfalar .pv-sayfa{margin:0 auto 18px;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.pv-sayfa{background:#fff;color:#000;box-sizing:border-box;overflow:hidden;position:relative;font-family:"Segoe UI",Arial,sans-serif;filter:grayscale(100%)}
+.pv-sayfa .pv-bas{border-bottom:2px solid #000;padding-bottom:1.5mm;margin-bottom:2mm;font-size:10px}
+.pv-sayfa .pv-bas b{font-size:13px}
+.pv-sayfa .pv-alt{position:absolute;left:10mm;right:10mm;bottom:5mm;display:flex;justify-content:space-between;font-size:8px;color:#333;border-top:1px solid #999;padding-top:1mm}
+.pv-sayfa table{border-collapse:collapse;width:auto;min-width:100%;table-layout:auto;font-size:inherit !important}
+.pv-sayfa th,.pv-sayfa td{font-size:inherit !important}
+.pv-sayfa th{background:#d9d9d9 !important;color:#000 !important;border:1px solid #000;padding:.25em .45em;font-weight:700;position:static;white-space:nowrap;min-width:0}
+.pv-sayfa td{border:1px solid #777;padding:.2em .45em;white-space:nowrap;background:#fff !important;color:#000 !important;min-width:0}
+.pv-sayfa td.n{text-align:right}
+.mail-alan{flex:1;overflow:auto;padding:16px 20px;background:#f4f6fa}
+.mail-alan .alan{margin-bottom:12px}
+.mail-alan .alan>b{display:block;color:#1a3a6b;font-size:12px;margin-bottom:4px}
+.cip-kutu{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#fff;border:1px solid #c7cfdc;border-radius:6px;padding:6px;min-height:40px;cursor:text}
+.cip{background:#1a3a6b;color:#fff;border-radius:14px;padding:3px 6px 3px 11px;font-size:12.5px;display:inline-flex;align-items:center;gap:4px}
+.cip.hatali{background:#c0392b}
+.cip button{background:none;border:none;color:#fff;cursor:pointer;font-size:15px;line-height:1;padding:0 3px}
+.cip-kutu input{border:none;outline:none;flex:1;min-width:220px;font-size:13px;padding:4px}
+.mail-alan input.tam,.mail-alan textarea,.mail-alan select{width:100%;padding:8px 10px;border:1px solid #c7cfdc;border-radius:6px;font:13px "Segoe UI",Arial,sans-serif}
+.mail-alan textarea{min-height:110px;resize:vertical}
+.mail-sonuc{padding:10px 12px;border-radius:6px;font-weight:700;display:none;margin-bottom:10px}
+.mail-sonuc.ok{display:block;background:#1e8449;color:#fff}.mail-sonuc.hata{display:block;background:#c0392b;color:#fff}
+.ipucu2{font-size:11.5px;color:#52514e;margin-top:3px}
+#sekmeKontrol iframe{width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9}
+</style>
+</head>
+<body>
+<nav class="sekmeler">
+  <button class="sekme aktif" id="skAnaliz" onclick="sekmeAc('analiz')">⚡ Elektrik Analizi</button>
+  <button class="sekme" id="skKontrol" onclick="sekmeAc('kontrol')">🧾 Fatura Kontrol · ödenen ↔ hesap</button>
+  <button class="sekme" id="skGes" onclick="sekmeAc('ges')">🏭 AOSB Fabrika · ☀ GES</button>
+  <button class="sekme" id="skBelgeler" onclick="sekmeAc('belgeler')">📁 Belgeler</button>
+  <button class="sekme" id="skReferans" onclick="sekmeAc('referans')" title="Veri güncelleme, dönem özetleri, mahsup ve tablo işaretleri">📘 Referans</button>
+  <div class="sekme-arac">
+    <button class="geri" onclick="geriDon()" title="Bir önceki görünüme / sekmeye dön">← Geri dön</button>
+    <button id="btnTamEkran" onclick="tamEkran()" title="Tam ekran aç / kapat">⛶ Tam ekran</button>
+    <button onclick="yazdirAc()" title="A4 ön izleme ile yazdır">🖨 Yazdır</button>
+    <button class="mail" onclick="mailAc()" title="Seçilen raporları Outlook ile gönder">✉ Mail gönder</button>
+  </div>
+</nav>
+<div id="sekmeAnaliz">
+<header>
+  <div>
+    <h1>⚡ SECENGIDA ELEKTRİK ANALİZİ</h1>
+    <div class="alt">SECENGIDA · Akdeniz Bölgesi · Tüzel kişi · AOSB fabrika (OG) + CK Akdeniz abonelikleri · Son 12 ay · EPDK + EPİAŞ + PVGIS canlı · faturalar Masaüstü › SECENGIDA klasöründen</div>
+  </div>
+  <div class="sag">
+    <button class="btn" onclick="ayarAc()">⚙ EPİAŞ Ayarları</button>
+    <button class="btn-yenile" id="btnYenile" onclick="simdiYenile()">⟳ Şimdi Yenile</button>
+  </div>
+</header>
+
+<main>
+  <div class="durum" id="durum"></div>
+
+  <div class="panel">
+    <h2>Hesap Parametreleri</h2>
+    <p class="aciklama">Değişiklikler anında yeniden hesaplanır. Sunucuya yeni sorgu gitmez, yalnızca önbellekteki canlı veri kullanılır.</p>
+    <div class="parametreler">
+      <label>GES konumu (Akdeniz Bölgesi)
+        <select id="pSehir" onchange="sehirKaydet();ciz()"></select>
+      </label>
+      <label>Şebeke tarife sınıfı
+        <select id="pTarife" onchange="parametreKaydet();ciz()">
+          <option value="AG">AG tek terim · 30 kWh/gün üstü</option>
+          <option value="AG_dusuk">AG tek terim · 30 kWh/gün ve altı</option>
+          <option value="OGT">OG tek terim</option>
+          <option value="OGC">OG çift terim (güç bedeli hariç)</option>
+        </select>
+      </label>
+      <label>Zaman dilimi
+        <select id="pZaman" onchange="parametreKaydet();ciz()">
+          <option value="tek">Tek zamanlı</option>
+          <option value="uc" selected>Üç zamanlı (gündüz/puant/gece)</option>
+        </select>
+      </label>
+      <label>GES veriş yönlü dağıtım bedeli
+        <select id="pLu" onchange="parametreKaydet();ciz()">
+          <option value="LU2">Lisanssız Üretici-2 (güneş)</option>
+          <option value="LU1">Lisanssız Üretici-1</option>
+          <option value="yok">Düşülmesin</option>
+        </select>
+      </label>
+      <label>Birim
+        <select id="pBirim" onchange="parametreKaydet();ciz()">
+          <option value="tl">TL/kWh</option>
+          <option value="kr">kr/kWh</option>
+          <option value="mwh">TL/MWh</option>
+        </select>
+      </label>
+      <label>Elektrik tüketim vergisi (sadece aktif enerjiye)
+        <select id="pEtv" onchange="parametreKaydet();ciz()">
+          <option value="diger">Diğer kullanım (ticarethane)</option>
+          <option value="imal">İmal / istihsal / soğutma</option>
+          <option value="yok">Hariç</option>
+        </select>
+      </label>
+      <label class="kutu"><input type="checkbox" id="pKdv" onchange="ciz()"> KDV %20 dahil</label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>1 · 12 Aylık Fiyat Matrisi</h2>
+    <p class="aciklama">Satırlar ay, sütunlar fiyat türü. Değerler seçili birimde, virgülden sonra 4 hane. PTF sütunları EPİAŞ saatlik verisinin ay içi ortalamasıdır. "GES ağırlıklı" değer, güneşin üretim yaptığı saatlere göre ağırlıklandırılmış ortalamadır.</p>
+    <div class="arac">
+      <button class="btn" onclick="excelAktar('aylik')">⬇ Excel'e aktar</button>
+      <button class="btn" onclick="panoyaKopyala('aylik')">⧉ Kopyala → Excel'e yapıştır</button>
+      <span class="bosluk"></span>
+    </div>
+    <div class="tablo-kap"><table id="tAylik"></table></div>
+    <div class="grafik" id="gAylik"></div>
+  </div>
+
+  <div class="panel">
+    <h2>2 · Saatlik Fiyat Matrisi</h2>
+    <p class="aciklama">Seçilen ayın her saati için, o saatin ay içindeki tüm günlerinin ortalaması.</p>
+    <div class="arac">
+      <label style="font-size:12px;font-weight:600;color:#52514e">Ay&nbsp;<select id="pAy" onchange="ayDegisti()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px"></select></label>
+      <button class="btn" onclick="excelAktar('saatlik')">⬇ Excel'e aktar</button>
+      <button class="btn" onclick="panoyaKopyala('saatlik')">⧉ Kopyala → Excel'e yapıştır</button>
+    </div>
+    <div class="tablo-kap"><table id="tSaatlik"></table></div>
+    <div class="grafik" id="gSaatlik"></div>
+  </div>
+
+  <div class="panel">
+    <h2>3 · Saatlik PTF Matrisi · 24 saat × 12 ay</h2>
+    <p class="aciklama">Her hücre, o ayın o saatindeki ortalama PTF değeridir (seçili birimde, vergisiz). Renk koyulaştıkça fiyat yükselir.</p>
+    <div class="arac">
+      <button class="btn" onclick="excelAktar('ptf')">⬇ Excel'e aktar</button>
+      <button class="btn" onclick="panoyaKopyala('ptf')">⧉ Kopyala → Excel'e yapıştır</button>
+    </div>
+    <div class="tablo-kap"><table id="tPtf"></table></div>
+  </div>
+
+  <div class="panel">
+    <h2>4 · Gider Tanım Tablosu · Vergi, Harç, Bağlantı/Katılım ve Tüm Bedeller</h2>
+    <p class="aciklama">Değerler sunucu tarafından resmi kaynaklardan otomatik okunur: EPDK kurul kararları (Word belgesi), EPDK tarife tablosu (Excel) ve 2464 sayılı Kanun metni (mevzuat.gov.tr). Günde bir kez kontrol edilir. Yeni yılın kararı yayımlandığında (genelde Aralık sonu) kendiliğinden devreye girer. "Önceki" sütunu bir önceki kararın değeridir.</p>
+    <div class="arac">
+      <label style="font-size:12px;font-weight:600;color:#52514e">Kategori&nbsp;<select id="gKategori" onchange="giderTablo()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px"></select></label>
+      <label style="font-size:12px;font-weight:600;color:#52514e">Ara&nbsp;<input id="gAra" oninput="giderTablo()" placeholder="kalem, karar no…" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;width:200px"></label>
+      <button class="btn" onclick="excelAktar('gider')">⬇ Excel'e aktar</button>
+      <button class="btn" onclick="panoyaKopyala('gider')">⧉ Kopyala → Excel'e yapıştır</button>
+      <span class="bosluk"></span>
+      <span id="gOzet" style="font-size:12px;color:#52514e"></span>
+    </div>
+    <div class="tablo-kap" style="max-height:640px;overflow:auto"><table id="tGider"></table></div>
+    <div class="not" id="gNot"></div>
+
+    <h2 style="margin-top:22px">GES Bağlantı, Katılım ve Resmi Bedel Hesaplayıcı</h2>
+    <p class="aciklama">Tutarlar yukarıdaki tablodan (EPDK kurul kararları, otomatik) alınır. Güç aralığı ve formül (ör. 1 MW üstü) kendiliğinden seçilir. KDV hariçtir.</p>
+    <div class="parametreler" style="margin-bottom:10px">
+      <label>Kurulu güç (kWe)<input id="hGuc" type="number" value="1000" min="1" oninput="hesaplayici()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;width:130px"></label>
+      <label>Bağlantı gerilimi
+        <select id="hGerilim" onchange="hesaplayici()"><option value="OG">OG</option><option value="AG">AG</option></select>
+      </label>
+      <label>Yer altı hat (metre)<input id="hYeralti" type="number" value="0" min="0" oninput="hesaplayici()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;width:130px"></label>
+      <label>Havai hat (metre)<input id="hHavai" type="number" value="500" min="0" oninput="hesaplayici()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;width:130px"></label>
+      <label class="kutu"><input type="checkbox" id="hCati" onchange="hesaplayici()"> Çatı/cephe uygulaması</label>
+    </div>
+    <div class="arac">
+      <button class="btn" onclick="excelAktar('hesap')">⬇ Excel'e aktar</button>
+      <button class="btn" onclick="panoyaKopyala('hesap')">⧉ Kopyala → Excel'e yapıştır</button>
+    </div>
+    <div class="tablo-kap"><table id="tHesap"></table></div>
+    <div class="not">Bağlantı bedeli, bağlantı hizmetini dağıtım şirketi verdiğinde EPDK'nın TL/metre birim bedeliyle hesaplanan tutardır. Bağlantı hattını ve trafoyu yatırımcı kendisi yaptırırsa gerçek maliyet müteahhit teklifine göre belirlenir. Başka bir yatırımcının kurduğu hatta sonradan bağlanılırsa, bağlantı anlaşmasında o hatta katılım bedeli ayrıca talep edilebilir. Bu tutar dağıtım şirketince projeye özel hesaplanır.</div>
+  </div>
+
+  <div class="panel">
+    <h2>5 · Fatura ve Mahsuplaşma Kontrolü · Ocak 2026 →</h2>
+    <p class="aciklama">Düzenlenen faturalar Elektrik Fatura Paneli'nden (192.168.0.106:8010) "Veriyi yenile" butonuyla okunur ve eklemeli saklanır (bkz. bölüm 6). Her fatura, bu uygulamanın otomatik okuduğu EPDK tarifeleri ve vergi kurallarıyla yeniden hesaplanır. Ocak–Nisan 2026 aylık, Mayıs 2026'dan itibaren saatlik mahsup kuralı uygulanır. Saatlik mahsubun doğrulanması için tesisin saatlik sayaç (OSOS) verisi gerekir.</p>
+    <div class="durum" id="mDurum"></div>
+    <div class="arac">
+      <button class="btn-yenile" onclick="panelVeriYenile()">⟳ Veriyi yenile · panelden oku ve ekle</button>
+      <span style="width:10px"></span>
+      <label style="font-size:12px;font-weight:600;color:#52514e">Saatlik sayaç dosyası (Excel/CSV)&nbsp;<input type="file" id="mDosya" accept=".xlsx,.xls,.csv"></label>
+      <input id="mTesisat" placeholder="Tesisat no (dosyada yoksa)" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;width:190px">
+      <button class="btn" onclick="olcumYukle()">⬆ Yükle</button>
+      <span class="bosluk"></span>
+      <button class="btn" onclick="excelAktar('mahsup')">⬇ Excel'e aktar</button>
+    </div>
+    <div class="tablo-kap"><table id="tMahsup"></table></div>
+    <div class="not" style="margin-top:6px">✔ Örtüşüyor: tüm kalemler ±1 TL / %0,5 içinde · ✘ Fark var · ⏳ Fatura bekleniyor (sayaç verisi var) · — Veri yok. Ayrıntı için hücreye tıklayın.</div>
+    <div id="mDetay" style="margin-top:14px"></div>
+  </div>
+
+  <div class="panel" id="panelVeri">
+    <h2>6 · Elektrik Fatura Paneli Verileri · saklanan kayıtlar</h2>
+    <p class="aciklama">Kaynak: Elektrik Fatura Paneli (Sami'nin bilgisayarı, ağ adresi 192.168.0.106:8010). Panel sadece <b>"Veriyi yenile"</b> butonuna basıldığında okunur. Yeni gelen faturalar saklananların üzerine <b>eklenir</b>, değişenler güncellenir. Daha önce saklanan hiçbir kayıt silinmez, panelden kalkmış olsa bile burada kalır.</p>
+    <div class="durum" id="pvDurum"></div>
+    <div class="arac">
+      <button class="btn-yenile" id="btnPanelYenile" onclick="panelVeriYenile()">⟳ Veriyi yenile · panelden oku ve ekle</button>
+      <a class="btn" href="#kontrol" onclick="sekmeAc('kontrol');return false" style="text-decoration:none;background:#1a3a6b;color:#fff;border-color:#1a3a6b">🧾 Fatura kontrol sayfası · ödenen ↔ hesap</a>
+      <span style="width:10px"></span>
+      <label style="font-size:12px;font-weight:600;color:#52514e">Yıl&nbsp;<select id="pvYil" onchange="panelCiz()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px"></select></label>
+      <label style="font-size:12px;font-weight:600;color:#52514e">Grup&nbsp;<select id="pvGrup" onchange="panelCiz()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px"></select></label>
+      <label style="font-size:12px;font-weight:600;color:#52514e">Değer&nbsp;<select id="pvDeger" onchange="panelCiz()" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px"><option value="odenecek">Ödenecek tutar (TL)</option><option value="tuketim">Tüketim (kWh)</option><option value="birim">Ortalama maliyet (TL/kWh)</option></select></label>
+      <input id="pvAra" oninput="panelCiz()" placeholder="Lokasyon / sözleşme no ara" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;width:200px">
+      <span class="bosluk"></span>
+      <button class="btn" onclick="excelAktar('panel')">⬇ Excel'e aktar</button>
+      <button class="btn" onclick="panoyaKopyala('panel')">⧉ Kopyala → Excel'e yapıştır</button>
+    </div>
+    <div class="tablo-kap"><table id="tPanel"></table></div>
+    <h3 style="margin:18px 0 6px;color:#1a3a6b;font-size:15px">GES saatlik sayaç verisi · aylık ve saatlik mahsup karşılaştırması (kWh)</h3>
+    <div class="arac">
+      <span class="bosluk"></span>
+      <button class="btn" onclick="excelAktar('ges')">⬇ Excel'e aktar</button>
+      <button class="btn" onclick="panoyaKopyala('ges')">⧉ Kopyala → Excel'e yapıştır</button>
+    </div>
+    <div class="tablo-kap"><table id="tGes"></table></div>
+    <div class="not" style="margin-top:6px">Aylık mahsupta ay boyunca çekilen ve verilen enerji toplamda netleşir. Saatlik mahsupta her saat kendi içinde netleşir: üretimin olmadığı saatlerdeki çekiş, gündüzkü fazla üretimle kapanamaz. "Saatlik mahsubun etkisi" sütunu, aynı sayaç verisiyle saatlik kuralın faturalanacak tüketimi kaç kWh artırdığını gösterir. 1 Mayıs 2026'dan itibaren saatlik kural geçerlidir (RG 33212). Panel faturada sadece toplam kWh ve ödenecek tutarı veriyor. Enerji, dağıtım, vergi ve mahsup kalemleri fatura PDF'lerinde bulunuyor.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Hesap Esasları ve Kaynaklar</h2>
+    <div class="not" id="notlar"></div>
+  </div>
+</main>
+</div>
+<div id="sekmeKontrol"><iframe id="kontrolCerceve" title="Elektrik Fatura Kontrol"></iframe></div>
+<div id="sekmeGes" style="display:none"><iframe id="gesCerceve" title="GES Mahsup Kontrolü" style="width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9"></iframe></div>
+<div id="sekmeBelgeler" style="display:none"><iframe id="belgeCerceve" title="Belgeler" style="width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9"></iframe></div>
+<div id="sekmeReferans" style="display:none"><iframe id="referansCerceve" title="Referans" style="width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9"></iframe></div>
+
+<div class="ipucu" id="ipucu"></div>
+
+<div class="modal-arka" id="ayarModal">
+  <div class="modal">
+    <h3>EPİAŞ Şeffaflık Platformu Girişi</h3>
+    <p style="font-size:12px;color:#52514e;margin:0 0 10px">Saatlik PTF verisi için gereklidir. Ücretsiz üyelik için seffaflik.epias.com.tr adresine gidip "Kayıt Ol" deyin. Bilgiler yalnızca bu bilgisayarda (elektrik_analizi_ayar.json) saklanır.</p>
+    <label style="font-size:12px;font-weight:600">E-posta (kullanıcı adı)</label>
+    <input id="aKullanici" type="email" autocomplete="username">
+    <label style="font-size:12px;font-weight:600">Şifre</label>
+    <input id="aSifre" type="password" autocomplete="current-password">
+    <div class="sonuc" id="aSonuc"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+      <button class="btn" onclick="ayarKapat()">Kapat</button>
+      <button class="btn-yenile" onclick="ayarKaydet()">Kaydet ve Bağlan</button>
+    </div>
+  </div>
+</div>
+
+<div class="tam-modal" id="pvModal">
+  <div class="kutu2">
+    <div class="bas2"><h3>🖨 Yazdırma ön izlemesi · A4 · siyah-beyaz</h3><button class="x" onclick="pvKapat()">×</button></div>
+    <div class="govde2">
+      <div class="secenek">
+        <h4>Yazdırılacak raporlar</h4>
+        <div id="pvRaporlar"></div>
+        <h4>Sayfa</h4>
+        <label style="flex-direction:column;gap:3px">Yön<select id="pvYon" onchange="pvCiz()"><option value="yatay">Yatay (geniş tablolar için)</option><option value="dikey">Dikey</option></select></label>
+        <label style="flex-direction:column;gap:3px">Yazı boyutu<select id="pvYazi" onchange="pvCiz()"><option value="oto">Otomatik · kâğıda sığdır</option><option value="7">7 px</option><option value="8">8 px</option><option value="9">9 px</option><option value="10">10 px</option><option value="11">11 px</option><option value="12">12 px</option></select></label>
+        <div class="dugmeler">
+          <button class="d-ana" onclick="pvYazdir()">🖨 Yazdır</button>
+          <button class="d-mavi" onclick="const s = pvSecili(); pvKapat(); mailAc(s)">✉ Bu raporları mail ile gönder</button>
+          <button class="d-sade" onclick="pvKapat()">Kapat</button>
+        </div>
+      </div>
+      <div class="pv-alan"><div class="pv-bilgi" id="pvBilgi"></div><div id="pvSayfalar"></div></div>
+    </div>
+  </div>
+</div>
+<div class="tam-modal" id="mailModal">
+  <div class="kutu2">
+    <div class="bas2"><h3>✉ Mail gönder · Outlook</h3><button class="x" onclick="mailKapat()">×</button></div>
+    <div class="govde2">
+      <div class="secenek">
+        <h4>Gönderilecek raporlar</h4>
+        <div id="mlRaporlar"></div>
+        <h4>Biçim</h4>
+        <label><input type="checkbox" id="mlExcel" checked> Excel eki (her rapor ayrı sayfa)</label>
+        <label><input type="checkbox" id="mlGovde" checked> Tablolar mailin içinde görünsün</label>
+        <div class="dugmeler">
+          <button class="d-ana" onclick="mailGonder(false)">📝 Outlook'ta aç · kontrol edip gönder</button>
+          <button class="d-kirmizi" onclick="mailGonder(true)">✉ Hemen gönder</button>
+          <button class="d-sade" onclick="mailKapat()">Kapat</button>
+        </div>
+      </div>
+      <div class="mail-alan">
+        <div class="mail-sonuc" id="mlSonuc"></div>
+        <div class="alan"><b>Gönderen hesap</b><select id="mlGonderen"></select></div>
+        <div class="alan"><b>Kime (birden fazla alıcı)</b><div class="cip-kutu" id="mlKime" onclick="this.querySelector('input').focus()"><input list="mlAdresler" placeholder="e-posta yazıp Enter'a basın · birden fazlasını ; ile yapıştırabilirsiniz"></div><div class="ipucu2">Daha önce gönderilen adresler yazarken öneri olarak çıkar.</div></div>
+        <div class="alan"><b>Bilgi (CC)</b><div class="cip-kutu" id="mlBilgi" onclick="this.querySelector('input').focus()"><input list="mlAdresler" placeholder="isteğe bağlı"></div></div>
+        <datalist id="mlAdresler"></datalist>
+        <div class="alan"><b>Konu</b><input class="tam" id="mlKonu"></div>
+        <div class="alan"><b>Mesaj</b><textarea id="mlMesaj"></textarea></div>
+        <div class="ipucu2">"Outlook'ta aç" maili Outlook'ta hazırlar, siz kontrol edip gönderirsiniz. "Hemen gönder" onayınızdan sonra doğrudan gönderir.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="yukleme"><div><span class="kum">⏳</span><span id="yuklemeMetin">Yükleniyor…</span></div></div>
+
+<script>
+const API = location.protocol === 'file:' ? 'http://localhost:5352' : '';
+const RENK = { sebeke: '#2a78d6', ptf: '#eb6834', ges: '#1baf7a' };
+const AY_AD = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const SAATLIK_MAHSUP_BASLANGIC = '2026-05-01'; // RG 02.04.2026/33212 — mesken hariç saatlik mahsuplaşma
+let VERI = null;
+let MATRIS = { aylik: null, saatlik: null, ptf: null };
+
+// ─── Yükleme göstergesi ────────────────────────────────────────────────────────
+function yuklemeGoster(m) { document.getElementById('yuklemeMetin').textContent = m || 'Yükleniyor…'; document.getElementById('yukleme').style.display = 'flex'; }
+function yuklemeGizle() { document.getElementById('yukleme').style.display = 'none'; }
+
+// ─── Biçimlendirme ─────────────────────────────────────────────────────────────
+const sayiTR = (v, h = 4) => v == null || isNaN(v) ? '' : v.toLocaleString('tr-TR', { minimumFractionDigits: h, maximumFractionDigits: h });
+const ayEtiket = a => { const [y, m] = a.split('-'); return AY_AD[+m - 1] + ' ' + y; };
+const ayKisa = a => { const [y, m] = a.split('-'); return AY_AD[+m - 1].slice(0, 3) + ' ' + y.slice(2); };
+const tarihTR = iso => iso ? new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+// İç hesaplar kr/kWh; gösterim birimine çevir
+function birim(krKwh) {
+  if (krKwh == null || isNaN(krKwh)) return null;
+  const b = document.getElementById('pBirim').value;
+  return b === 'kr' ? krKwh : b === 'mwh' ? krKwh * 10 : krKwh / 100;
+}
+const birimAd = () => ({ tl: 'TL/kWh', kr: 'kr/kWh', mwh: 'TL/MWh' })[document.getElementById('pBirim').value];
+const hane = () => document.getElementById('pBirim').value === 'mwh' ? 2 : 4;
+
+// ─── Tarife ve zaman dilimi ────────────────────────────────────────────────────
+function gunTarifesi(gun) {
+  let t = null;
+  for (const x of VERI.tarifeler) if (x.gecerlilik <= gun) t = x;
+  return t || VERI.tarifeler[0];
+}
+// Yaz saati güncel sayaçlar için yıl boyu: Gündüz 06-17, Puant 17-22, Gece 22-06
+const dilim = h => h >= 6 && h < 17 ? 'gunduz' : h >= 17 && h < 22 ? 'puant' : 'gece';
+const DILIM_AD = { gunduz: 'Gündüz', puant: 'Puant', gece: 'Gece' };
+
+// Güneş üretim profili: seçili Akdeniz şehrinin PVGIS ay × saat ışınımı (TSİ). PVGIS'e henüz
+// ulaşılamadıysa Antalya için yaklaşık gün doğumu-batımı ile sinüs eğrisine düşülür.
+const GUN_DOGUMU = [8.0, 7.6, 7.0, 6.4, 5.9, 5.7, 5.8, 6.1, 6.6, 7.0, 7.4, 7.9];
+const GUN_BATIMI = [17.7, 18.2, 18.7, 19.2, 19.6, 20.0, 20.0, 19.5, 18.9, 18.2, 17.6, 17.4];
+function gunesVerisi() { const s = document.getElementById('pSehir').value; return VERI.gunes && VERI.gunes[s]; }
+function sehirKaydet() { try { localStorage.setItem('elk_sehir', document.getElementById('pSehir').value); } catch (e) { } }
+// Hesap parametreleri (tarife sınıfı, zaman dilimi, LÜ bedeli, birim, ETV) bu tarayıcıda saklanır, açılışta geri yüklenir
+const PARAMETRELER = ['pTarife', 'pZaman', 'pLu', 'pBirim', 'pEtv'];
+function parametreKaydet() { try { localStorage.setItem('elk_parametre', JSON.stringify(Object.fromEntries(PARAMETRELER.map(id => [id, document.getElementById(id).value])))); } catch (e) { } }
+(function parametreYukle() {
+  let k = {}; try { k = JSON.parse(localStorage.getItem('elk_parametre') || '{}') || {}; } catch (e) { }
+  for (const id of PARAMETRELER) { const el = document.getElementById(id); if (el && k[id] && [...el.options].some(o => o.value === k[id])) el.value = k[id]; }
+})();
+function gunesAgirlik(ay, h) {
+  const g = gunesVerisi();
+  if (g) return g.isinim[ay - 1][h];
+  const sr = GUN_DOGUMU[ay - 1], ss = GUN_BATIMI[ay - 1];
+  let t = 0;
+  for (let k = 0; k < 4; k++) { // saat içini 4 parçada örnekle
+    const x = h + (k + 0.5) / 4;
+    if (x > sr && x < ss) t += Math.pow(Math.sin(Math.PI * (x - sr) / (ss - sr)), 1.3);
+  }
+  return t / 4;
+}
+
+// Elektrik Tüketim Vergisi (2464 s. K. m.34, ticarethane %5) SADECE aktif enerji bedeli üzerinden;
+// KDV (%20) ise aktif enerji + dağıtım + ETV toplamı üzerinden hesaplanır.
+// ETV oranları sunucuda 2464 s. Kanun m.38 metninden otomatik okunur (okunamazsa kanundaki %5 / %1)
+function etvOrani() {
+  const s = document.getElementById('pEtv').value, e = VERI.bedeller && VERI.bedeller.etv;
+  return s === 'yok' ? 0 : (s === 'imal' ? (e ? e.imal : 1) : (e ? e.diger : 5)) / 100;
+}
+function vergili(enerji, dagitim) {
+  const etv = enerji * etvOrani();
+  return (enerji + etv + dagitim) * (document.getElementById('pKdv').checked ? 1.20 : 1);
+}
+function sebekeFiyati(t, h) { // kr/kWh, vergili (seçime göre)
+  const s = t[document.getElementById('pTarife').value];
+  const enerji = document.getElementById('pZaman').value === 'uc' ? s[dilim(h)] : s.tek;
+  return vergili(enerji, s.dagitim);
+}
+function gesFazlaFiyati(t) { // kr/kWh — tek zamanlı aktif enerji bedeli − veriş yönlü dağıtım bedeli (satış, vergisiz)
+  const s = t[document.getElementById('pTarife').value];
+  const lu = document.getElementById('pLu').value;
+  return s.tek - (lu === 'yok' ? 0 : t[lu] || 0);
+}
+
+// ─── Hesap motoru ──────────────────────────────────────────────────────────────
+function ayGunleri(ay) {
+  const [y, m] = ay.split('-').map(Number);
+  const n = new Date(y, m, 0).getDate();
+  const r = [];
+  for (let g = 1; g <= n; g++) r.push(ay + '-' + String(g).padStart(2, '0'));
+  return r;
+}
+function saatlikHesap(ay) {
+  const m = +ay.split('-')[1];
+  const gunler = ayGunleri(ay);
+  const satirlar = [];
+  for (let h = 0; h < 24; h++) {
+    let ptfTop = 0, ptfN = 0, ptfMin = Infinity, ptfMax = -Infinity, seb = 0, fazla = 0, n = 0;
+    for (const g of gunler) {
+      const t = gunTarifesi(g);
+      seb += sebekeFiyati(t, h); fazla += gesFazlaFiyati(t); n++;
+      const p = VERI.ptf[g] && VERI.ptf[g][h];
+      if (p != null) { const kr = p / 10; ptfTop += kr; ptfN++; ptfMin = Math.min(ptfMin, kr); ptfMax = Math.max(ptfMax, kr); }
+    }
+    satirlar.push({
+      h, dilim: dilim(h), gunes: gunesAgirlik(m, h),
+      ptf: ptfN ? ptfTop / ptfN : null, ptfMin: ptfN ? ptfMin : null, ptfMax: ptfN ? ptfMax : null, ptfGun: ptfN,
+      sebeke: seb / n, catiOz: seb / n, fazla: fazla / n,
+    });
+  }
+  const gTop = satirlar.reduce((a, s) => a + s.gunes, 0);
+  satirlar.forEach(s => s.gunesPay = gTop ? s.gunes / gTop : 0);
+  return satirlar;
+}
+function aylikHesap(ay) {
+  const gunler = ayGunleri(ay);
+  const s = saatlikHesap(ay);
+  const tarifeSet = [...new Set(gunler.map(g => gunTarifesi(g).gecerlilik))];
+  const tOrt = k => { let top = 0; for (const g of gunler) top += gunTarifesi(g)[document.getElementById('pTarife').value][k]; return top / gunler.length; };
+  const ptfSaat = s.filter(x => x.ptf != null);
+  const ptfOrt = ptfSaat.length ? ptfSaat.reduce((a, x) => a + x.ptf, 0) / ptfSaat.length : null;
+  const gw = ptfSaat.reduce((a, x) => a + x.gunes, 0);
+  const ptfGes = gw ? ptfSaat.reduce((a, x) => a + x.ptf * x.gunes, 0) / gw : null;
+  const sw = s.reduce((a, x) => a + x.gunes, 0);
+  const dag = tOrt('dagitim');
+  const luSec = document.getElementById('pLu').value;
+  let luOrt = 0; if (luSec !== 'yok') { for (const g of gunler) luOrt += gunTarifesi(g)[luSec] || 0; luOrt /= gunler.length; }
+  const ptfGunSayisi = Math.min(...s.map(x => x.ptfGun));
+  return {
+    ay, donem: tarifeSet.map(d => d.split('-').reverse().join('.')).join(' + '),
+    mahsup: ay + '-01' >= SAATLIK_MAHSUP_BASLANGIC ? 'Saatlik' : 'Aylık',
+    aktif: tOrt('tek'), gunduz: tOrt('gunduz'), puant: tOrt('puant'), gece: tOrt('gece'), dagitim: dag, lu: luOrt,
+    sebekeTek: vergili(tOrt('tek'), dag),
+    sebekeGunduz: vergili(tOrt('gunduz'), dag), sebekePuant: vergili(tOrt('puant'), dag), sebekeGece: vergili(tOrt('gece'), dag),
+    catiOz: sw ? s.reduce((a, x) => a + x.catiOz * x.gunes, 0) / sw : null,
+    fazla: s[0].fazla, tarlaLisanssiz: s[0].fazla,
+    ptfOrt, ptfGes, tarlaPiyasa: ptfGes,
+    ptfKapsam: ptfGunSayisi + '/' + gunler.length,
+    uretim: gunesVerisi() ? gunesVerisi().aylikUretim[+ay.split('-')[1] - 1] : null,
+  };
+}
+
+// ─── Tablolar ──────────────────────────────────────────────────────────────────
+const AYLIK_SUTUN = [
+  ['donem', 'Tarife dönemi', 'Tarife', 'metin'], ['mahsup', 'Mahsuplaşma', 'Tarife', 'metin'],
+  ['aktif', 'Aktif enerji (tek zamanlı)', 'EPDK bileşenleri (vergisiz)'], ['dagitim', 'Dağıtım bedeli', 'EPDK bileşenleri (vergisiz)'], ['lu', 'Veriş dağıtım (LÜ)', 'EPDK bileşenleri (vergisiz)'],
+  ['sebekeTek', 'Tek zamanlı', 'Şebeke birim fiyatı'], ['sebekeGunduz', 'Gündüz', 'Şebeke birim fiyatı'], ['sebekePuant', 'Puant', 'Şebeke birim fiyatı'], ['sebekeGece', 'Gece', 'Şebeke birim fiyatı'],
+  ['catiOz', 'Öz tüketim değeri', 'Çatı GES'], ['fazla', 'İhtiyaç fazlası satış', 'Çatı GES'],
+  ['tarlaLisanssiz', 'Lisanssız · uzaktan mahsup', 'Tarla GES'], ['tarlaPiyasa', 'Piyasa satışı (PTF, GES ağırlıklı)', 'Tarla GES'],
+  ['ptfOrt', 'PTF ortalama (24 saat)', 'EPİAŞ PTF'], ['ptfKapsam', 'Veri kapsamı (gün)', 'EPİAŞ PTF', 'metin'],
+  ['uretim', 'Aylık üretim (kWh/kWp)', 'PVGIS · seçili şehir', 'sayi'],
+];
+function basliklar(sutunlar, ilk) {
+  let grp = '<tr><th class="grp" rowspan="2">' + ilk + '</th>', ust = '<tr>';
+  let i = 0;
+  while (i < sutunlar.length) {
+    let j = i; while (j < sutunlar.length && sutunlar[j][2] === sutunlar[i][2]) j++;
+    grp += '<th class="grp" colspan="' + (j - i) + '">' + sutunlar[i][2] + '</th>';
+    for (let k = i; k < j; k++) ust += '<th>' + sutunlar[k][1] + '</th>';
+    i = j;
+  }
+  return grp + '</tr>' + ust + '</tr>';
+}
+function aylikTablo() {
+  const satirlar = VERI.aylar.map(aylikHesap);
+  const h = hane();
+  let html = basliklar(AYLIK_SUTUN, 'Ay (' + birimAd() + ')');
+  const excel = [['Ay', ...AYLIK_SUTUN.map(c => c[2] + ' · ' + c[1] + (c[3] ? '' : ' (' + birimAd() + ')'))]];
+  for (const r of satirlar) {
+    html += '<tr><td class="l">' + ayEtiket(r.ay) + '</td>';
+    const ex = [ayEtiket(r.ay)];
+    for (const [k, , , tip] of AYLIK_SUTUN) {
+      if (tip === 'metin') { html += '<td style="text-align:center">' + r[k] + '</td>'; ex.push(r[k]); }
+      else { const v = tip === 'sayi' ? r[k] : birim(r[k]); html += v == null ? '<td class="bos">—</td>' : '<td class="n">' + sayiTR(v, h) + '</td>'; ex.push(v == null ? null : +v.toFixed(6)); }
+    }
+    html += '</tr>'; excel.push(ex);
+  }
+  // 12 ay ortalaması
+  html += '<tr class="ozet"><td class="l">12 ay ortalaması</td>';
+  const ex = ['12 ay ortalaması'];
+  for (const [k, , , tip] of AYLIK_SUTUN) {
+    if (tip === 'metin') { html += '<td></td>'; ex.push(''); continue; }
+    const d = satirlar.map(r => r[k]).filter(v => v != null);
+    const o = d.length ? d.reduce((a, b) => a + b, 0) / d.length : null;
+    const v = tip === 'sayi' ? o : birim(o);
+    html += v == null ? '<td class="bos">—</td>' : '<td class="n">' + sayiTR(v, h) + '</td>'; ex.push(v == null ? null : +v.toFixed(6));
+  }
+  html += '</tr>'; excel.push(ex);
+  document.getElementById('tAylik').innerHTML = html;
+  MATRIS.aylik = excel;
+  cizgiGrafik('gAylik', satirlar.map(r => ayKisa(r.ay)), [
+    { ad: 'Şebeke birim fiyatı (tek zamanlı)', renk: RENK.sebeke, v: satirlar.map(r => birim(r.sebekeTek)) },
+    { ad: 'GES ihtiyaç fazlası / lisanssız mahsup', renk: RENK.ges, v: satirlar.map(r => birim(r.fazla)) },
+    { ad: 'PTF · GES ağırlıklı (tarla piyasa)', renk: RENK.ptf, v: satirlar.map(r => birim(r.ptfGes)) },
+  ], 'Ay');
+}
+
+function saatlikTablo() {
+  const ay = document.getElementById('pAy').value;
+  const s = saatlikHesap(ay);
+  const h = hane();
+  const sut = ['Saat', 'Zaman dilimi', 'Güneş üretim payı (%)', 'Şebeke birim fiyatı', 'Çatı GES öz tüketim değeri', 'Çatı GES ihtiyaç fazlası', 'Tarla GES lisanssız mahsup', 'Tarla GES piyasa (PTF ort.)', 'PTF en düşük', 'PTF en yüksek'];
+  let html = '<tr>' + sut.map((x, i) => '<th>' + x + (i >= 3 ? '<br><span style="font-weight:400;font-size:10.5px">' + birimAd() + '</span>' : '') + '</th>').join('') + '</tr>';
+  const excel = [sut.map((x, i) => i >= 3 ? x + ' (' + birimAd() + ')' : x)];
+  const hucre = v => v == null ? '<td class="bos">—</td>' : '<td class="n">' + sayiTR(v, h) + '</td>';
+  for (const r of s) {
+    const saat = String(r.h).padStart(2, '0') + ':00–' + String(r.h + 1).padStart(2, '0') + ':00';
+    const vals = [birim(r.sebeke), birim(r.catiOz), birim(r.fazla), birim(r.fazla), birim(r.ptf), birim(r.ptfMin), birim(r.ptfMax)];
+    html += '<tr><td class="l">' + saat + '</td><td style="text-align:center">' + DILIM_AD[r.dilim] + '</td><td class="n">' + sayiTR(r.gunesPay * 100, 2) + '</td>' + vals.map(hucre).join('') + '</tr>';
+    excel.push([saat, DILIM_AD[r.dilim], +(r.gunesPay * 100).toFixed(4), ...vals.map(v => v == null ? null : +v.toFixed(6))]);
+  }
+  document.getElementById('tSaatlik').innerHTML = html;
+  MATRIS.saatlik = excel;
+  cizgiGrafik('gSaatlik', s.map(r => String(r.h).padStart(2, '0')), [
+    { ad: 'Şebeke birim fiyatı', renk: RENK.sebeke, v: s.map(r => birim(r.sebeke)) },
+    { ad: 'GES ihtiyaç fazlası / lisanssız mahsup', renk: RENK.ges, v: s.map(r => birim(r.fazla)) },
+    { ad: 'PTF saatlik ortalama', renk: RENK.ptf, v: s.map(r => birim(r.ptf)) },
+  ], 'Saat');
+}
+
+function ptfTablo() {
+  const h = hane();
+  const aylar = VERI.aylar;
+  const deger = aylar.map(ay => saatlikHesap(ay).map(r => birim(r.ptf)));
+  const hepsi = deger.flat().filter(v => v != null);
+  const mn = Math.min(...hepsi), mx = Math.max(...hepsi);
+  const RAMPA = ['#cde2fb', '#b7d3f6', '#9ec5f4', '#86b6ef', '#6da7ec', '#5598e7', '#3987e5', '#2a78d6', '#256abf', '#1c5cab'];
+  const renk = v => { if (v == null || !(mx > mn)) return ''; const i = Math.min(RAMPA.length - 1, Math.floor((v - mn) / (mx - mn) * RAMPA.length)); return 'background:' + RAMPA[i] + ';color:' + (i >= 6 ? '#fff' : '#0b0b0b'); };
+  let html = '<tr><th>Saat (' + birimAd() + ')</th>' + aylar.map(a => '<th>' + ayKisa(a) + '</th>').join('') + '<th>12 ay ort.</th></tr>';
+  const excel = [['Saat', ...aylar.map(ayEtiket), '12 ay ortalaması']];
+  for (let s = 0; s < 24; s++) {
+    const satir = aylar.map((_, i) => deger[i][s]);
+    const d = satir.filter(v => v != null);
+    const ort = d.length ? d.reduce((a, b) => a + b, 0) / d.length : null;
+    const saat = String(s).padStart(2, '0') + ':00';
+    html += '<tr><td class="l">' + saat + '</td>' + satir.map(v => v == null ? '<td class="bos">—</td>' : '<td class="n" style="' + renk(v) + '">' + sayiTR(v, h) + '</td>').join('') + '<td class="n" style="font-weight:700">' + (ort == null ? '—' : sayiTR(ort, h)) + '</td></tr>';
+    excel.push([saat, ...satir.map(v => v == null ? null : +v.toFixed(6)), ort == null ? null : +ort.toFixed(6)]);
+  }
+  document.getElementById('tPtf').innerHTML = html;
+  MATRIS.ptf = excel;
+}
+
+// ─── Çizgi grafik (tek eksen, hover crosshair + ipucu) ────────────────────────
+function cizgiGrafik(kapId, etiketler, seriler, xAd) {
+  const kap = document.getElementById(kapId);
+  const W = 1100, H = 300, sol = 64, sag = 220, ust = 16, alt = 34;
+  const tum = seriler.flatMap(s => s.v).filter(v => v != null);
+  if (!tum.length) { kap.innerHTML = '<div class="not">Grafik için veri yok. EPİAŞ bağlantısını kontrol edin.</div>'; return; }
+  let ymin = Math.min(0, ...tum), ymax = Math.max(...tum) * 1.08;
+  const adim = (() => { const r = ymax / 5, p = Math.pow(10, Math.floor(Math.log10(r))); return [1, 2, 2.5, 5, 10].map(k => k * p).find(k => k >= r); })();
+  ymax = Math.ceil(ymax / adim) * adim;
+  const n = etiketler.length, gw = W - sol - sag, gh = H - ust - alt;
+  const X = i => sol + (n === 1 ? gw / 2 : i * gw / (n - 1));
+  const Y = v => ust + gh - (v - ymin) / (ymax - ymin) * gh;
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img">';
+  for (let v = ymin; v <= ymax + 1e-9; v += adim) {
+    svg += '<line x1="' + sol + '" x2="' + (W - sag) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#e6e9ef" stroke-width="1"/>';
+    svg += '<text x="' + (sol - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" font-size="11" fill="#52514e">' + sayiTR(v, v % 1 ? 2 : 0) + '</text>';
+  }
+  const her = Math.max(1, Math.ceil(n / 14));
+  etiketler.forEach((e, i) => { if (i % her === 0 || i === n - 1) svg += '<text x="' + X(i) + '" y="' + (H - 12) + '" text-anchor="middle" font-size="11" fill="#52514e">' + e + '</text>'; });
+  svg += '<text x="' + sol + '" y="11" font-size="11" fill="#52514e">' + birimAd() + '</text>';
+  // Seri sonu etiketleri: çakışmayı önlemek için dikey olarak ayır
+  const sonlar = [];
+  seriler.forEach(s => {
+    let d = '', basla = true;
+    s.v.forEach((v, i) => { if (v == null) { basla = true; return; } d += (basla ? 'M' : 'L') + X(i).toFixed(1) + ',' + Y(v).toFixed(1); basla = false; });
+    svg += '<path d="' + d + '" fill="none" stroke="' + s.renk + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    let son = -1; s.v.forEach((v, i) => { if (v != null) son = i; });
+    if (son >= 0) { svg += '<circle cx="' + X(son) + '" cy="' + Y(s.v[son]) + '" r="4" fill="' + s.renk + '" stroke="#fff" stroke-width="2"/>'; sonlar.push({ y: Y(s.v[son]), x: X(son), ad: s.ad, v: s.v[son] }); }
+  });
+  sonlar.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < sonlar.length; i++) if (sonlar[i].y - sonlar[i - 1].y < 28) sonlar[i].y = sonlar[i - 1].y + 28;
+  sonlar.forEach(l => {
+    svg += '<text x="' + (l.x + 10) + '" y="' + (l.y - 2) + '" font-size="11" fill="#0b0b0b" font-weight="600">' + sayiTR(l.v, hane()) + '</text>';
+    svg += '<text x="' + (l.x + 10) + '" y="' + (l.y + 11) + '" font-size="10.5" fill="#52514e">' + (l.ad.length > 32 ? l.ad.slice(0, 31) + '…' : l.ad) + '</text>';
+  });
+  svg += '<line id="' + kapId + '_cizgi" x1="0" x2="0" y1="' + ust + '" y2="' + (ust + gh) + '" stroke="#52514e" stroke-width="1" stroke-dasharray="3,3" style="display:none"/>';
+  svg += '<rect x="' + sol + '" y="' + ust + '" width="' + gw + '" height="' + gh + '" fill="transparent" id="' + kapId + '_alan"/>';
+  svg += '</svg>';
+  kap.innerHTML = svg + '<div class="lejant">' + seriler.map(s => '<span><i style="background:' + s.renk + '"></i>' + s.ad + '</span>').join('') + '</div>';
+  const alan = document.getElementById(kapId + '_alan'), cizgi = document.getElementById(kapId + '_cizgi'), ip = document.getElementById('ipucu');
+  const svgEl = kap.querySelector('svg');
+  alan.addEventListener('mousemove', ev => {
+    const r = svgEl.getBoundingClientRect(), olcek = W / r.width;
+    const x = (ev.clientX - r.left) * olcek;
+    const i = Math.max(0, Math.min(n - 1, Math.round((x - sol) / gw * (n - 1))));
+    cizgi.setAttribute('x1', X(i)); cizgi.setAttribute('x2', X(i)); cizgi.style.display = '';
+    ip.innerHTML = '<div class="bas">' + xAd + ': ' + etiketler[i] + '</div>' + seriler.map(s => '<div class="sat"><span><i style="background:' + s.renk + '"></i>' + s.ad + '</span><b>' + (s.v[i] == null ? '—' : sayiTR(s.v[i], hane())) + '</b></div>').join('');
+    ip.style.display = 'block';
+    const px = ev.clientX + 16 + ip.offsetWidth > innerWidth ? ev.clientX - ip.offsetWidth - 12 : ev.clientX + 16;
+    ip.style.left = px + scrollX + 'px'; ip.style.top = ev.clientY + scrollY + 12 + 'px';
+  });
+  alan.addEventListener('mouseleave', () => { cizgi.style.display = 'none'; ip.style.display = 'none'; });
+}
+
+// ─── Gider tanım tablosu ───────────────────────────────────────────────────────
+const URL_MEDAS = 'https://www.meramedas.com.tr/tr/epdk-kurul-kararlari-ulusal-tarifeler.html';
+const URL_2464 = 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=2464&MevzuatTur=1&MevzuatTertip=5';
+const URL_EPDK_BEDEL = 'https://www.epdk.gov.tr/Detay/Icerik/3-1330/nihai-kullanicilara-uygulanan-diger-bedeller';
+const tarihNokta = iso => iso ? iso.split('-').reverse().join('.') : '';
+function giderSatirlari() {
+  const S = [];
+  const t = VERI.tarifeler, son = t[t.length - 1], onc = t.length > 1 ? t[t.length - 2] : null;
+  const tDay = 'EPDK tarife tablosu · ' + tarihNokta(son.gecerlilik) + ' (önceki: ' + (onc ? tarihNokta(onc.gecerlilik) : '—') + ')';
+  const tar = (kategori, kalem, f, birim, uygulama) => S.push({ kategori, kalem, deger: f(son), onceki: onc ? f(onc) : null, birim, uygulama, gecerlilik: tarihNokta(son.gecerlilik), dayanak: tDay, url: URL_MEDAS, okuma: 'oto', kaynak: 'EPDK tarife tablosu (Excel)' });
+  const KE = 'Enerji ve dağıtım bedelleri (vergisiz)';
+  tar(KE, 'Aktif enerji · AG tek terim · 30 kWh/gün üstü · tek zamanlı', x => x.AG.tek, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Aktif enerji · AG tek terim · 30 kWh/gün ve altı · tek zamanlı', x => x.AG_dusuk.tek, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Aktif enerji · AG · gündüz (06–17)', x => x.AG.gunduz, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Aktif enerji · AG · puant (17–22)', x => x.AG.puant, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Aktif enerji · AG · gece (22–06)', x => x.AG.gece, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Dağıtım bedeli · AG tek terim', x => x.AG.dagitim, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Aktif enerji · OG tek terim · tek zamanlı', x => x.OGT.tek, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Dağıtım bedeli · OG tek terim', x => x.OGT.dagitim, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Aktif enerji · OG çift terim · tek zamanlı', x => x.OGC.tek, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Dağıtım bedeli · OG çift terim', x => x.OGC.dagitim, 'kr/kWh', 'Tüketim');
+  tar(KE, 'Güç bedeli · OG çift terim', x => x.gucBedeli ?? null, 'kr/kW/ay', 'Tüketim');
+  tar(KE, 'Güç aşım bedeli · OG çift terim (güç bedelinin 2 katı)', x => x.gucBedeli != null ? x.gucBedeli * 2 : null, 'kr/kW/ay', 'Tüketim');
+  const KR = 'Reaktif enerji';
+  tar(KR, 'Reaktif enerji bedeli (endüktif/kapasitif, limit aşılınca ölçülen reaktifin tamamına)', x => x.reaktif ?? null, 'kr/kVArh', 'Tüketim (AG ≥ 9 kW bağlantı gücü, OG)');
+  const reElle = { url: 'https://www.piagrid.com/rehber/reaktif-enerji-bedeli', okuma: 'elle', kaynak: 'Tarife uygulama usul ve esasları · elle doğrulandı 29.09.2026' };
+  S.push({ kategori: KR, kalem: 'Reaktif sınırı · endüktif · kurulu güç 50 kVA ve üzeri', deger: 20, formul: 'Endüktif reaktif / aktif tüketim oranı bu sınırı aşarsa', birim: '%', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: 'EPDK tarife uygulamalarına ilişkin usul ve esaslar', ...reElle });
+  S.push({ kategori: KR, kalem: 'Reaktif sınırı · kapasitif · kurulu güç 50 kVA ve üzeri', deger: 15, formul: 'Kapasitif reaktif / aktif tüketim oranı bu sınırı aşarsa', birim: '%', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: 'EPDK tarife uygulamalarına ilişkin usul ve esaslar', ...reElle });
+  S.push({ kategori: KR, kalem: 'Reaktif sınırı · endüktif · kurulu güç 50 kVA altı', deger: 33, formul: 'Endüktif reaktif / aktif tüketim oranı bu sınırı aşarsa', birim: '%', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: 'EPDK tarife uygulamalarına ilişkin usul ve esaslar', ...reElle });
+  S.push({ kategori: KR, kalem: 'Reaktif bedel muafiyeti', deger: null, formul: 'Mesken, aydınlatma, tek fazlı ve bağlantı gücü 9 kW\'a kadar (dahil) aboneler', birim: '', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: 'EPDK tarife uygulamalarına ilişkin usul ve esaslar', ...reElle });
+  const KG = 'GES · veriş yönlü dağıtım bedeli';
+  tar(KG, 'Lisanssız Üretici-1 dağıtım bedeli', x => x.LU1, 'kr/kWh', 'GES');
+  tar(KG, 'Lisanssız Üretici-2 dağıtım bedeli (5346 Ek-I (e): güneş)', x => x.LU2, 'kr/kWh', 'GES');
+
+  // Vergiler
+  const KV = 'Vergiler ve yasal kesintiler';
+  const e = VERI.bedeller && VERI.bedeller.etv;
+  const etvOk = { url: URL_2464, okuma: e ? 'oto' : 'elle', kaynak: e ? 'mevzuat.gov.tr (Kanun metni, ' + tarihTR(e.okunma) + ')' : 'mevzuat.gov.tr (okunamadı, kanundaki son oran)' };
+  S.push({ kategori: KV, kalem: 'Elektrik Tüketim Vergisi · diğer kullanım (ticarethane, mesken)', deger: e ? e.diger : 5, birim: '%', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: '2464 s. Belediye Gelirleri Kanunu m.38/b', ...etvOk });
+  S.push({ kategori: KV, kalem: 'Elektrik Tüketim Vergisi · imal, istihsal, taşıma, soğutma işleri', deger: e ? e.imal : 1, birim: '%', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: '2464 s. Belediye Gelirleri Kanunu m.38/a', ...etvOk });
+  S.push({ kategori: KV, kalem: 'Elektrik Tüketim Vergisi · matrah', deger: null, formul: 'Aktif enerji satış bedeli (iletim, dağıtım ve perakende hizmet bedelleri hariç)', birim: '', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: '2464 s. Kanun m.37', ...etvOk });
+  const elle = { url: '', okuma: 'elle', kaynak: 'Mevzuat · elle doğrulandı 29.09.2026' };
+  S.push({ kategori: KV, kalem: 'KDV · elektrik (ticarethane, sanayi, genel oran)', deger: 20, birim: '%', uygulama: 'Tüketim + GES satışı', gecerlilik: '10.07.2023', dayanak: '3065 s. KDV Kanunu m.28 · Cumhurbaşkanı Kararı (genel oran %20)', ...elle });
+  S.push({ kategori: KV, kalem: 'KDV · mesken ve tarımsal sulama elektriği (indirimli oran)', deger: 10, birim: '%', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: '3065 s. KDV Kanunu m.28 · Cumhurbaşkanı Kararı (indirimli oran)', ...elle });
+  S.push({ kategori: KV, kalem: 'KDV · matrah', deger: null, formul: 'Aktif enerji + dağıtım + güç/reaktif bedelleri + Elektrik Tüketim Vergisi', birim: '', uygulama: 'Tüketim', gecerlilik: 'Yürürlükte', dayanak: '3065 s. KDV Kanunu m.20-24', ...elle });
+  S.push({ kategori: KV, kalem: 'ÖTV · elektrik enerjisi', deger: 0, formul: 'Uygulanmaz', birim: '%', uygulama: 'Tüketim', gecerlilik: '—', dayanak: '4760 s. ÖTV Kanunu listelerinde elektrik yer almaz', ...elle });
+  S.push({ kategori: KV, kalem: 'TRT payı', deger: 0, formul: 'Kaldırıldı (önceki oran %2)', birim: '%', uygulama: 'Tüketim', gecerlilik: '01.01.2022', dayanak: '3093 s. Kanun m.1 değişikliği, RG 25.12.2021', ...elle });
+  S.push({ kategori: KV, kalem: 'Enerji Fonu', deger: 0, formul: 'Kaldırıldı (önceki oran %1)', birim: '%', uygulama: 'Tüketim', gecerlilik: '01.01.2022', dayanak: 'Kanun değişikliği, RG 25.12.2021', ...elle });
+
+  // Tapu harçları (492 s. Kanun, otomatik) ve belediye harçları (2464 s. Kanun, belediye meclisi belirler)
+  const KT = 'Harçlar · tapu (arazi GES)';
+  const tp = VERI.bedeller && VERI.bedeller.tapu;
+  const URL_492 = 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=492&MevzuatTur=1&MevzuatTertip=5';
+  for (const x of (tp ? tp.kalemler : [])) S.push({ kategori: KT, kalem: x.kalem, deger: x.deger, birim: x.birim, uygulama: 'GES (arazi alımı, irtifak, tescil)', gecerlilik: 'Yürürlükte', dayanak: x.dayanak, url: URL_492, okuma: x.deger == null ? 'eski' : 'oto', kaynak: 'mevzuat.gov.tr (Kanun metni, ' + tarihTR(tp.okunma) + ')' });
+  const KB = 'Harçlar · belediye (imar ve yapı)';
+  const beled = { deger: null, birim: 'TL', uygulama: 'GES (arazi)', gecerlilik: 'Belediye meclis kararı', url: URL_2464, okuma: 'bekliyor', kaynak: 'Belediye belirlenince otomatik okunacak' };
+  [['Plan ve proje tasdik harcı', 'Beher inşaat m² · 2464 s. Kanun m.80/c, m.84'],
+   ['Yapı kullanma izni harcı', 'Beher inşaat m² · 2464 s. Kanun m.80/f, m.84'],
+   ['Zemin açma izni ve toprak hafriyatı harcı', 'Toprak m³ / kanal m² · 2464 s. Kanun m.80/d, m.84'],
+   ['Parselasyon harcı', 'Beher m² · 2464 s. Kanun m.80/a, m.84'],
+   ['İfraz ve tevhit harcı', 'Beher m² · 2464 s. Kanun m.80/b, m.84'],
+   ['Bina inşaat harcı', 'İnşaat alanı m² · 2464 s. Kanun Ek Madde 1-5'],
+   ['Yapı ruhsatı ve diğer ücretler (ücret tarifesi)', 'Belediye meclisi ücret tarifesi · 2464 s. Kanun m.97']]
+    .forEach(([k, d]) => S.push({ kategori: KB, kalem: k, formul: 'Tutar belediye meclisince kanundaki aralıkta belirlenir', dayanak: d, ...beled }));
+
+  // Son Kaynak Tedarik Tarifesi
+  const KS = 'Son Kaynak Tedarik Tarifesi (SKTT)';
+  S.push({ kategori: KS, kalem: 'SKTT yıllık tüketim limiti · ticarethane ve sanayi', deger: 15000, birim: 'kWh/yıl', uygulama: 'Tüketim', gecerlilik: '01.01.2026', dayanak: 'EPDK Kurul Kararı 30.10.2025', ...elle });
+  S.push({ kategori: KS, kalem: 'SKTT yıllık tüketim limiti · mesken', deger: 4000, birim: 'kWh/yıl', uygulama: 'Tüketim', gecerlilik: '01.01.2026', dayanak: 'EPDK Kurul Kararı 30.10.2025', ...elle });
+  S.push({ kategori: KS, kalem: 'SKTT enerji bedeli katsayısı · mesken dışı', deger: 1.0938, formul: 'Aktif enerji = (PTF + YEKDEM birim maliyeti) × katsayı', birim: 'katsayı', uygulama: 'Tüketim', gecerlilik: '01.01.2026', dayanak: 'EPDK Kurul Kararı 30.10.2025', ...elle });
+
+  // EPDK kurul kararları (otomatik)
+  for (const k of (VERI.bedeller && VERI.bedeller.kaynaklar) || []) {
+    const m = k.baslik.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/), y = k.baslik.match(/(\d{4}) yıl/);
+    const gec = m ? String(m[1]).padStart(2, '0') + '.' + String(m[2]).padStart(2, '0') + '.' + m[3] : y && !/TORETOSAF/.test(k.baslik) ? '01.01.' + y[1] : k.kararTarihi;
+    for (const x of k.kalemler) {
+      S.push({
+        kategori: k.kategori, kalem: [x.bolum, x.kalem].filter(Boolean).join(' · '), deger: x.deger, formul: x.formul, onceki: x.onceki, birim: x.birim,
+        uygulama: k.uygulama, gecerlilik: gec, dayanak: 'EPDK Kurul Kararı ' + k.kararNo + ' (' + k.kararTarihi + ') · RG ' + k.rgTarih + '/' + k.rgSayi,
+        url: k.belgeUrl || URL_EPDK_BEDEL, okuma: k.eskiVeri ? 'eski' : 'oto', kaynak: 'EPDK kurul kararı (Word)', aciklama: k.aciklama,
+      });
+    }
+  }
+  return S;
+}
+function giderKategorileri() {
+  const s = document.getElementById('gKategori'), onceki = s.value;
+  const k = [...new Set(giderSatirlari().map(x => x.kategori))];
+  s.innerHTML = '<option value="">Tümü</option>' + k.map(x => '<option>' + x + '</option>').join('');
+  if (k.includes(onceki)) s.value = onceki;
+}
+function giderTablo() {
+  const kat = document.getElementById('gKategori').value, ara = document.getElementById('gAra').value.toLocaleLowerCase('tr-TR');
+  const tum = giderSatirlari();
+  const S = tum.filter(x => (!kat || x.kategori === kat) && (!ara || (x.kalem + ' ' + x.dayanak + ' ' + x.kategori).toLocaleLowerCase('tr-TR').includes(ara)));
+  const OKUMA = { oto: '🔄 Otomatik', elle: '✋ Elle doğrulandı', eski: '⚠ Son okunan (kaynağa ulaşılamadı)', bekliyor: '⏳ Belediye bekleniyor' };
+  const sut = ['Kategori', 'Kalem', 'Değer', 'Birim', 'Formül / açıklama', 'Önceki dönem', 'Değişim (%)', 'Uygulama', 'Geçerlilik', 'Dayanak', 'Okuma', 'Kaynak'];
+  let html = '<tr>' + sut.slice(1).map(x => '<th>' + x + '</th>').join('') + '</tr>';
+  const excel = [sut.slice(0, 11).concat(['Kaynak bağlantısı'])];
+  const n = (v, b) => v == null ? '' : sayiTR(v, /^kr/.test(b || '') ? 4 : Number.isInteger(v) ? 0 : (Math.abs(v) < 10 ? 4 : 2));
+  let sonKat = null;
+  for (const x of S) {
+    const deg = x.deger != null && x.onceki != null && x.onceki !== 0 ? (x.deger - x.onceki) / x.onceki * 100 : null;
+    if (x.kategori !== sonKat) { html += '<tr><td colspan="11" style="background:#eef2f8;font-weight:700;color:#1a3a6b">' + x.kategori + '</td></tr>'; sonKat = x.kategori; }
+    html += '<tr><td style="white-space:normal;min-width:260px">' + x.kalem + '</td>'
+      + '<td class="n" style="font-weight:700">' + n(x.deger, x.birim) + '</td><td>' + (x.birim || '') + '</td>'
+      + '<td style="white-space:normal;min-width:180px">' + (x.formul || '') + '</td>'
+      + '<td class="n">' + n(x.onceki, x.birim) + '</td><td class="n">' + (deg == null ? '' : sayiTR(deg, 1)) + '</td>'
+      + '<td>' + (x.uygulama || '') + '</td><td>' + (x.gecerlilik || '') + '</td>'
+      + '<td style="white-space:normal;min-width:220px;font-size:11.5px">' + x.dayanak + '</td>'
+      + '<td>' + OKUMA[x.okuma] + '</td>'
+      + '<td>' + (x.url ? '<a href="' + x.url + '" target="_blank" rel="noopener">' + x.kaynak + '</a>' : x.kaynak) + '</td></tr>';
+    excel.push([x.kategori, x.kalem, x.deger, x.birim || '', x.formul || '', x.onceki, deg == null ? null : +deg.toFixed(4), x.uygulama || '', x.gecerlilik || '', x.dayanak, OKUMA[x.okuma].replace(/^\S+ /, ''), x.url || '']);
+  }
+  document.getElementById('tGider').innerHTML = html;
+  MATRIS.gider = excel;
+  const b = VERI.bedeller || {};
+  const oto = tum.filter(x => x.okuma === 'oto').length;
+  document.getElementById('gOzet').innerHTML = S.length + ' kalem gösteriliyor · ' + oto + '/' + tum.length + ' otomatik okunuyor · Son kaynak kontrolü: <b>' + tarihTR(b.sonKontrol) + '</b>' + (b.hatalar && b.hatalar.length ? ' · <span style="color:#c0392b">⚠ ' + b.hatalar.join('; ') + '</span>' : '');
+  const acik = [...new Set(((b.kaynaklar) || []).flatMap(k => k.aciklama || []))].filter(a => !/^Enerji Piyasası Düzenleme Kurulunun/.test(a));
+  document.getElementById('gNot').innerHTML = (acik.length ? '<b>Kurul kararlarındaki uygulama notları:</b><ul style="margin:4px 0 8px 18px;padding:0">' + acik.map(a => '<li>' + a + '</li>').join('') + '</ul>' : '')
+    + '<b>Not:</b> Belediye harçlarının güncel tutarını her belediye meclisi kendi ücret tarifesiyle belirler. Tarla GES\'in belediyesi belli olunca o belediyenin tarifesi otomatik okunacak. Bağlantı ve katılım bedeli projeye özeldir; aşağıdaki hesaplayıcı, bu tablodaki otomatik okunan EPDK birim bedelleriyle hesaplar.';
+}
+
+// ─── GES bağlantı / katılım / resmi bedel hesaplayıcı ─────────────────────────
+// Kalem etiketindeki güç aralığını çözer: "50-250 kW (dâhil)", "250 kW-5 MW", "700 kWe - 1 MWe (1 MWe hariç)", "5 MW üzeri", "50 kWe ve altı"
+function aralik(etiket) {
+  const L = etiket.replace(/(\d)\.(\d{3})/g, '$1$2');
+  const t = [...L.matchAll(/(\d+(?:,\d+)?)\s*(MWe|MW|kWe|kW)?/g)].map(m => ({ n: +m[1].replace(',', '.'), b: m[2] || '' }));
+  if (!t.length) return null;
+  for (let i = t.length - 2; i >= 0; i--) if (!t[i].b) t[i].b = t[i + 1].b;
+  const kw = x => /^M/.test(x.b) ? x.n * 1000 : x.n;
+  if (/ve altı/i.test(L)) return { lo: 0, hi: kw(t[0]), dahilLo: true };
+  if (/üzeri/i.test(L)) return { lo: kw(t[0]), hi: Infinity, dahilLo: /ve üzeri/i.test(L) };
+  if (t.length < 2) return null;
+  return { lo: kw(t[0]), hi: kw(t[1]), dahilLo: kw(t[0]) === 0, hariçHi: /hariç/i.test(L) };
+}
+const araliktaMi = (a, kw) => a && (a.dahilLo ? kw >= a.lo : kw > a.lo) && (a.hariçHi ? kw < a.hi : kw <= a.hi);
+// "46.030 + (kWe Cinsinden Kurulu Güç - 1000) × 54" veya "1.255 + 5,1 × (Güç - 100)"
+function formulHesapla(f, kw) {
+  const s = f.replace(/(\d)\.(\d{3})/g, '$1$2').replace(/,/g, '.').replace(/×/g, '*');
+  let m = /^\s*([\d.]+)\s*\+\s*\([^)]*?-\s*([\d.]+)\s*\)\s*\*\s*([\d.]+)/.exec(s);
+  if (m) return +m[1] + (kw - +m[2]) * +m[3];
+  m = /^\s*([\d.]+)\s*\+\s*([\d.]+)\s*\*\s*\([^)]*?-\s*([\d.]+)\s*\)/.exec(s);
+  if (m) return +m[1] + +m[2] * (kw - +m[3]);
+  return null;
+}
+function hesaplayici() {
+  const kw = +document.getElementById('hGuc').value || 0, ger = document.getElementById('hGerilim').value;
+  const yer = +document.getElementById('hYeralti').value || 0, hav = +document.getElementById('hHavai').value || 0;
+  const cati = document.getElementById('hCati').checked;
+  const K = (VERI.bedeller && VERI.bedeller.kaynaklar) || [];
+  const satir = [];
+  const deger = x => x.deger != null ? x.deger : (x.formul ? formulHesapla(x.formul, kw) : null);
+  const ekle = (ad, kaynakFiltre, kalemFiltre, tur, carpan = 1, aciklama = '') => {
+    for (const k of K.filter(kaynakFiltre)) {
+      const x = k.kalemler.find(y => kalemFiltre(y));
+      if (x) { const v = deger(x); satir.push({ ad, kalem: x.kalem, birim: x.birim, birimDeger: v, tutar: v == null ? null : v * carpan, tur, dayanak: 'EPDK ' + k.kararNo + ' · RG ' + k.rgTarih, aciklama }); return; }
+    }
+    satir.push({ ad, kalem: 'Kurul kararında bu güce uyan satır bulunamadı', tutar: null, tur, dayanak: '' });
+  };
+  const gucte = y => araliktaMi(aralik(y.kalem), kw);
+  if (cati && kw <= 50) {
+    ekle('Proje onay bedeli', k => k.fId === 21218, y => /Proje Onay/i.test(y.kalem), 'Tek seferlik');
+    ekle('Kabul bedeli', k => k.fId === 21218, y => /Kabul/i.test(y.kalem), 'Tek seferlik');
+  } else {
+    ekle('Proje onay bedeli', k => k.fId === 23583, y => /Proje Onay/i.test(y.kalem) && gucte(y), 'Tek seferlik');
+    ekle('Kabul bedeli', k => k.fId === 23583, y => /Kabul/i.test(y.kalem) && gucte(y), 'Tek seferlik');
+  }
+  ekle('Şebeke işletmecisi başvuru bedeli', k => k.fId === 1853 && /başvuru/i.test(k.baslik), gucte, 'Tek seferlik (başvuru yılı)');
+  ekle('Görevli tedarik şirketi yıllık işletim bedeli', k => k.fId === 1853 && /görevli tedarik şirketlerinin tahsil edeceği yıllık/i.test(k.baslik), gucte, 'Yıllık');
+  ekle('Şebeke işletmecisi yıllık işletim bedeli', k => k.fId === 1853 && /şebeke işletmecisinin tahsil edeceği yıllık/i.test(k.baslik), gucte, 'Yıllık');
+  // Bağlantı bedeli (TL/metre × uzunluk)
+  for (const [tip, m] of [['Yer altı', yer], ['Havai', hav]]) {
+    if (!m) continue;
+    ekle('Bağlantı bedeli · ' + tip + ' · ' + m.toLocaleString('tr-TR') + ' m', k => k.fId === 1851,
+      y => (ger === 'OG' ? /^OG/.test(y.bolum) : /^AG/.test(y.bolum) && gucte({ kalem: y.kalem.split(' · ')[0] })) && new RegExp(tip + '$', 'i').test(y.kalem), 'Tek seferlik', m);
+  }
+  const tek = satir.filter(s => /^Tek/.test(s.tur)).reduce((a, s) => a + (s.tutar || 0), 0);
+  const yil = satir.filter(s => s.tur === 'Yıllık').reduce((a, s) => a + (s.tutar || 0), 0);
+  const tl = v => v == null ? '—' : v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  let html = '<tr><th>Bedel</th><th>Kurul kararındaki satır</th><th>Birim bedel</th><th>Birim</th><th>Tutar (TL, KDV hariç)</th><th>Tür</th><th>Dayanak</th></tr>';
+  const excel = [['Bedel', 'Kurul kararındaki satır', 'Birim bedel', 'Birim', 'Tutar (TL, KDV hariç)', 'Tür', 'Dayanak']];
+  for (const s of satir) {
+    html += '<tr><td class="l">' + s.ad + '</td><td style="white-space:normal;min-width:260px;font-size:11.5px">' + s.kalem + '</td><td class="n">' + tl(s.birimDeger) + '</td><td>' + (s.birim || '') + '</td><td class="n" style="font-weight:700">' + tl(s.tutar) + '</td><td>' + s.tur + '</td><td style="font-size:11.5px">' + s.dayanak + '</td></tr>';
+    excel.push([s.ad, s.kalem, s.birimDeger ?? null, s.birim || '', s.tutar == null ? null : +s.tutar.toFixed(2), s.tur, s.dayanak]);
+  }
+  html += '<tr class="ozet"><td class="l">Toplam tek seferlik</td><td></td><td></td><td></td><td class="n">' + tl(tek) + '</td><td></td><td></td></tr>';
+  html += '<tr class="ozet"><td class="l">Toplam yıllık</td><td></td><td></td><td></td><td class="n">' + tl(yil) + '</td><td></td><td></td></tr>';
+  excel.push(['Toplam tek seferlik', '', null, '', +tek.toFixed(2), '', ''], ['Toplam yıllık', '', null, '', +yil.toFixed(2), '', '']);
+  document.getElementById('tHesap').innerHTML = html;
+  MATRIS.hesap = excel;
+}
+
+// ─── Fatura ve mahsuplaşma kontrolü ───────────────────────────────────────────
+let MAHSUP = null, mSecili = null;
+const tlTR = v => v == null ? '—' : v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const kwhTR = v => v == null ? '—' : v.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+async function mahsupYukle() {
+  try { MAHSUP = await (await fetch(API + '/api/mahsup')).json(); mahsupCiz(); }
+  catch (e) { document.getElementById('mDurum').innerHTML = '<div class="rozet hata">Mahsup verisi alınamadı: ' + e.message + '</div>'; }
+}
+function mahsupCiz() {
+  const M = MAHSUP, p = M.panel || {};
+  const d = [];
+  d.push('<div class="rozet ' + (p.hata ? 'hata' : (p.sonBasari ? 'ok' : '')) + '">Elektrik paneli: ' + (p.sonBasari ? 'son okuma <b>' + tarihTR(p.sonBasari) + '</b>' : '<b>henüz okunamadı</b>') + (p.hata ? ' · ' + p.hata + ' (son deneme ' + tarihTR(p.sonDeneme) + ')' : '') + '</div>');
+  d.push('<div class="rozet">Saklanan fatura: <b>' + M.faturaSayisi + '</b>' + (p.sonDosya ? ' · son ham kayıt: ' + p.sonDosya : '') + '</div>');
+  d.push('<div class="rozet">Saatlik sayaç verisi olan tesis: <b>' + M.olcumTesisleri.length + '</b></div>');
+  document.getElementById('mDurum').innerHTML = d.join('');
+  const rejim = ay => ay + '-01' >= '2026-05-01' ? 'Saatlik' : 'Aylık';
+  let html = '<tr><th>Tesis</th><th>Belediye</th>' + M.aylar.map(a => '<th>' + ayKisa(a) + '<br><span style="font-weight:400;font-size:10.5px">' + rejim(a) + ' mahsup</span></th>').join('') + '</tr>';
+  if (!M.tesisler.length) html += '<tr><td colspan="' + (M.aylar.length + 2) + '" class="bos" style="padding:18px">Henüz fatura veya sayaç verisi yok. Panel açıldığında faturalar otomatik okunacak.</td></tr>';
+  for (const t of M.tesisler) {
+    html += '<tr><td class="l">' + (t.ad || '') + '<br><span style="font-weight:400;color:#52514e;font-size:11px">' + t.tesisatNo + '</span></td><td>' + (t.belediye ? t.belediye.ilce + ' / ' + t.belediye.il : '—') + '</td>';
+    for (const ay of M.aylar) {
+      const h = M.hucreler.find(x => x.tesisatNo === t.tesisatNo && x.ay === ay);
+      const k = h && h.karsilastirma;
+      let ic, stil = '';
+      if (!h || h.sonuc === 'veri-yok') ic = '<span style="color:#9aa3b2">—</span>';
+      else if (h.sonuc === 'ortusuyor') { ic = '✔ Örtüşüyor'; stil = 'color:#1e8449;font-weight:700'; }
+      else if (h.sonuc === 'farkli') { const tf = k.satirlar.find(s => s.k === 'toplamTL'); ic = '✘ ' + k.farkli + ' kalemde fark' + (tf && tf.fark != null ? '<br><span style="font-size:11px">toplam fark ' + tlTR(tf.fark) + ' TL</span>' : ''); stil = 'background:#c0392b;color:#fff;font-weight:700'; }
+      else if (h.sonuc === 'fatura-bekleniyor') ic = '⏳ Fatura bekleniyor';
+      else ic = '⚠ Hesaplanamadı';
+      const sec = mSecili && mSecili.no === t.tesisatNo && mSecili.ay === ay ? ';outline:2px solid #1a3a6b' : '';
+      html += '<td style="text-align:center;cursor:pointer;' + stil + sec + '" onclick="mahsupDetay(\'' + t.tesisatNo + '\',\'' + ay + '\')">' + ic + '</td>';
+    }
+    html += '</tr>';
+  }
+  document.getElementById('tMahsup').innerHTML = html;
+  // Excel: her hücre × kalem
+  const ex = [['Tesisat no', 'Tesis', 'Belediye', 'Dönem', 'Mahsup rejimi', 'Sonuç', 'Kalem', 'Birim', 'Fatura', 'Hesap', 'Fark (fatura − hesap)', 'Kalem durumu', 'Saatlik mahsup etkisi (TL)', 'Olası sebep']];
+  for (const h of M.hucreler.filter(x => x.sonuc !== 'veri-yok')) {
+    const t = M.tesisler.find(x => x.tesisatNo === h.tesisatNo) || {};
+    const bel = t.belediye ? t.belediye.ilce + ' / ' + t.belediye.il : '';
+    const seb = h.karsilastirma ? h.karsilastirma.sebepler.join(' ') : '';
+    const etki = h.rejimEtkisi ? h.rejimEtkisi.farkTL : null;
+    if (h.karsilastirma) for (const s of h.karsilastirma.satirlar) ex.push([h.tesisatNo, t.ad || '', bel, h.ay, rejim(h.ay), h.sonuc, s.ad, s.birim, s.fatura, s.hesap, s.fark, s.durum, etki, seb]);
+    else ex.push([h.tesisatNo, t.ad || '', bel, h.ay, rejim(h.ay), h.sonuc, '', '', null, null, null, '', etki, (h.hesap && h.hesap.notlar || []).join(' ')]);
+  }
+  MATRIS.mahsup = ex;
+  if (mSecili) mahsupDetay(mSecili.no, mSecili.ay, true);
+}
+function mahsupDetay(no, ay, sessiz) {
+  mSecili = { no, ay };
+  if (!sessiz) mahsupCiz();
+  const h = MAHSUP.hucreler.find(x => x.tesisatNo === no && x.ay === ay);
+  const t = MAHSUP.tesisler.find(x => x.tesisatNo === no) || { tesisatNo: no };
+  const el = document.getElementById('mDetay');
+  if (!h || h.sonuc === 'veri-yok') { el.innerHTML = '<div class="not">' + ayEtiket(ay) + ' için bu tesiste fatura veya sayaç verisi yok.</div>'; return; }
+  const k = h.karsilastirma, hs = h.hesap || {};
+  let html = '<h3 style="margin:0 0 6px;color:#1a3a6b;font-size:15px">' + (t.ad || no) + ' · ' + ayEtiket(ay) + ' · ' + (hs.rejim || '') + ' mahsup</h3>';
+  html += '<div class="parametreler" style="margin-bottom:10px">'
+    + '<label>Tarife sınıfı<select id="tsSinif"><option value="AG">AG tek terim (30 kWh/gün üstü)</option><option value="AG_dusuk">AG tek terim (30 kWh/gün ve altı)</option><option value="OGT">OG tek terim</option><option value="OGC">OG çift terim</option></select></label>'
+    + '<label>Zaman<select id="tsZaman"><option value="tek">Tek zamanlı</option><option value="uc">Üç zamanlı</option></select></label>'
+    + '<label>Tüketim vergisi<select id="tsEtv"><option value="diger">%5 diğer (ticarethane)</option><option value="imal">%1 imal/istihsal</option></select></label>'
+    + '<label>Sözleşme gücü (kW)<input id="tsGuc" type="number" style="padding:5px 8px;border:1px solid #c7cfdc;border-radius:5px;width:110px"></label>'
+    + '<button class="btn" onclick="tesisKaydet(\'' + no + '\')">Ayarı kaydet ve yeniden hesapla</button></div>';
+  if (k) {
+    html += '<div class="tablo-kap"><table><tr><th>Kalem</th><th>Birim</th><th>Faturada</th><th>Uygulamanın hesabı</th><th>Fark (fatura − hesap)</th><th>Durum</th></tr>';
+    for (const s of k.satirlar) {
+      const f = s.birim === 'kWh' ? kwhTR : tlTR;
+      const du = s.durum === 'ok' ? '<span style="color:#1e8449;font-weight:700">✔ Örtüşüyor</span>' : s.durum === 'fark' ? '<span style="color:#c0392b;font-weight:700">✘ Fark var</span>' : '<span style="color:#9aa3b2">Faturada yok</span>';
+      html += '<tr><td class="l">' + s.ad + '</td><td>' + s.birim + '</td><td class="n">' + f(s.fatura) + '</td><td class="n">' + f(s.hesap) + '</td><td class="n" style="font-weight:700">' + (s.fark == null ? '—' : f(s.fark)) + '</td><td>' + du + '</td></tr>';
+    }
+    html += '</table></div>';
+    if (k.sebepler.length) html += '<div class="not"><b>Olası sebepler:</b><ul style="margin:4px 0 0 18px;padding:0">' + k.sebepler.map(x => '<li>' + x + '</li>').join('') + '</ul></div>';
+  } else if (hs.durum === 'hesaplandi') {
+    html += '<div class="not">Fatura henüz gelmedi. Sayaç verisine göre beklenen fatura: toplam <b>' + tlTR(hs.toplamTL) + ' TL</b> (tüketim ' + kwhTR(hs.tuketimKwh) + ' kWh), ihtiyaç fazlası alacağı <b>' + tlTR(hs.fazlaBedelTL) + ' TL</b> (' + kwhTR(hs.fazlaKwh) + ' kWh).</div>';
+  }
+  if (h.rejimEtkisi) {
+    const e = h.rejimEtkisi;
+    html += '<div class="rozet" style="margin-top:8px;display:inline-block">Mahsup rejimi etkisi (aynı sayaç verisiyle): aylık mahsup olsaydı net <b>' + tlTR(e.aylikNet) + ' TL</b>, saatlik mahsupla net <b>' + tlTR(e.saatlikNet) + ' TL</b> → fark <b style="color:' + (e.farkTL > 0 ? '#c0392b' : '#1e8449') + '">' + tlTR(e.farkTL) + ' TL</b></div>';
+  }
+  if (hs.notlar && hs.notlar.length) html += '<div class="not"><b>Hesap notları:</b> ' + hs.notlar.join(' ') + '</div>';
+  el.innerHTML = html;
+  document.getElementById('tsSinif').value = t.tarifeSinifi || 'AG';
+  document.getElementById('tsZaman').value = t.zaman || 'tek';
+  document.getElementById('tsEtv').value = t.etv || 'diger';
+  document.getElementById('tsGuc').value = t.sozlesmeGucuKw || '';
+}
+async function tesisKaydet(no) {
+  const b = { tesisatNo: no, tarifeSinifi: document.getElementById('tsSinif').value, zaman: document.getElementById('tsZaman').value, etv: document.getElementById('tsEtv').value, sozlesmeGucuKw: +document.getElementById('tsGuc').value || null };
+  await fetch(API + '/api/mahsup/tesis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) });
+  await mahsupYukle();
+}
+async function panelSimdiOku() {
+  yuklemeGoster('Elektrik paneli okunuyor…');
+  try { MAHSUP = await (await fetch(API + '/api/mahsup/panel-cek', { method: 'POST' })).json(); mahsupCiz(); }
+  catch (e) { alert('Panel okunamadı: ' + e.message); } finally { yuklemeGizle(); }
+}
+async function olcumYukle() {
+  const f = document.getElementById('mDosya').files[0];
+  if (!f) { alert('Önce saatlik sayaç dosyasını seçin.'); return; }
+  yuklemeGoster('Sayaç verisi yükleniyor…');
+  try {
+    const b64 = await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = no; r.readAsDataURL(f); });
+    const r = await (await fetch(API + '/api/mahsup/olcum', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dosyaAdi: f.name, base64: b64, tesisatNo: document.getElementById('mTesisat').value.trim() }) })).json();
+    if (!r.ok) alert('Yüklenemedi: ' + r.hata); else { alert(r.tesis.length + ' tesis, ' + r.gun + ' günlük saatlik veri kaydedildi.'); await mahsupYukle(); }
+  } catch (e) { alert('Yükleme hatası: ' + e.message); } finally { yuklemeGizle(); }
+}
+
+// ─── 6 · Elektrik Fatura Paneli verileri (saklanan, eklemeli) ──────────────────
+let PANELV = null;
+async function panelVeriYukle() {
+  try { PANELV = await (await fetch(API + '/api/panel')).json(); panelSecimleri(); panelCiz(); }
+  catch (e) { document.getElementById('pvDurum').innerHTML = '<div class="rozet hata">Saklanan panel verisi alınamadı: ' + e.message + '</div>'; }
+}
+async function panelVeriYenile() {
+  const b = document.getElementById('btnPanelYenile');
+  b.disabled = true;
+  yuklemeGoster('Elektrik Fatura Paneli okunuyor, yeni kayıtlar ekleniyor…');
+  try {
+    PANELV = await (await fetch(API + '/api/panel/yenile', { method: 'POST' })).json();
+    panelSecimleri(); panelCiz();
+    const y = PANELV.yenileme || {};
+    if (y.hata) alert('Panel okunamadı: ' + y.hata + '\n\nSaklanan kayıtlar korunuyor.');
+    else alert('Panelden ' + y.gelen.toLocaleString('tr-TR') + ' fatura okundu.\nYeni eklenen: ' + y.yeni.toLocaleString('tr-TR') + '\nGüncellenen: ' + y.guncellenen.toLocaleString('tr-TR') + '\nSaklanan toplam: ' + PANELV.faturalar.length.toLocaleString('tr-TR'));
+    mahsupYukle();
+    panelVeriYukle();
+  } catch (e) { alert('Yenileme hatası: ' + e.message); }
+  finally { b.disabled = false; yuklemeGizle(); }
+}
+function panelSecimleri() {
+  if (!PANELV || !PANELV.var) return;
+  const doldur = (id, liste, tumu) => {
+    const s = document.getElementById(id), onceki = s.value;
+    s.innerHTML = (tumu ? '<option value="">Tümü</option>' : '') + liste.map(x => '<option value="' + x + '">' + x + '</option>').join('');
+    if (onceki && liste.includes(onceki)) s.value = onceki;
+  };
+  const yillar = [...new Set(PANELV.faturalar.map(f => f.donem.slice(0, 4)))].sort().reverse();
+  doldur('pvYil', yillar, false);
+  doldur('pvGrup', [...new Set(PANELV.faturalar.map(f => f.grup || '(grupsuz)'))].sort((a, b) => a.localeCompare(b, 'tr')), true);
+}
+function panelCiz() {
+  const P = PANELV;
+  const d = [];
+  if (!P || !P.var) {
+    const h = P && P.durum && P.durum.hata;
+    d.push('<div class="rozet ' + (h ? 'hata' : '') + '">Henüz saklanan panel verisi yok.' + (h ? ' Son deneme hatası: ' + h : ' "Veriyi yenile" butonuna basın.') + '</div>');
+    document.getElementById('pvDurum').innerHTML = d.join('');
+    document.getElementById('tPanel').innerHTML = ''; document.getElementById('tGes').innerHTML = '';
+    return;
+  }
+  const s = P.durum || {}, y = P.sonYenileme || {};
+  d.push('<div class="rozet ' + (s.hata ? 'hata' : 'ok') + '">Son yenileme: <b>' + tarihTR(P.alinma) + '</b>' + (y.gelen != null ? ' · ' + y.gelen.toLocaleString('tr-TR') + ' okundu, ' + y.yeni.toLocaleString('tr-TR') + ' yeni, ' + y.guncellenen.toLocaleString('tr-TR') + ' güncellendi' : '') + (s.hata ? ' · son deneme hatası: ' + s.hata : '') + '</div>');
+  d.push('<div class="rozet">Saklanan fatura: <b>' + P.faturalar.length.toLocaleString('tr-TR') + '</b> · lokasyon: <b>' + P.lokasyonlar.length.toLocaleString('tr-TR') + '</b> · ilk kayıt: ' + tarihTR(P.ilkAlinma) + '</div>');
+  d.push('<div class="rozet">Panel adresi: <b>' + (s.adres || '—') + '</b> · panelin fatura klasörü: ' + (s.klasor || '—') + '</div>');
+  d.push('<div class="rozet">Saklandığı yer: <b>Desktop\\CLAUDE\\elektrik_mahsup_veri.json</b> · ham anlık görüntüler: <b>Desktop\\CLAUDE\\elektrik_panel_ham\\</b></div>');
+  // Aynı sözleşme + aynı ay + aynı kWh ve tutarla birden fazla fatura dosyası: mükerrer kesilmiş olabilir
+  const grp = {};
+  for (const f of P.faturalar) (grp[f.sozlesmeNo + '|' + f.donem + '|' + f.tuketim + '|' + f.odenecek] = grp[f.sozlesmeNo + '|' + f.donem + '|' + f.tuketim + '|' + f.odenecek] || []).push(f);
+  const supheli = Object.values(grp).filter(l => l.length > 1);
+  if (supheli.length) d.push('<div class="rozet hata" title="' + supheli.map(l => l[0].lokasyon + ' · ' + l[0].donem + ' · ' + tlTR(l[0].odenecek) + ' TL · ' + l.map(f => f.dosya).join(' / ')).join('\n').replace(/"/g, '&quot;') + '">⚠ Aynı ay için aynı tutar ve kWh ile birden fazla fatura dosyası: <b>' + supheli.length + '</b> (mükerrer kesilmiş olabilir, ayrıntı için üzerine gelin)</div>');
+  document.getElementById('pvDurum').innerHTML = d.join('');
+
+  const yil = document.getElementById('pvYil').value, grup = document.getElementById('pvGrup').value, deger = document.getElementById('pvDeger').value;
+  const ara = document.getElementById('pvAra').value.trim().toLocaleLowerCase('tr-TR');
+  const lokAd = Object.fromEntries(P.lokasyonlar.map(l => [l.sozlesmeNo, l]));
+  const aylar = Array.from({ length: 12 }, (_, i) => yil + '-' + String(i + 1).padStart(2, '0'));
+  const satir = {};
+  for (const f of P.faturalar) {
+    if (!f.donem.startsWith(yil)) continue;
+    const l = lokAd[f.sozlesmeNo] || {}, g = l.grup || f.grup || '(grupsuz)', ad = l.lokasyon || f.lokasyon || '';
+    if (grup && g !== grup) continue;
+    if (ara && !(ad + ' ' + f.sozlesmeNo).toLocaleLowerCase('tr-TR').includes(ara)) continue;
+    const r = (satir[f.sozlesmeNo] = satir[f.sozlesmeNo] || { no: f.sozlesmeNo, ad, grup: g, ay: {} });
+    const c = (r.ay[f.donem] = r.ay[f.donem] || { odenecek: 0, tuketim: 0, adet: 0 });
+    c.odenecek += +f.odenecek || 0; c.tuketim += +f.tuketim || 0; c.adet++;
+  }
+  const deg = c => !c ? null : deger === 'birim' ? (c.tuketim ? c.odenecek / c.tuketim : null) : c[deger];
+  const fmt = v => v == null ? '' : deger === 'tuketim' ? kwhTR(v) : deger === 'birim' ? v.toLocaleString('tr-TR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : tlTR(v);
+  const topla = hucreler => { const t = { odenecek: 0, tuketim: 0, adet: 0 }; for (const c of hucreler) if (c) { t.odenecek += c.odenecek; t.tuketim += c.tuketim; t.adet += c.adet; } return t.adet ? t : null; };
+  const satirlar = Object.values(satir).sort((a, b) => a.grup.localeCompare(b.grup, 'tr') || a.ad.localeCompare(b.ad, 'tr'));
+  const birimAd = { odenecek: 'TL', tuketim: 'kWh', birim: 'TL/kWh' }[deger];
+  let html = '<tr><th>Lokasyon</th><th>Sözleşme no</th><th>Grup</th>' + aylar.map(a => '<th>' + ayKisa(a) + '</th>').join('') + '<th>Yıl toplamı</th></tr>';
+  const ex = [['Lokasyon', 'Sözleşme no', 'Grup', ...aylar.map(ayEtiket), 'Yıl toplamı (' + birimAd + ')']];
+  for (const r of satirlar) {
+    const hs = aylar.map(a => r.ay[a]), top = topla(hs);
+    html += '<tr><td class="l">' + r.ad + '</td><td>' + r.no + '</td><td class="l">' + r.grup + '</td>' + hs.map(c => '<td class="n"' + (c && c.adet > 1 ? ' title="' + c.adet + ' fatura"' : '') + '>' + fmt(deg(c)) + '</td>').join('') + '<td class="n" style="font-weight:700">' + fmt(deg(top)) + '</td></tr>';
+    ex.push([r.ad, r.no, r.grup, ...hs.map(c => deg(c)), deg(top)]);
+  }
+  if (!satirlar.length) html += '<tr><td colspan="16" class="bos" style="padding:18px">Seçime uyan fatura yok.</td></tr>';
+  else {
+    const ayTop = aylar.map(a => topla(satirlar.map(r => r.ay[a]))), genel = topla(ayTop);
+    html += '<tr style="background:#eef2f8;font-weight:700"><td class="l">TOPLAM (' + satirlar.length + ' sözleşme)</td><td></td><td></td>' + ayTop.map(c => '<td class="n">' + fmt(deg(c)) + '</td>').join('') + '<td class="n">' + fmt(deg(genel)) + '</td></tr>';
+    ex.push(['TOPLAM', '', '', ...ayTop.map(c => deg(c)), deg(genel)]);
+  }
+  document.getElementById('tPanel').innerHTML = html;
+  MATRIS.panel = ex;
+
+  // GES aylık / saatlik mahsup
+  let g = '<tr><th>Ay</th><th>Geçerli kural</th><th>Saat</th><th>Çekiş</th><th>Veriş</th><th>Aylık mahsup: faturalanacak</th><th>Aylık mahsup: ihtiyaç fazlası</th><th>Saatlik mahsup: faturalanacak</th><th>Saatlik mahsup: ihtiyaç fazlası</th><th>Saatlik mahsubun etkisi</th></tr>';
+  const gx = [['Ay', 'Geçerli kural', 'Saat', 'Çekiş (kWh)', 'Veriş (kWh)', 'Aylık mahsup faturalanacak (kWh)', 'Aylık mahsup ihtiyaç fazlası (kWh)', 'Saatlik mahsup faturalanacak (kWh)', 'Saatlik mahsup ihtiyaç fazlası (kWh)', 'Saatlik mahsubun etkisi (kWh)']];
+  for (const a of P.gesAylik) {
+    const etki = Math.round((a.saatlikTuketim - a.aylikTuketim) * 100) / 100;
+    g += '<tr><td class="l">' + ayEtiket(a.ay) + '</td><td>' + a.rejim + '</td><td class="n">' + a.saat + '</td><td class="n">' + kwhTR(a.cekis) + '</td><td class="n">' + kwhTR(a.veris) + '</td><td class="n">' + kwhTR(a.aylikTuketim) + '</td><td class="n">' + kwhTR(a.aylikFazla) + '</td><td class="n">' + kwhTR(a.saatlikTuketim) + '</td><td class="n">' + kwhTR(a.saatlikFazla) + '</td><td class="n" style="font-weight:700;color:' + (etki > 0 ? '#c0392b' : '#1e8449') + '">' + (etki > 0 ? '+' : '') + kwhTR(etki) + '</td></tr>';
+    gx.push([ayEtiket(a.ay), a.rejim, a.saat, a.cekis, a.veris, a.aylikTuketim, a.aylikFazla, a.saatlikTuketim, a.saatlikFazla, etki]);
+  }
+  if (!P.gesAylik.length) g += '<tr><td colspan="10" class="bos" style="padding:18px">GES saatlik verisi yok.</td></tr>';
+  document.getElementById('tGes').innerHTML = g;
+  MATRIS.ges = gx;
+}
+
+// ─── Sekmeler: Elektrik Analizi | Fatura Kontrol (aynı sunucudaki /fatura-kontrol sayfası çerçevede) ─
+function sekmeAc(ad) {
+  const bolum = { analiz: 'sekmeAnaliz', kontrol: 'sekmeKontrol', ges: 'sekmeGes', belgeler: 'sekmeBelgeler', referans: 'sekmeReferans' }, dugme = { analiz: 'skAnaliz', kontrol: 'skKontrol', ges: 'skGes', belgeler: 'skBelgeler', referans: 'skReferans' };
+  for (const k of Object.keys(bolum)) {
+    document.getElementById(bolum[k]).style.display = k === ad ? (k === 'analiz' ? '' : 'block') : 'none';
+    document.getElementById(dugme[k]).classList.toggle('aktif', k === ad);
+  }
+  const cer = { kontrol: ['kontrolCerceve', '/fatura-kontrol'], ges: ['gesCerceve', '/aosb'], belgeler: ['belgeCerceve', '/belgeler'], referans: ['referansCerceve', '/referans'] }[ad];
+  if (cer) { const c = document.getElementById(cer[0]); if (!c.src || ad === 'referans') c.src = cer[1]; }
+  try { history.replaceState(null, '', ad === 'analiz' ? location.pathname : '#' + ad); } catch (e) { }
+  window.scrollTo(0, 0);
+}
+if (['#kontrol', '#ges', '#belgeler', '#referans'].includes(location.hash)) setTimeout(() => sekmeAc(location.hash.slice(1)), 0);
+
+// ─── Geri dön / tam ekran ────────────────────────────────────────────────────
+function aktifSekme() { return document.getElementById('sekmeKontrol').style.display === 'block' ? 'kontrol' : document.getElementById('sekmeGes').style.display === 'block' ? 'ges' : 'analiz'; }
+function gesPenceresi() { const c = document.getElementById('gesCerceve'); return c && c.src ? c.contentWindow : null; }
+function kontrolPenceresi() { const c = document.getElementById('kontrolCerceve'); return c && c.src ? c.contentWindow : null; }
+function geriDon() {
+  if (document.getElementById('pvModal').style.display === 'block') return pvKapat();
+  if (document.getElementById('mailModal').style.display === 'block') return mailKapat();
+  if (aktifSekme() === 'kontrol' || aktifSekme() === 'ges') {
+    const w = aktifSekme() === 'ges' ? gesPenceresi() : kontrolPenceresi();
+    if (w && w.geri && w.geri()) return;
+    return sekmeAc('analiz');
+  }
+  if (history.length > 1) history.back(); else alert('Geri dönülecek sayfa yok.');
+}
+function tamEkran() {
+  if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(e => alert('Tam ekran açılamadı: ' + e.message));
+}
+document.addEventListener('fullscreenchange', () => { document.getElementById('btnTamEkran').textContent = document.fullscreenElement ? '⛶ Tam ekrandan çık' : '⛶ Tam ekran'; });
+
+// ─── Rapor listesi (yazdır + mail ortak) ────────────────────────────────────
+const ANALIZ_RAPOR_AD = { aylik: '12 Aylık Fiyat Matrisi', saatlik: 'Saatlik Matris', ptf: 'PTF Saat x Ay Matrisi', gider: 'Gider Tanım Tablosu', hesap: 'GES Resmi Bedel Hesabı', mahsup: 'Fatura ve Mahsup Kontrolü', panel: 'Elektrik Paneli Faturaları', ges: 'GES Aylık-Saatlik Mahsup' };
+const GES_RAPOR_AD = { ozet: 'Genel özet', ay: 'Ay bazlı fatura matrisi', fiyat: 'Birim fiyat · geçici ↔ kesin', ges: 'GES veriş ↔ mahsup', bedel: 'Bedeller · reaktif · demand', saglama: 'Fatura sağlaması', trafo: 'ANT Trafo hizmet faturaları' };
+const KONTROL_RAPOR_AD = { ozet: 'Genel özet', ay: 'Ay bazlı karşılaştırma', fatura: 'Fatura bazlı karşılaştırma (vergiler dahil)', fazla: 'Fazla faturalananlar', eksik: 'Az faturalananlar', mukayese: 'Fazla ↔ az karşılaştırması', incele: 'Orantısız tutarlar (incelenmeli)', mukerrer: 'Mükerrer faturalar (kesin)', cift: 'Aynı ay birden çok fatura', ek: 'Ek / düzeltme faturaları', firma: 'Firma bazlı özet', lokasyon: 'Lokasyon bazlı özet', ges: 'GES FATURA & KONTROL' };
+async function gesHazir() {
+  const c = document.getElementById('gesCerceve');
+  if (!c.src) c.src = '/aosb';
+  for (let i = 0; i < 100; i++) { const w = c.contentWindow; if (w && w.kontrolDurum && w.kontrolDurum().hazir) return w; await new Promise(r => setTimeout(r, 200)); }
+  return null;
+}
+async function kontrolHazir() {
+  const c = document.getElementById('kontrolCerceve');
+  if (!c.src) c.src = '/fatura-kontrol';
+  for (let i = 0; i < 100; i++) { const w = c.contentWindow; if (w && w.kontrolDurum && w.kontrolDurum().hazir) return w; await new Promise(r => setTimeout(r, 200)); }
+  return null;
+}
+function varsayilanSecim() {
+  if (aktifSekme() === 'ges') { const w = gesPenceresi(); const g = w && w.kontrolDurum ? w.kontrolDurum().gorunum : 'ozet'; return ['g:' + (GES_RAPOR_AD[g] ? g : 'ozet')]; }
+  if (aktifSekme() === 'kontrol') { const w = kontrolPenceresi(); const g = w && w.kontrolDurum ? w.kontrolDurum().gorunum : 'ozet'; return ['k:' + (g && g !== 'yontem' ? g : 'ozet')]; }
+  return ['a:aylik'];
+}
+function raporSecimCiz(kap, secili, degisince) {
+  let h = '<div class="grup-bas">⚡ Elektrik Analizi</div>';
+  for (const [k, ad] of Object.entries(ANALIZ_RAPOR_AD)) if (MATRIS[k] && MATRIS[k].length > 1) h += '<label><input type="checkbox" value="a:' + k + '"' + (secili.includes('a:' + k) ? ' checked' : '') + '> ' + ad + '</label>';
+  h += '<div class="grup-bas">🧾 Fatura Kontrol <span style="font-weight:400;font-size:11px">(sekmedeki filtrelerle)</span></div>';
+  for (const [k, ad] of Object.entries(KONTROL_RAPOR_AD)) h += '<label><input type="checkbox" value="k:' + k + '"' + (secili.includes('k:' + k) ? ' checked' : '') + '> ' + ad + '</label>';
+  h += '<div class="grup-bas">🏭 AOSB Fabrika · ☀ GES <span style="font-weight:400;font-size:11px">(sekmedeki filtrelerle)</span></div>';
+  for (const [k, ad] of Object.entries(GES_RAPOR_AD)) h += '<label><input type="checkbox" value="g:' + k + '"' + (secili.includes('g:' + k) ? ' checked' : '') + '> ' + ad + '</label>';
+  kap.innerHTML = h;
+  kap.querySelectorAll('input').forEach(i => i.onchange = degisince || null);
+}
+const seciliListe = kap => [...kap.querySelectorAll('input:checked')].map(i => i.value);
+async function raporlariTopla(secim) {
+  const out = [];
+  for (const v of secim.filter(x => x.startsWith('a:'))) { const k = v.slice(2); if (MATRIS[k]) out.push({ ad: 'Elektrik Analizi · ' + ANALIZ_RAPOR_AD[k] + (k === 'panel' ? ' ' + document.getElementById('pvYil').value : k === 'saatlik' ? ' ' + ayEtiket(document.getElementById('pAy').value) : ''), satirlar: MATRIS[k] }); }
+  const kIds = secim.filter(x => x.startsWith('k:')).map(x => x.slice(2));
+  let filtre = '';
+  if (kIds.length) {
+    const w = await kontrolHazir();
+    if (!w) throw new Error('Fatura Kontrol verisi yüklenemedi.');
+    out.push(...w.disaRaporlar(kIds).map(r => ({ ad: r.ad, satirlar: r.satirlar, bilgi: r.bilgi })));
+    filtre = w.filtreMetni();
+  }
+  const gIds = secim.filter(x => x.startsWith('g:')).map(x => x.slice(2));
+  if (gIds.length) {
+    const w = await gesHazir();
+    if (!w) throw new Error('AOSB Fabrika verisi yüklenemedi.');
+    const gf = w.filtreMetni();
+    out.push(...w.disaRaporlar(gIds).map(r => ({ ad: r.ad, satirlar: r.satirlar, filtre: gf, bilgi: r.bilgi })));
+  }
+  return { raporlar: out, filtre };
+}
+
+// ─── Yazdır: ekranda A4 ön izleme → siyah-beyaz çıktı ───────────────────────
+let PV = null, pvSira = 0;
+function yazdirAc(secim) {
+  document.getElementById('pvModal').style.display = 'block';
+  raporSecimCiz(document.getElementById('pvRaporlar'), secim || varsayilanSecim(), pvCiz);
+  pvCiz();
+}
+function pvKapat() { document.getElementById('pvModal').style.display = 'none'; }
+const pvSecili = () => seciliListe(document.getElementById('pvRaporlar'));
+const pvHucre = v => typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString('tr-TR') : v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })) : (v == null ? '' : String(v));
+const pvKac = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function pvTablo(bas, satirlar) {
+  return '<table><thead><tr>' + bas.map(x => '<th>' + pvKac(x) + '</th>').join('') + '</tr></thead><tbody>' + satirlar.map(r => '<tr>' + r.map(v => '<td' + (typeof v === 'number' ? ' class="n"' : '') + '>' + pvKac(pvHucre(v)) + '</td>').join('') + '</tr>').join('') + '</tbody></table>';
+}
+async function pvCiz() {
+  const benim = ++pvSira;
+  const kap = document.getElementById('pvSayfalar'), bilgi = document.getElementById('pvBilgi');
+  const secim = pvSecili();
+  if (!secim.length) { kap.innerHTML = ''; bilgi.textContent = 'Soldan en az bir rapor seçin.'; PV = null; return; }
+  bilgi.textContent = '⏳ Ön izleme hazırlanıyor…';
+  let veri;
+  try { veri = await raporlariTopla(secim); } catch (e) { bilgi.textContent = e.message; return; }
+  if (benim !== pvSira) return;
+  const yatay = document.getElementById('pvYon').value === 'yatay', W = yatay ? 297 : 210, H = yatay ? 210 : 297, KENAR = 10, ALT = 14;
+  // Ölçüm gerçek A4 boyutunda, ekran dışında yapılır; mm→px oranı sayfanın kendisinden ölçülür (Windows %125 ölçek tuzağı)
+  const olc = document.createElement('div');
+  olc.style.cssText = 'position:absolute;left:-20000px;top:0;visibility:hidden';
+  document.body.appendChild(olc);
+  const tarih = new Date().toLocaleString('tr-TR');
+  const sayfaAc = (baslik, alt) => { const p = document.createElement('div'); p.className = 'pv-sayfa'; p.style.cssText = 'width:' + W + 'mm;height:' + H + 'mm;padding:' + KENAR + 'mm ' + KENAR + 'mm ' + ALT + 'mm'; p.innerHTML = '<div class="pv-bas"><b>' + pvKac(baslik) + '</b><br><span>ELEKTRİK ANALİZİ · SC Grup · ' + pvKac(alt) + '</span></div><div class="pv-ic"></div><div class="pv-alt"><span>' + tarih + '</span><span class="pv-no"></span></div>'; return p; };
+  const sayfalar = [];
+  for (const rap of veri.raporlar) {
+    const bas = rap.satirlar[0] || [], govde = rap.satirlar.slice(1);
+    const alt = (rap.filtre || (rap.ad.startsWith('Fatura Kontrol') ? veri.filtre : 'hazırlanma ' + tarih)) + (rap.bilgi ? ' · ' + rap.bilgi : '');
+    const p = sayfaAc(rap.ad, alt); olc.appendChild(p);
+    const pxmm = p.offsetWidth / W;
+    const ic = p.querySelector('.pv-ic');
+    const icW = (W - 2 * KENAR) * pxmm, icH = (H - KENAR - ALT) * pxmm - p.querySelector('.pv-bas').offsetHeight - 8;
+    const ornek = govde.slice(0, 400);
+    const dene = f => { ic.style.fontSize = f + 'px'; ic.innerHTML = pvTablo(bas, ornek); const t = ic.querySelector('table'); return { w: t.scrollWidth, h: t.offsetHeight }; };
+    // Yazı boyutu: genişliğe sığan en büyük; rapor tek sayfaya sığıyorsa kâğıdın yüksekliğini de doldurur
+    let f = +document.getElementById('pvYazi').value || 0;
+    if (!f) { f = 6; for (let x = 16; x >= 6; x -= 0.5) { const m = dene(x); if (m.w <= icW && (govde.length > 60 || m.h <= icH || x <= 9)) { f = x; break; } } }
+    ic.style.fontSize = f + 'px'; ic.innerHTML = pvTablo(bas, govde.slice(0, 1));
+    const tb = ic.querySelector('table'), baslikH = tb.querySelector('thead').offsetHeight;
+    const ilk = tb.querySelector('tbody tr'), satirH = Math.max(1, ilk ? ilk.offsetHeight : 12);
+    const sayfaBasi = Math.max(1, Math.floor((icH - baslikH) / satirH));
+    olc.removeChild(p);
+    const parca = govde.length ? Math.ceil(govde.length / sayfaBasi) : 1;
+    for (let i = 0; i < parca; i++) {
+      const s2 = sayfaAc(rap.ad + (parca > 1 ? ' (' + (i + 1) + '/' + parca + ')' : ''), alt);
+      const ic2 = s2.querySelector('.pv-ic'); ic2.style.fontSize = f + 'px';
+      ic2.innerHTML = govde.length ? pvTablo(bas, govde.slice(i * sayfaBasi, (i + 1) * sayfaBasi)) : '<i>Kayıt yok.</i>';
+      sayfalar.push(s2);
+    }
+  }
+  document.body.removeChild(olc);
+  sayfalar.forEach((p, i) => { p.querySelector('.pv-no').textContent = 'Sayfa ' + (i + 1) + ' / ' + sayfalar.length; });
+  kap.innerHTML = '';
+  sayfalar.forEach(p => kap.appendChild(p));
+  const gercekW = sayfalar[0] ? sayfalar[0].offsetWidth : 1;
+  kap.style.zoom = Math.min(1, (kap.parentElement.clientWidth - 40) / gercekW);
+  PV = { sayfalar, yatay };
+  bilgi.textContent = veri.raporlar.length + ' rapor · ' + sayfalar.length + ' sayfa · A4 ' + (yatay ? 'yatay' : 'dikey') + ' · siyah-beyaz. Yazdır düğmesi tam bu görünümü basar.';
+}
+function pvYazdir() {
+  if (!PV || !PV.sayfalar.length) { alert('Önce en az bir rapor seçin.'); return; }
+  const css = [...document.styleSheets].map(ss => { try { return [...ss.cssRules].filter(r => /pv-/.test(r.cssText)).map(r => r.cssText).join('\n'); } catch (e) { return ''; } }).join('\n');
+  const fr = document.createElement('iframe');
+  fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(fr);
+  const d = fr.contentDocument;
+  d.open();
+  d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>SECENGIDA ELEKTRİK ANALİZİ</title><style>' + css + '@page{size:A4 ' + (PV.yatay ? 'landscape' : 'portrait') + ';margin:0}html,body{margin:0;padding:0}.pv-sayfa{page-break-after:always;break-after:page;box-shadow:none;margin:0}.pv-sayfa:last-child{page-break-after:auto;break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>' + PV.sayfalar.map(p => p.outerHTML).join('') + '</body></html>');
+  d.close();
+  setTimeout(() => { fr.contentWindow.focus(); fr.contentWindow.print(); setTimeout(() => fr.remove(), 60000); }, 300);
+}
+
+// ─── Mail: Outlook ile çok alıcılı gönderim ─────────────────────────────────
+const EPOSTA_RE = /^[^\s@;,]+@[^\s@;,]+\.[^\s@;,]+$/;
+function cipKur(kutuId) {
+  const kutu = document.getElementById(kutuId), inp = kutu.querySelector('input');
+  const ekle = metin => { for (const a of String(metin).split(/[;,\s]+/).map(x => x.trim()).filter(Boolean)) { if (cipler(kutuId).includes(a)) continue; const c = document.createElement('span'); c.className = 'cip' + (EPOSTA_RE.test(a) ? '' : ' hatali'); c.dataset.adres = a; c.title = EPOSTA_RE.test(a) ? a : 'Geçersiz e-posta adresi'; c.innerHTML = pvKac(a) + '<button type="button" title="Kaldır">×</button>'; c.querySelector('button').onclick = e => { e.stopPropagation(); c.remove(); }; kutu.insertBefore(c, inp); } };
+  inp.onkeydown = e => { if (['Enter', ',', ';', 'Tab'].includes(e.key) && inp.value.trim()) { e.preventDefault(); ekle(inp.value); inp.value = ''; } else if (e.key === 'Backspace' && !inp.value) { const s2 = kutu.querySelectorAll('.cip'); if (s2.length) s2[s2.length - 1].remove(); } };
+  inp.onblur = () => { if (inp.value.trim()) { ekle(inp.value); inp.value = ''; } };
+  inp.onpaste = e => { const t = (e.clipboardData || window.clipboardData).getData('text'); if (/[;,\s]/.test(t.trim())) { e.preventDefault(); ekle(t); } };
+  inp.oninput = () => { if (/[;,]$/.test(inp.value)) { ekle(inp.value); inp.value = ''; } };
+  kutu._ekle = ekle;
+}
+const cipler = kutuId => [...document.getElementById(kutuId).querySelectorAll('.cip')].map(c => c.dataset.adres);
+let MAIL_BILGI = null;
+async function mailAc(secim) {
+  document.getElementById('mailModal').style.display = 'block';
+  document.getElementById('mlSonuc').className = 'mail-sonuc';
+  raporSecimCiz(document.getElementById('mlRaporlar'), secim || varsayilanSecim(), mailKonuGuncelle);
+  if (!document.getElementById('mlKime')._ekle) { cipKur('mlKime'); cipKur('mlBilgi'); }
+  if (!document.getElementById('mlMesaj').value) document.getElementById('mlMesaj').value = 'Merhaba,\n\nElektrik analizi raporu aşağıda ve ekteki Excel dosyasındadır.\n\nSaygılarımla,\nİshak DURMUŞ';
+  mailKonuGuncelle(true);
+  if (!MAIL_BILGI) {
+    const sel = document.getElementById('mlGonderen');
+    sel.innerHTML = '<option>⏳ Outlook hesapları okunuyor…</option>';
+    try { MAIL_BILGI = await (await fetch(API + '/api/mail/bilgi')).json(); } catch (e) { MAIL_BILGI = { hesaplar: [], adresler: [] }; }
+    const h = MAIL_BILGI.hesaplar || [];
+    sel.innerHTML = h.length ? h.map(a => '<option value="' + pvKac(a) + '">' + pvKac(a) + '</option>').join('') : '<option value="">Outlook varsayılan hesabı</option>';
+    const kurumsal = h.find(a => /scgrup/i.test(a)); if (kurumsal) sel.value = kurumsal;
+    try { const onceki = localStorage.getItem('elk_mail_gonderen'); if (onceki && h.includes(onceki)) sel.value = onceki; } catch (e) { }
+    document.getElementById('mlAdresler').innerHTML = (MAIL_BILGI.adresler || []).map(a => '<option value="' + pvKac(a) + '">').join('');
+  }
+}
+function mailKapat() { document.getElementById('mailModal').style.display = 'none'; }
+function mailKonuGuncelle(ilk) {
+  const k = document.getElementById('mlKonu');
+  if (ilk !== true && k.dataset.elle === '1') return;
+  const secim = seciliListe(document.getElementById('mlRaporlar'));
+  const adlar = secim.map(v => v.startsWith('a:') ? ANALIZ_RAPOR_AD[v.slice(2)] : v.startsWith('g:') ? 'GES ' + GES_RAPOR_AD[v.slice(2)] : KONTROL_RAPOR_AD[v.slice(2)]);
+  k.value = 'Elektrik Analizi · ' + (adlar.length ? adlar.slice(0, 3).join(', ') + (adlar.length > 3 ? ' +' + (adlar.length - 3) : '') : 'rapor') + ' · ' + new Date().toLocaleDateString('tr-TR');
+  k.oninput = () => { k.dataset.elle = '1'; };
+}
+async function mailGonder(hemen) {
+  const sonuc = document.getElementById('mlSonuc');
+  ['mlKime', 'mlBilgi'].forEach(id => { const inp = document.getElementById(id).querySelector('input'); if (inp.value.trim()) { document.getElementById(id)._ekle(inp.value); inp.value = ''; } });
+  const kime = cipler('mlKime'), bilgi = cipler('mlBilgi'), secim = seciliListe(document.getElementById('mlRaporlar'));
+  const hatali = [...kime, ...bilgi].filter(a => !EPOSTA_RE.test(a));
+  const hata = m => { sonuc.className = 'mail-sonuc hata'; sonuc.textContent = m; };
+  if (!kime.length) return hata('En az bir alıcı ekleyin (Kime).');
+  if (hatali.length) return hata('Geçersiz e-posta adresi: ' + hatali.join(', ') + ' · kırmızı adresleri düzeltin veya × ile kaldırın.');
+  if (!secim.length) return hata('Soldan en az bir rapor seçin.');
+  if (hemen && !confirm('Mail HEMEN gönderilecek.\n\nKime: ' + kime.join(', ') + (bilgi.length ? '\nBilgi: ' + bilgi.join(', ') : '') + '\nKonu: ' + document.getElementById('mlKonu').value + '\nRapor sayısı: ' + secim.length + '\n\nOnaylıyor musunuz?')) return;
+  yuklemeGoster(hemen ? 'Mail gönderiliyor…' : 'Mail Outlook\'ta hazırlanıyor…');
+  try {
+    const { raporlar, filtre } = await raporlariTopla(secim);
+    const gonderen = document.getElementById('mlGonderen').value;
+    try { localStorage.setItem('elk_mail_gonderen', gonderen); } catch (e) { }
+    const r = await (await fetch(API + '/api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gonderen, kime, bilgi, konu: document.getElementById('mlKonu').value, not: document.getElementById('mlMesaj').value, raporlar, filtre, excel: document.getElementById('mlExcel').checked, govdeTablo: document.getElementById('mlGovde').checked, hemen, dosyaAdi: 'ELEKTRİK ANALİZİ ' + new Date().toISOString().slice(0, 10) }) })).json();
+    if (!r.ok) return hata('Gönderilemedi: ' + r.hata);
+    sonuc.className = 'mail-sonuc ok';
+    sonuc.textContent = r.durum === 'gonderildi' ? '✔ Mail gönderildi → ' + kime.join(', ') + (bilgi.length ? ' (bilgi: ' + bilgi.join(', ') + ')' : '') : '✔ Mail Outlook\'ta açıldı. Kontrol edip Gönder\'e basın.';
+    MAIL_BILGI = null;
+  } catch (e) { hata('Hata: ' + e.message); }
+  finally { yuklemeGizle(); }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { pvKapat(); mailKapat(); } });
+
+// ─── Dışa aktarma ──────────────────────────────────────────────────────────────
+async function excelAktar(tur) {
+  const ad = { aylik: '12 Aylık Fiyat Matrisi', saatlik: 'Saatlik Matris ' + ayEtiket(document.getElementById('pAy').value), ptf: 'PTF Saat x Ay Matrisi', gider: 'Gider Tanım Tablosu', hesap: 'GES Resmi Bedel Hesabı', mahsup: 'Fatura ve Mahsup Kontrolü', panel: 'Elektrik Paneli Faturaları ' + document.getElementById('pvYil').value, ges: 'GES Aylık-Saatlik Mahsup' }[tur];
+  try {
+    yuklemeGoster('Excel hazırlanıyor…');
+    const r = await fetch(API + '/api/excel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ad, satirlar: MATRIS[tur], bilgi: 'EPİAŞ PTF son güncelleme: ' + tarihTR(VERI.durum.ptfSonGuncelleme) + ' · Rapor: ' + tarihTR(new Date().toISOString()) }) });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const blob = await r.blob();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ELEKTRİK ANALİZİ - ' + ad + '.xlsx'; a.click();
+  } catch (e) { alert('Excel oluşturulamadı: ' + e.message); }
+  finally { yuklemeGizle(); }
+}
+function panoyaKopyala(tur) {
+  const tsv = MATRIS[tur].map(r => r.map(v => typeof v === 'number' ? String(v).replace('.', ',') : (v == null ? '' : v)).join('\t')).join('\r\n');
+  navigator.clipboard.writeText(tsv).then(() => alert('Tablo kopyalandı. Excel\'de bir hücreye tıklayıp Ctrl+V ile yapıştırın.'), () => alert('Kopyalanamadı.'));
+}
+
+// ─── Durum, ayarlar, yenileme ──────────────────────────────────────────────────
+// Şeritteki "ayrıntı": Referans sekmesini açar (çerçevedeyse ana sayfada)
+function referansAc() { try { if (window.top !== window && window.top.sekmeAc) return window.top.sekmeAc('referans'); } catch (e) { } if (typeof sekmeAc === 'function' && document.getElementById('sekmeReferans')) return sekmeAc('referans'); location.href = '/#referans'; }
+function durumCiz() {
+  // Veri güncelleme: tek satırlık ince şerit, tıklayınca ayrıntı tablosu (turuncu vurgu)
+  const d = VERI.durum, t = VERI.tarifeler, P = VERI.panel || {}, Y = VERI.yekdem || {};
+  const e = x => String(x == null ? '' : x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const bugun = new Date().toDateString();
+  const kisa = iso => { if (!iso) return '—'; const d = new Date(iso); return (d.toDateString() === bugun ? '' : d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }) + ' ') + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); };
+  const uzun = iso => iso ? new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+  const dk = iso => iso ? (Date.now() - new Date(iso)) / 60000 : Infinity;
+  const isaret = (iso, sinir, hata) => sinir == null ? '' : hata ? '⚠️' : dk(iso) <= sinir ? '✅' : '⏳';
+  const adr = a => String(a || '').replace(/^https?:\/\//, '').replace(/:8010$/, '');
+  const lj = (isaret, metin) => '<span class="vz-i">' + isaret + '</span><span>' + metin + '</span>';
+  const MAHSUP_CIP = '<span title="MAHSUP: GES’in ürettiği elektrik, tüketilen elektrikten düşülür; faturaya yalnızca fark yansır. Üretim tüketimi aşarsa artan kısım ihtiyaç fazlası olarak satılır (alacak).&#10;• ÇA Çatı GES: aynı ölçüm noktası; mahsuplaşan kWh tam perakende fiyat değerinde.&#10;• TA Tarla GES: uzaktan mahsup; yalnız enerji bedeli düşer, dağıtım bedeli yine ödenir.&#10;• Aylık kural (Nisan 2026’ya kadar): ay toplamı netleşir. Saatlik kural (01.05.2026’dan): her saat ayrı netleşir.&#10;• Yansıyan mahsup = mahsupsuz tutar (kWh × emsal birim) − ödenen. Artı: indirim yansımış; eksi: mahsupsuz fiyattan bile fazla ödenmiş.&#10;• Dikkat: panel faturadan yalnız kWh ve tutarı okur; çekiş / veriş / mahsup satırları okunmadığı için sonuç yaklaşıktır." style="cursor:help;background:#e3f4ea;color:#1e7045;border:1px solid #a9dcbf;border-radius:5px;padding:0 6px;font-weight:700">☀ Mahsup = GES üretimi tüketimden düşülür ⓘ</span>';
+  const serit = satirlar => '<div class="veri-zaman"><style>'
+    + '.veri-zaman{background:#fff4e0;border:1px solid #f0c27a;border-left:4px solid #e67e22;border-radius:5px;padding:2px 8px;margin:0 0 6px;color:#5a3b00;font-size:11px;line-height:18px}'
+    + '.veri-zaman .vz-ust{display:flex;flex-wrap:wrap;gap:0 10px;align-items:center}'
+    + '.veri-zaman .vz-ust b{font-weight:700}.veri-zaman .vz-ac{margin-left:auto;color:#b35a0c;font-weight:700}.veri-zaman a.vz-ac{text-decoration:none;cursor:pointer}.veri-zaman a.vz-ac:hover{text-decoration:underline}'
+    + '.veri-zaman table.vz{border-collapse:collapse;width:auto;font-size:11px;margin:3px 0 2px}.veri-zaman .vz th{position:static;background:#f6d9a8;color:#5a3b00;padding:1px 8px;font-size:10.5px;max-width:none;cursor:default}'
+    + '.veri-zaman .vz td{padding:1px 8px;border-bottom:1px solid #f3dcb6;white-space:nowrap;text-align:left;font-size:11px;background:transparent;color:#5a3b00;line-height:16px}'
+    + '.veri-zaman .vz-cip{display:inline-block;padding:0 5px;border-radius:5px;font-size:10px;font-weight:700;line-height:14px;margin:0 2px 0 0;border:1px solid}'
+    + '.veri-zaman .vz-ok{background:#e3f4ea;color:#1e7045;border-color:#a9dcbf}.veri-zaman .vz-kapali{background:#fdecea;color:#a93226;border-color:#f1a9a0}'
+    + '.veri-zaman .vz-ic{display:flex;align-items:stretch;margin:3px 0 2px}.veri-zaman .vz-sol{flex:1 1 50%;min-width:0;padding-right:12px;border-right:2px solid #f0c27a;overflow:auto}.veri-zaman .vz-sag{flex:1 1 50%;min-width:0;padding-left:12px}'
+    + '.veri-zaman .vz-lb{font-weight:800;margin:2px 0 3px;font-size:11.5px}.veri-zaman .vz-lj{display:grid;grid-template-columns:22px 1fr;gap:1px 6px;font-size:11px;margin-bottom:5px}.veri-zaman .vz-i{text-align:center;font-weight:800}'
+    + '</style><div class="vz-ust"><span>🕒</span>'
+    + satirlar.map(r => '<span title="' + e(r.ad + ' · ' + r.siklik + ' · ' + uzun(r.iso)) + '">' + r.kisa + ' ' + isaret(r.iso, r.sinir, r.hata) + ' <b>' + (r.iso === undefined ? r.ekKisa || '' : kisa(r.iso)) + '</b>' + (r.ekKisa && r.iso !== undefined ? ' ' + r.ekKisa : '') + '</span>').join('<span>·</span>')
+    + '<span>·</span>' + MAHSUP_CIP + '<a class="vz-ac" href="#referans" onclick="referansAc();return false" title="Veri güncelleme ayrıntısı, dönem özeti, mahsup ve işaret açıklamaları Referans sekmesinde">📘 ayrıntı · Referans ▸</a></div></div>';
+  const panelSatiri = (P, bulut) => {
+    const ok = P.paneller || [], kapali = P.okunamayan || [];
+    const ek = ok.map(x => '<span class="vz-cip vz-ok">✅ ' + e(adr(x.adres)) + ' · ' + x.fatura + ' fatura</span>').join('')
+      + kapali.map(x => '<span class="vz-cip vz-kapali" title="' + e(x) + '">⛔ ' + e(adr(x.split(': ')[0])) + ' · ' + (/kapalı/.test(x) ? 'kapalı' : 'okunamadı') + '</span>').join('')
+      + (bulut && P.adres ? '<span class="vz-cip vz-ok">☁ ' + e(P.adres) + '</span>' : '');
+    const ekKisa = bulut ? '(Supabase)' : ok.length || kapali.length ? '(' + ok.length + ' panel' + (kapali.length ? ', ' + kapali.length + ' kapalı' : '') + ')' : '';
+    return { ad: 'Panel faturaları', kisa: 'Panel', siklik: bulut ? 'Supabase\'den, 30 dakikada bir (masaüstü panelleri okur)' : '30 dakikada bir · ağdaki tüm paneller', iso: P.sonBasari, sinir: 45, hata: P.hata, ek, ekKisa };
+  };
+  const bulut = /^Supabase/.test(P.adres || '');
+  const S = [
+    { ad: 'EPİAŞ PTF', kisa: 'PTF', siklik: 'her saat (içinde bulunulan ay + yarın)', iso: d.ptfSonGuncelleme, sinir: 90, hata: d.ptfHata, ek: d.ptfCalisiyor ? '⏳ güncelleniyor' : '' },
+    { ad: 'YEKDEM', kisa: 'YEKDEM', siklik: 'günde bir + her açılışta', iso: Y.son, sinir: 26 * 60, hata: Y.hata },
+    { ad: 'EPDK tarife kontrolü', kisa: 'Tarife kontrolü', siklik: 'günde bir (MEDAŞ arşivi)', iso: d.tarifeSonKontrol, sinir: 26 * 60, hata: d.tarifeHata, ek: d.tarifeYeniBulunan ? '🆕 ' + e(d.tarifeYeniBulunan) + ' otomatik eklendi' : '' },
+    { ad: 'Yürürlükteki tarifeler', kisa: 'Tarifeler', siklik: 'yeni tarife yayımlandıkça', iso: undefined, sinir: null, ek: '<b>' + t.map(x => x.gecerlilik.split('-').reverse().join('.')).join(', ') + '</b>', ekKisa: t.map(x => x.gecerlilik.split('-').reverse().join('.')).join(', ') },
+    panelSatiri(P, bulut),
+    { ad: 'Bu sayfa', kisa: 'Sayfa', siklik: '5 dakikada bir kendini yeniler', iso: new Date().toISOString(), sinir: null },
+  ];
+  document.getElementById('durum').innerHTML = (d.kimlikVar ? '' : '<div class="rozet hata" style="margin-bottom:6px">⚠ EPİAŞ kullanıcı bilgisi girilmemiş. Saatlik PTF gelmez. <a href="#" onclick="ayarAc();return false" style="color:#fff">Ayarları aç</a></div>') + serit(S);
+}
+function notlarCiz() {
+  const t = VERI.tarifeler;
+  const son = t[t.length - 1];
+  document.getElementById('notlar').innerHTML = `
+  <p><b>Şebeke birim fiyatı:</b> EPDK "vergiler hariç" tarife tablosundaki <i>Kamu ve Özel Hizmetler Sektörü ile Diğer</i> (ticarethane) satırında aktif enerji bedeli ile dağıtım bedelinin toplamıdır. Seçime göre vergiler eklenir: Elektrik Tüketim Vergisi (2464 s. Kanun, ticarethane %5) yalnızca aktif enerji bedeli üzerinden, KDV (%20) ise aktif enerji + dağıtım + tüketim vergisi toplamı üzerinden hesaplanır. Elektrikte ÖTV yoktur; TRT payı ve Enerji Fonu 01.01.2022 itibarıyla kaldırılmıştır. Yıllık tüketimi 15.000 kWh üzerinde olup ikili anlaşması olmayan ticarethane aboneleri Son Kaynak Tedarik Tarifesi ile faturalanır, bu durumda aktif enerji bedeli bu tablodaki değil (PTF + YEKDEM) × 1,0938 formülündeki değerdir. Tüzel kişi olarak KDV indirilebildiği için varsayılan olarak hariç tutulmuştur. OG çift terimde aylık güç bedeli (kr/kW/ay) kWh fiyatına dahil değildir. Son yürürlükteki tablo: ${son.gecerlilik.split('-').reverse().join('.')}.</p>
+  <p><b>Zaman dilimleri:</b> Yaz saatine güncel sayaçlarda yıl boyu Gündüz 06–17, Puant 17–22, Gece 22–06.</p>
+  <p><b>Çatı GES (aynı ölçüm noktası):</b> Aynı saatte tüketilen üretim, şebekeden alınmayan enerji demektir. Değeri, o saatin şebeke birim fiyatıdır. Aylık değer güneş üretim saatlerine göre ağırlıklandırılır. İhtiyaç fazlası, abone grubunun tek zamanlı aktif enerji bedelinden veriş yönlü dağıtım bedeli (varsayılan Lisanssız Üretici-2) düşülerek değerlenir. 1 Mayıs 2026'dan itibaren mahsuplaşma saatliktir (RG 02.04.2026/33212, mesken hariç). Önceki aylarda aylık mahsuplaşma geçerliydi.</p>
+  <p><b>Tarla GES:</b> "Lisanssız · uzaktan mahsup" sütunu, farklı ölçüm noktasındaki tesisin tüketimle mahsuplaşan veya fazla verdiği kWh için aynı esası (aktif enerji bedeli − LÜ) kullanır. Tüketim noktasında dağıtım bedeli ödenmeye devam ettiği için bu değere dağıtım tasarrufu eklenmez. "Piyasa satışı" sütunu ise lisanslı tesisler veya 10 yıllık alım süresini dolduran lisanssız tesisler için saatlik PTF'nin güneş üretim saatlerine göre ağırlıklı ortalamasıdır (vergisiz, dağıtım/dengesizlik maliyeti düşülmemiştir).</p>
+  <p><b>Bölge ve güneş profili:</b> EPDK tarifeleri ulusaldır. Akdeniz EDAŞ (Antalya, Burdur, Isparta) ve Toroslar EDAŞ (Adana, Mersin, Hatay, Osmaniye, Kahramanmaraş) bölgelerinde aynı kWh fiyatları uygulanır. Bölgeye göre değişen, güneşin hangi saatte ne kadar ürettiğidir. Saatlik ağırlık ve aylık üretim, seçili şehir için ${gunesVerisi() ? gunesVerisi().kaynak + ' verisinden, Türkiye saatine (UTC+3) çevrilerek alınmıştır. Bulutluluk dahil uzun dönem ortalamasıdır, belirli bir yılın ölçümü değildir' : 'PVGIS\'ten henüz alınamadı. Geçici olarak Antalya için yaklaşık sinüs eğrisi kullanılıyor'}.</p>
+  <p><b>Kaynaklar:</b> EPDK tarife tabloları (resmi Excel, MEDAŞ "EPDK Kurul Kararları – Ulusal Tarifeler" arşivinden otomatik), EPİAŞ Şeffaflık Platformu Gün Öncesi Piyasası PTF servisi (saatlik, TL/MWh). Yüklü tarife dosyaları: ${t.map(x => x.dosya + ' (' + x.gecerlilik + ')').join(', ')}.</p>`;
+}
+function sehirListesi() {
+  const s = document.getElementById('pSehir');
+  let onceki = s.value;
+  if (!onceki) { try { onceki = localStorage.getItem('elk_sehir'); } catch (e) { } }
+  s.innerHTML = (VERI.sehirler || []).map(x => '<option value="' + x + '">' + x + (VERI.gunes && VERI.gunes[x] ? ' · ' + sayiTR(VERI.gunes[x].yillikUretim, 0) + ' kWh/kWp/yıl' : ' · PVGIS bekleniyor') + '</option>').join('');
+  s.value = onceki && (VERI.sehirler || []).includes(onceki) ? onceki : 'Antalya';
+}
+function ayListesi() {
+  const s = document.getElementById('pAy'), onceki = s.value, eskiEnYeni = s.options.length ? s.options[0].value : null;
+  s.innerHTML = VERI.aylar.slice().reverse().map(a => '<option value="' + a + '">' + ayEtiket(a) + '</option>').join('');
+  // En yeni ay seçiliyken takvimde yeni ay başladıysa seçim kendiliğinden yeni aya geçer (liste en yeniyle başlar);
+  // geçmiş bir ay bilerek seçildiyse o ay korunur
+  if (onceki && VERI.aylar.includes(onceki) && onceki !== eskiEnYeni) s.value = onceki;
+}
+// Ay seçilince: eldeki veriyle hemen çiz, ardından sunucudan o anki güncel veriyi alıp yeniden çiz
+function ayDegisti() { ciz(); veriYukle(true); }
+function ciz() {
+  if (!VERI || !VERI.tarifeler.length) return;
+  aylikTablo(); saatlikTablo(); ptfTablo(); giderKategorileri(); giderTablo(); hesaplayici(); durumCiz(); notlarCiz();
+}
+async function veriYukle(sessiz) {
+  try {
+    if (!sessiz) yuklemeGoster('Veriler yükleniyor…');
+    const r = await fetch(API + '/api/veri');
+    VERI = await r.json();
+    sehirListesi(); ayListesi(); ciz();
+    mahsupYukle();
+  } catch (e) {
+    document.getElementById('durum').innerHTML = '<div class="rozet hata">Sunucuya ulaşılamadı. Sunucuyu yeniden başlatın. Hata:' + e.message + '</div>';
+  } finally { yuklemeGizle(); }
+}
+async function simdiYenile() {
+  const b = document.getElementById('btnYenile');
+  b.disabled = true;
+  yuklemeGoster('EPİAŞ ve EPDK kaynakları sorgulanıyor…');
+  try { await fetch(API + '/api/yenile', { method: 'POST' }); } catch (e) { }
+  b.disabled = false;
+  await veriYukle();
+}
+function ayarAc() {
+  document.getElementById('aKullanici').value = '';
+  fetch(API + '/api/durum').then(r => r.json()).then(d => { document.getElementById('aKullanici').value = d.kullanici || ''; }).catch(() => { });
+  document.getElementById('aSifre').value = '';
+  document.getElementById('aSonuc').textContent = '';
+  document.getElementById('ayarModal').style.display = 'flex';
+}
+function ayarKapat() { document.getElementById('ayarModal').style.display = 'none'; }
+async function ayarKaydet() {
+  const kullanici = document.getElementById('aKullanici').value.trim(), sifre = document.getElementById('aSifre').value;
+  const s = document.getElementById('aSonuc');
+  if (!kullanici || !sifre) { s.style.color = '#c0392b'; s.textContent = 'E-posta ve şifre gerekli.'; return; }
+  s.style.color = '#1a3a6b'; s.textContent = '⏳ EPİAŞ\'a bağlanılıyor…';
+  try {
+    const r = await (await fetch(API + '/api/ayar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kullanici, sifre }) })).json();
+    if (!r.ok) { s.style.color = '#c0392b'; s.textContent = r.hata; return; }
+    s.style.color = '#1e8449'; s.textContent = '✔ Bağlantı başarılı. 12 aylık saatlik PTF arka planda indiriliyor…';
+    setTimeout(() => { ayarKapat(); veriYukle(); }, 1500);
+  } catch (e) { s.style.color = '#c0392b'; s.textContent = 'Sunucu hatası: ' + e.message; }
+}
+
+veriYukle();
+// Otonom: sayfa açık kaldıkça sunucu önbelleğini 5 dakikada bir sessizce yeniden oku (sorgu sunucuda zaten saatlik)
+setInterval(() => veriYukle(true), 5 * 60 * 1000);
+</script>
+</body>
+</html>
