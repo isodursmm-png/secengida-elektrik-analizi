@@ -31,7 +31,7 @@ body{margin:0;font-family:"Segoe UI",Arial,sans-serif;background:#f3f5f9;color:#
 .uyari{background:#c0392b;color:#fff;border-radius:7px;padding:9px 14px;margin-bottom:12px;font-weight:600}
 .bilgi{background:#eef7f1;border:1px solid #b9dcc6;color:#1d3b2a;border-radius:7px;padding:6px 12px;margin-bottom:12px;font-size:12px}
 table{border-collapse:collapse;width:100%;font-size:12px}
-th{background:#1a3a6b;color:#fff;padding:5px 7px;text-align:left;font-weight:600;position:sticky;top:0}
+th{background:#1a3a6b;color:#fff;padding:5px 7px;text-align:left;font-weight:600;position:sticky;top:0;z-index:2;box-shadow:0 2px 0 #12294d}
 td{padding:4px 7px;border-bottom:1px solid #eef0f3;vertical-align:middle}
 tr:hover td{background:#f5f8fc}
 td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -61,7 +61,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 <body>
 <div class="kap">
   <div class="baslik"><h2>📁 Belgeler</h2></div>
-  <div class="aciklama">Fatura PDF’leri, GES faturaları, CK Elektrik teminat dosyaları, sözleşmeler ve diğer belgeler. Dosyalar <b>yalnızca Supabase’de</b> (özel, dışarıya kapalı depolama) tutulur; bilgisayara kopya yazılmaz. Masaüstünde ve bulut sitesinde aynı liste görünür.</div>
+  <div class="aciklama">SECENGIDA fatura PDF’leri (AOSB, CK Akdeniz, ANT Trafo), sözleşmeler ve diğer belgeler. <b>Masaüstü › SECENGIDA</b> klasörüne bırakılan fatura zip / PDF’leri otomatik okunup Faturalar’a eklenir. Dosyalar <b>bu bilgisayarda</b> (SECENGIDA ELEKTRİK ANALİZİ\veri\belge_deposu) tutulur; internete / GitHub’a gönderilmez.</div>
   <div id="durum"></div>
 
   <div class="klasorler" id="klasorler"></div>
@@ -94,11 +94,12 @@ td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     </div>
     <div class="ozet" id="ozet"></div>
     <div class="ozet" id="ozet"></div>
-    <div style="overflow:auto"><table id="tablo"></table></div>
+    <div class="tablo-kap" style="overflow:auto;max-height:calc(100vh - 90px)"><table id="tablo"></table></div>
   </div>
 </div>
 <script>
-// İki klasör: Faturalar ve Belgeler (Supabase kovasında da ayrı klasörler: faturalar/ ve belgeler/)
+let YEREL = false; // depolama bu bilgisayarda mı (SECENGIDA masaüstü)
+// İki klasör: Faturalar ve Belgeler (yerel depoda veri\belge_deposu\faturalar ve \belgeler; Supabase tanımlıysa kovada aynı klasörler)
 const KLASOR = {
   faturalar: { ad: 'Faturalar', ik: '🧾', alt: 'Elektrik ve GES fatura PDF’leri', kat: [['Elektrik faturası', 'fatura'], ['GES faturası', 'ges'], ['Fark / ek fatura', 'fatura'], ['Diğer fatura', '']] },
   belgeler: { ad: 'Belgeler', ik: '📁', alt: 'Teminat, sözleşme, tarife ve diğer belgeler', kat: [['CK Elektrik / teminat', 'teminat'], ['Sözleşme', 'sozlesme'], ['Tarife / EPDK', ''], ['Yazışma', ''], ['Diğer', '']] },
@@ -223,14 +224,15 @@ async function esle() {
 }
 async function sil(id) {
   const x = B.find(b => b.id === id);
-  if (!x || !confirm('"' + x.ad + '" silinsin mi? Supabase’den kalıcı olarak kaldırılır.')) return;
+  if (!x || !confirm('"' + x.ad + '" silinsin mi? ' + (YEREL ? 'Bilgisayardaki belge deposundan' : 'Supabase’den') + ' kalıcı olarak kaldırılır.')) return;
   const j = await (await fetch('/api/belgeler/sil', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })).json();
   if (!j.ok) alert('Silinemedi.'); B = j.belgeler || B; ciz();
 }
 async function yukleListe() {
   try {
     const j = await (await fetch('/api/belgeler')).json();
-    document.getElementById('durum').innerHTML = j.supabase ? '<div class="bilgi">☁ Depolama: <b>Supabase</b> · özel kova <b>elektrik-belgeler</b> · dosyalar yalnızca orada tutulur.</div>' : '<div class="uyari">⚠ Supabase tanımlı değil: belgeler yalnızca Supabase’de tutulduğu için yükleme yapılamaz. (.env / Render: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)</div>';
+    YEREL = !!j.yerel;
+    document.getElementById('durum').innerHTML = j.yerel ? '<div class="bilgi">💻 Depolama: <b>bu bilgisayar</b> · veri\\belge_deposu · SECENGIDA klasöründen gelen faturalar otomatik eklenir (silmek için dosyayı klasörden kaldırın).</div>' : j.supabase ? '<div class="bilgi">☁ Depolama: <b>Supabase</b> · özel kova <b>elektrik-belgeler</b> · dosyalar yalnızca orada tutulur.</div>' : '<div class="uyari">⚠ Supabase tanımlı değil: belgeler yalnızca Supabase’de tutulduğu için yükleme yapılamaz. (.env / Render: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)</div>';
     if (j.hata && j.supabase) document.getElementById('durum').innerHTML += '<div class="uyari">⚠ ' + esc(j.hata) + '</div>';
     B = j.belgeler || []; ciz();
   } catch (e) { document.getElementById('durum').innerHTML = '<div class="uyari">⚠ Sunucuya ulaşılamadı: ' + esc(e.message) + '</div>'; }
