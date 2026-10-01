@@ -32,6 +32,7 @@ const BULUT = !!process.env.RENDER || process.env.BULUT === '1';
 
 const PORT = process.env.PORT || 5356;
 const UYGULAMA = 'SECENGIDA ELEKTRİK ANALİZİ';
+const FIRMA_ETIKETI = 'SECEN UNLU MAMÜLLER ELEKTRİK ANALİZİ'; // mail, Excel ve yazdırma başlıklarında
 const AYAR_DOSYASI = path.join(VERI, 'elektrik_analizi_ayar.json');
 const PTF_DOSYASI = path.join(VERI, 'elektrik_analizi_ptf.json');
 const TARIFE_KLASORU = path.join(VERI, 'tarifeler');
@@ -1059,7 +1060,7 @@ function mailGovdesi(b) {
   const tarih = new Date().toLocaleString('tr-TR');
   let h = '<div style="font-family:Segoe UI,Arial,sans-serif;font-size:13px;color:#111">';
   if (b.not) h += '<p>' + htmlKac(b.not).replace(/\n/g, '<br>') + '</p>';
-  h += '<div style="background:#1a3a6b;color:#fff;padding:10px 14px;font-size:16px;font-weight:bold">⚡ ' + UYGULAMA + '</div>';
+  h += '<div style="background:#1a3a6b;color:#fff;padding:10px 14px;font-size:16px;font-weight:bold">⚡ ' + FIRMA_ETIKETI + '</div>';
   h += '<div style="color:#555;font-size:12px;margin:6px 0 12px">Hazırlanma: ' + tarih + (b.filtre ? ' · ' + htmlKac(b.filtre) : '') + '</div>';
   for (const r of b.raporlar || []) {
     const s = r.satirlar || [];
@@ -1104,7 +1105,7 @@ async function mailGonder(b) {
       let ad = String(r.ad || 'Rapor').replace(/[\\/?*[\]:]/g, ' ').slice(0, 31), i = 2;
       while (adlar.has(ad)) ad = ad.slice(0, 28) + ' ' + i++;
       adlar.add(ad);
-      const ws = XLSX.utils.aoa_to_sheet(r.bilgi ? [[String(r.bilgi)], [], ...(r.satirlar || [])] : (r.satirlar || []));
+      const ws = XLSX.utils.aoa_to_sheet([[FIRMA_ETIKETI + ' · ' + String(r.ad || '')], ...(r.bilgi ? [[String(r.bilgi)]] : []), [], ...(r.satirlar || [])]);
       ws['!cols'] = ((r.satirlar || [])[0] || []).map(() => ({ wch: 16 }));
       XLSX.utils.book_append_sheet(wb, ws, ad);
     }
@@ -1191,6 +1192,8 @@ http.createServer(async (req, res) => {
       return gonder(res, 200, { ok: true, hesaplar: mailHesaplari || [], adresler: jsonOku(MAIL_ADRES_DOSYASI, { adresler: [] }).adresler });
     }
     if (url.pathname === '/api/mail' && req.method === 'POST') return gonder(res, 200, await mailGonder(await govdeOku(req)));
+    // Sayfaların başlığının altındaki ortak sekme şeridi (çerçevede açılınca)
+    if (url.pathname === '/sekme-serit.js') return gonder(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'sekme-serit.js')), 'application/javascript; charset=utf-8');
     if (url.pathname === '/aosb') return gonder(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'aosb.html')), 'text/html; charset=utf-8');
     if (url.pathname === '/api/aosb') return gonder(res, 200, aosbRaporu());
     if (url.pathname === '/api/aosb/yenile' && req.method === 'POST') { const son = await panelCek(); return gonder(res, 200, { ...aosbRaporu(), yenileme: son }); }
@@ -1257,7 +1260,7 @@ http.createServer(async (req, res) => {
     if (url.pathname === '/api/excel' && req.method === 'POST') {
       const b = await govdeOku(req);
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(b.bilgi ? [[String(b.bilgi)], [], ...(b.satirlar || [])] : (b.satirlar || []));
+      const ws = XLSX.utils.aoa_to_sheet([[FIRMA_ETIKETI + ' · ' + String(b.ad || '')], ...(b.bilgi ? [[String(b.bilgi)]] : []), [], ...(b.satirlar || [])]);
       ws['!cols'] = (b.satirlar && b.satirlar[0] || []).map((_, i) => ({ wch: i === 0 ? 18 : 16 }));
       XLSX.utils.book_append_sheet(wb, ws, String(b.ad || 'Matris').replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
       const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });

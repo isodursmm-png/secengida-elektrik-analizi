@@ -66,9 +66,9 @@ td.bos{color:#9aa3b2;text-align:center}
 .isi{color:#0b0b0b}
 @media(max-width:700px){main{padding:12px}header{padding:12px}}
 .sekmeler{display:flex;gap:4px;background:#1a3a6b;padding:0 22px;position:sticky;top:0;z-index:30;box-shadow:0 2px 6px rgba(0,0,0,.15)}
-.sekme{background:#2c5190;color:#dfe7f3;border:none;border-radius:7px 7px 0 0;padding:9px 20px;font:600 13.5px "Segoe UI",Arial,sans-serif;cursor:pointer;margin-top:6px}
-.sekme:hover{background:#355d9e;color:#fff}
-.sekme.aktif{background:#f4f6fa;color:#1a3a6b}
+.sekme{background:linear-gradient(#f0913a,#d9661a);color:#fff;border:1px solid #b9540f;border-bottom:none;border-radius:8px 8px 0 0;padding:8px 20px 9px;font:700 13.5px "Segoe UI",Arial,sans-serif;cursor:pointer;margin-top:6px;text-shadow:0 1px 1px rgba(0,0,0,.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.28);transition:background .15s,transform .15s}
+.sekme:hover{background:linear-gradient(#f7a45a,#e67e22);transform:translateY(-1px)}
+.sekme.aktif{background:#f4f6fa;color:#1a3a6b;border-color:#f4f6fa;border-top:4px solid #e67e22;padding-top:5px;text-shadow:none;box-shadow:0 -2px 8px rgba(0,0,0,.18);transform:none}
 #sekmeKontrol{display:none}
 .sekme-arac{margin-left:auto;display:flex;gap:6px;align-items:center;padding:5px 0}
 .sekme-arac button{background:#fff;color:#1a3a6b;border:1px solid #fff;border-radius:6px;padding:6px 12px;font:700 12.5px "Segoe UI",Arial,sans-serif;cursor:pointer}
@@ -120,10 +120,21 @@ td.bos{color:#9aa3b2;text-align:center}
 .mail-sonuc{padding:10px 12px;border-radius:6px;font-weight:700;display:none;margin-bottom:10px}
 .mail-sonuc.ok{display:block;background:#1e8449;color:#fff}.mail-sonuc.hata{display:block;background:#c0392b;color:#fff}
 .ipucu2{font-size:11.5px;color:#52514e;margin-top:3px}
-#sekmeKontrol iframe{width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9}
+#sekmeKontrol iframe{width:100%;height:100vh;border:none;display:block;background:#f3f5f9}
 </style>
 </head>
 <body>
+<div id="sekmeAnaliz">
+<header>
+  <div>
+    <h1>⚡ SECENGIDA ELEKTRİK ANALİZİ</h1>
+    <div class="alt">SECENGIDA · Akdeniz Bölgesi · Tüzel kişi · AOSB fabrika (OG) + CK Akdeniz abonelikleri · Son 12 ay · EPDK + EPİAŞ + PVGIS canlı · faturalar Masaüstü › SECENGIDA klasöründen</div>
+  </div>
+  <div class="sag">
+    <button class="btn" onclick="ayarAc()">⚙ EPİAŞ Ayarları</button>
+    <button class="btn-yenile" id="btnYenile" onclick="simdiYenile()">⟳ Şimdi Yenile</button>
+  </div>
+</header>
 <nav class="sekmeler">
   <button class="sekme aktif" id="skAnaliz" onclick="sekmeAc('analiz')">⚡ Elektrik Analizi</button>
   <button class="sekme" id="skKontrol" onclick="sekmeAc('kontrol')">🧾 Fatura Kontrol · ödenen ↔ hesap</button>
@@ -137,17 +148,6 @@ td.bos{color:#9aa3b2;text-align:center}
     <button class="mail" onclick="mailAc()" title="Seçilen raporları Outlook ile gönder">✉ Mail gönder</button>
   </div>
 </nav>
-<div id="sekmeAnaliz">
-<header>
-  <div>
-    <h1>⚡ SECENGIDA ELEKTRİK ANALİZİ</h1>
-    <div class="alt">SECENGIDA · Akdeniz Bölgesi · Tüzel kişi · AOSB fabrika (OG) + CK Akdeniz abonelikleri · Son 12 ay · EPDK + EPİAŞ + PVGIS canlı · faturalar Masaüstü › SECENGIDA klasöründen</div>
-  </div>
-  <div class="sag">
-    <button class="btn" onclick="ayarAc()">⚙ EPİAŞ Ayarları</button>
-    <button class="btn-yenile" id="btnYenile" onclick="simdiYenile()">⟳ Şimdi Yenile</button>
-  </div>
-</header>
 
 <main>
   <div class="durum" id="durum"></div>
@@ -317,9 +317,9 @@ td.bos{color:#9aa3b2;text-align:center}
 </main>
 </div>
 <div id="sekmeKontrol"><iframe id="kontrolCerceve" title="Elektrik Fatura Kontrol"></iframe></div>
-<div id="sekmeGes" style="display:none"><iframe id="gesCerceve" title="GES Mahsup Kontrolü" style="width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9"></iframe></div>
-<div id="sekmeBelgeler" style="display:none"><iframe id="belgeCerceve" title="Belgeler" style="width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9"></iframe></div>
-<div id="sekmeReferans" style="display:none"><iframe id="referansCerceve" title="Referans" style="width:100%;height:calc(100vh - 44px);border:none;display:block;background:#f3f5f9"></iframe></div>
+<div id="sekmeGes" style="display:none"><iframe id="gesCerceve" title="GES Mahsup Kontrolü" style="width:100%;height:100vh;border:none;display:block;background:#f3f5f9"></iframe></div>
+<div id="sekmeBelgeler" style="display:none"><iframe id="belgeCerceve" title="Belgeler" style="width:100%;height:100vh;border:none;display:block;background:#f3f5f9"></iframe></div>
+<div id="sekmeReferans" style="display:none"><iframe id="referansCerceve" title="Referans" style="width:100%;height:100vh;border:none;display:block;background:#f3f5f9"></iframe></div>
 
 <div class="ipucu" id="ipucu"></div>
 
@@ -1204,7 +1204,7 @@ async function pvCiz() {
   olc.style.cssText = 'position:absolute;left:-20000px;top:0;visibility:hidden';
   document.body.appendChild(olc);
   const tarih = new Date().toLocaleString('tr-TR');
-  const sayfaAc = (baslik, alt) => { const p = document.createElement('div'); p.className = 'pv-sayfa'; p.style.cssText = 'width:' + W + 'mm;height:' + H + 'mm;padding:' + KENAR + 'mm ' + KENAR + 'mm ' + ALT + 'mm'; p.innerHTML = '<div class="pv-bas"><b>' + pvKac(baslik) + '</b><br><span>ELEKTRİK ANALİZİ · SC Grup · ' + pvKac(alt) + '</span></div><div class="pv-ic"></div><div class="pv-alt"><span>' + tarih + '</span><span class="pv-no"></span></div>'; return p; };
+  const sayfaAc = (baslik, alt) => { const p = document.createElement('div'); p.className = 'pv-sayfa'; p.style.cssText = 'width:' + W + 'mm;height:' + H + 'mm;padding:' + KENAR + 'mm ' + KENAR + 'mm ' + ALT + 'mm'; p.innerHTML = '<div class="pv-bas"><b>' + pvKac(baslik) + '</b><br><span>SECEN UNLU MAMÜLLER ELEKTRİK ANALİZİ · ' + pvKac(alt) + '</span></div><div class="pv-ic"></div><div class="pv-alt"><span>' + tarih + '</span><span class="pv-no"></span></div>'; return p; };
   const sayfalar = [];
   for (const rap of veri.raporlar) {
     const bas = rap.satirlar[0] || [], govde = rap.satirlar.slice(1);
@@ -1248,7 +1248,7 @@ function pvYazdir() {
   document.body.appendChild(fr);
   const d = fr.contentDocument;
   d.open();
-  d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>SECENGIDA ELEKTRİK ANALİZİ</title><style>' + css + '@page{size:A4 ' + (PV.yatay ? 'landscape' : 'portrait') + ';margin:0}html,body{margin:0;padding:0}.pv-sayfa{page-break-after:always;break-after:page;box-shadow:none;margin:0}.pv-sayfa:last-child{page-break-after:auto;break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>' + PV.sayfalar.map(p => p.outerHTML).join('') + '</body></html>');
+  d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>SECEN UNLU MAMÜLLER ELEKTRİK ANALİZİ</title><style>' + css + '@page{size:A4 ' + (PV.yatay ? 'landscape' : 'portrait') + ';margin:0}html,body{margin:0;padding:0}.pv-sayfa{page-break-after:always;break-after:page;box-shadow:none;margin:0}.pv-sayfa:last-child{page-break-after:auto;break-after:auto}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>' + PV.sayfalar.map(p => p.outerHTML).join('') + '</body></html>');
   d.close();
   setTimeout(() => { fr.contentWindow.focus(); fr.contentWindow.print(); setTimeout(() => fr.remove(), 60000); }, 300);
 }
@@ -1326,7 +1326,7 @@ async function excelAktar(tur) {
     const r = await fetch(API + '/api/excel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ad, satirlar: MATRIS[tur], bilgi: 'EPİAŞ PTF son güncelleme: ' + tarihTR(VERI.durum.ptfSonGuncelleme) + ' · Rapor: ' + tarihTR(new Date().toISOString()) }) });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const blob = await r.blob();
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ELEKTRİK ANALİZİ - ' + ad + '.xlsx'; a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'SECEN UNLU MAMÜLLER ELEKTRİK ANALİZİ - ' + ad + '.xlsx'; a.click();
   } catch (e) { alert('Excel oluşturulamadı: ' + e.message); }
   finally { yuklemeGizle(); }
 }
@@ -1457,5 +1457,6 @@ veriYukle();
 // Otonom: sayfa açık kaldıkça sunucu önbelleğini 5 dakikada bir sessizce yeniden oku (sorgu sunucuda zaten saatlik)
 setInterval(() => veriYukle(true), 5 * 60 * 1000);
 </script>
+<script src="/sekme-serit.js"></script>
 </body>
 </html>
