@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aktif · Reaktif</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:#f3f5f9;color:#0b0b0b;font-size:13px}
+.ust{background:#1a3a6b;color:#fff;padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.ust h1{margin:0;font-size:18px;letter-spacing:.3px}
+.ust .alt{font-size:12px;opacity:.85}
+.ust .bosluk{flex:1}
+.ana{padding:14px 18px 40px}
+.baslik{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;background:#1a3a6b;color:#fff;padding:10px 14px;border-radius:8px 8px 0 0}
+.baslik h2{margin:0;color:#fff;font-size:18px}
+.aciklama{color:#fff;background:#244a84;margin:0 0 10px;padding:8px 14px;line-height:1.55;border-radius:0 0 8px 8px;font-size:12.5px}
+.kartlar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:10px}
+.kart{background:#1a3a6b;color:#fff;border-radius:8px;padding:6px 10px;border-top:4px solid #5dade2}
+.kart .e{font-size:10.5px;color:#d6e4f5;font-weight:600}.kart .d{font-size:17px;font-weight:800;margin-top:1px}.kart .a{font-size:10.5px;color:#d6e4f5}
+.kart.ok{border-top-color:#2ecc71}.kart.t{border-top-color:#e67e22}.kart.k{background:#c0392b;border-top-color:#7b241c}
+.bulgu{background:#1a3a6b;color:#fff;border-left:6px solid #5dade2;border-radius:6px;padding:7px 12px;margin-bottom:6px;line-height:1.5}
+.bulgu.k{background:#c0392b;border-left-color:#7b241c}.bulgu.t{border-left-color:#e67e22}.bulgu.y{border-left-color:#2ecc71}
+.tablo-kap{background:#fff;border:1px solid #dde3ec;border-radius:8px;overflow:auto;margin-bottom:12px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:#1a3a6b;color:#fff;padding:5px 8px;text-align:center;font-weight:700;position:sticky;top:0;z-index:2;white-space:nowrap}
+th.sol,td.sol{text-align:left;position:sticky;left:0;z-index:1}
+th.sol{z-index:3}
+td{padding:5px 8px;border-bottom:1px solid #eef0f3;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.sol{background:#f7f9fc;font-weight:700;color:#1a3a6b;min-width:230px}
+td.sol small{display:block;font-weight:500;color:#64748b;font-size:10.5px}
+tr.grup td{background:#1a3a6b!important;color:#fff;font-weight:800;text-align:left;font-size:11.5px;letter-spacing:.6px}
+td.top{background:#e3eaf5;font-weight:800;border-left:2px solid #1a3a6b}
+td.y{background:#e8f6ee;color:#1e8449;font-weight:800}td.t{background:#fdebd0;color:#b9770e;font-weight:800}td.k{background:#c0392b;color:#fff;font-weight:800}
+.ay-bas{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ay-yenile{border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.15);color:#fff;border-radius:10px;padding:0 7px;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit}
+.ay-yenile:hover{background:#e67e22;border-color:#e67e22}.ay-yenile:disabled{opacity:.5;cursor:wait}
+.ay-zaman{font-size:9px;font-weight:500;opacity:.8}
+a.fno{color:#1a3a6b;font-weight:600;text-decoration:none;border-bottom:1px dotted #1a3a6b;font-size:11px}
+.not{font-size:11.5px;color:#52514e;margin:4px 0 14px;line-height:1.5}
+.bos{padding:40px;text-align:center;color:#5d6673;font-size:14px}
+</style>
+</head>
+<body>
+<div class="ust">
+  <div><h1>⚡ AKTİF · REAKTİF ENERJİ</h1><div class="alt" id="ustAlt">SECENGIDA · AOSB fabrika (OG) · faturalardaki sayaç okumalarından · önbellekte saklı</div></div>
+  <div class="bosluk"></div>
+</div>
+<div class="ana" id="ana"><div class="bos">⏳ Yükleniyor…</div></div>
+<script>
+// Veri: /api/reaktif — AOSB faturaları bir kez okunur ve önbellekte (veri/secengida_faturalar.json) saklanır;
+// sayfa açılışında yeniden okunmaz. Bir ayın üstündeki ⟳ yalnız o ayın faturasını depodaki PDF'ten yeniden okur.
+let V = null;
+const SINIR = { ind: 20, kap: 15 };   // EPDK, kurulu güç ≥ 50 kVA: endüktif %20, kapasitif %15 (aşılırsa ölçülen reaktifin tamamı faturalanır)
+const AY = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const ayAd = a => AY[+a.slice(5, 7) - 1];
+const n = (v, d = 0) => v == null || v === '' || !isFinite(v) ? '—' : Number(v).toLocaleString('tr-TR', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fno = (no, id) => id ? '<a class="fno" href="/belge-gor/' + encodeURIComponent(id) + '" target="_blank" title="Faturayı aç">' + no + '</a>' : (no || '—');
+const zaman = t => t ? new Date(t).toLocaleString('tr-TR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+const oranSinif = (p, s) => p == null ? '' : p >= s ? 'k' : p >= s * 0.75 ? 't' : 'y';
+
+async function yukle() {
+  try { V = await (await fetch('/api/reaktif')).json(); } catch (e) { document.getElementById('ana').innerHTML = '<div class="bos">Veri alınamadı: ' + e.message + '</div>'; return; }
+  ciz();
+}
+async function ayYenile(ay, b) {
+  if (b) { b.disabled = true; b.textContent = '…'; }
+  try {
+    const r = await (await fetch('/api/reaktif/ay-yenile?ay=' + ay, { method: 'POST' })).json();
+    if (r.ok === false) throw new Error(r.hata || 'yenilenemedi');
+    V = r; ciz();
+  } catch (e) { alert(ayAd(ay) + ' faturası yeniden okunamadı: ' + e.message); if (b) { b.disabled = false; b.textContent = '⟳'; } }
+}
+
+function ciz() {
+  const A = (V && V.aylar || []).map(a => {
+    const indK = a.induktifOran != null && a.olculen ? a.olculen * a.induktifOran / 100 : null, kapK = a.kapasitifOran != null && a.olculen ? a.olculen * a.kapasitifOran / 100 : null;
+    const cos = a.olculen && indK != null ? a.olculen / Math.sqrt(a.olculen * a.olculen + indK * indK) : null;
+    return Object.assign({}, a, { indK, kapK, cos, dg: a.demand && a.sozlesmeGucu ? a.demand / a.sozlesmeGucu * 100 : null });
+  });
+  if (!A.length) { document.getElementById('ana').innerHTML = '<div class="bos">AOSB faturası bulunamadı.</div>'; return; }
+  const top = k => A.reduce((t, x) => t + (+x[k] || 0), 0), olc = top('olculen'), iT = top('indK'), kT = top('kapK');
+  const iP = olc ? iT / olc * 100 : null, kP = olc ? kT / olc * 100 : null, rTL = top('reaktifTL');
+  const maxI = A.reduce((m, x) => x.induktifOran != null && (!m || x.induktifOran > m.induktifOran) ? x : m, null), maxK = A.reduce((m, x) => x.kapasitifOran != null && (!m || x.kapasitifOran > m.kapasitifOran) ? x : m, null);
+  // Hassas noktalar
+  const B = [];
+  for (const x of A) {
+    if (x.induktifOran != null && x.induktifOran >= SINIR.ind) B.push(['k', ayAd(x.ay) + ': endüktif oran %' + n(x.induktifOran, 1) + ' — sınır (%' + SINIR.ind + ') aşıldı, ölçülen reaktifin tamamı faturalanır']);
+    else if (x.induktifOran != null && x.induktifOran >= SINIR.ind * 0.75) B.push(['t', ayAd(x.ay) + ': endüktif oran %' + n(x.induktifOran, 1) + ' — sınıra yakın (kompanzasyon kontrol edilmeli)']);
+    if (x.kapasitifOran != null && x.kapasitifOran >= SINIR.kap) B.push(['k', ayAd(x.ay) + ': kapasitif oran %' + n(x.kapasitifOran, 1) + ' — sınır (%' + SINIR.kap + ') aşıldı (aşırı kompanzasyon)']);
+    else if (x.kapasitifOran != null && x.kapasitifOran >= SINIR.kap * 0.75) B.push(['t', ayAd(x.ay) + ': kapasitif oran %' + n(x.kapasitifOran, 1) + ' — sınıra yakın (kondansatör kademeleri gözden geçirilmeli)']);
+    if (x.reaktifTL > 0) B.push(['k', ayAd(x.ay) + ': faturada ' + n(x.reaktifTL, 2) + ' TL reaktif bedel']);
+    if (x.dg != null && x.dg >= 90) B.push(['t', ayAd(x.ay) + ': demand ' + n(x.demand, 0) + ' kW, sözleşme gücünün %' + n(x.dg, 0) + '\'i']);
+  }
+  const ay = A.map(x => x.ay), oku = V.okuma || {};
+  const satir = (ad, alt, f, topV, sinif) => '<tr><td class="sol">' + ad + (alt ? '<small>' + alt + '</small>' : '') + '</td>' + A.map(x => { const v = f(x); return '<td class="' + (sinif ? sinif(x) : '') + '">' + v + '</td>'; }).join('') + '<td class="top">' + (topV == null ? '' : topV) + '</td></tr>';
+  let h = '<div class="baslik"><h2>⚡ Aktif · reaktif enerji matrisi</h2><span style="font-size:12px;opacity:.85">' + ayAd(ay[0]) + ' – ' + ayAd(ay[ay.length - 1]) + ' ' + ay[0].slice(0, 4) + ' · AOSB fabrika (OG) · ' + A.length + ' fatura</span></div>'
+    + '<div class="aciklama">Aktif enerji (kWh) gerçekten kullanılan enerjidir; reaktif enerji (kVArh) motor, trafo ve kompanzasyon sisteminin şebekeyle gidip gelen ama iş yapmayan enerjisidir. '
+    + 'Oran = sayaçtaki reaktif okuma ÷ aktif okuma. Sınır (kurulu güç ≥ 50 kVA): <b>endüktif %' + SINIR.ind + '</b>, <b>kapasitif %' + SINIR.kap + '</b>; aşılırsa o ay ölçülen reaktifin tamamı faturalanır. '
+    + 'Değerler önbellekte saklanır; bir ayın başındaki <b>⟳</b> yalnız o ayın faturasını yeniden okur.</div>'
+    + '<div class="kartlar">'
+    + '<div class="kart"><div class="e">Ölçülen aktif enerji</div><div class="d">' + n(olc) + ' kWh</div><div class="a">' + A.length + ' ay toplamı</div></div>'
+    + '<div class="kart ' + oranSinif(iP, SINIR.ind).replace('y', 'ok') + '"><div class="e">Endüktif / aktif (dönem)</div><div class="d">%' + n(iP, 1) + '</div><div class="a">en yüksek ' + (maxI ? ayAd(maxI.ay) + ' %' + n(maxI.induktifOran, 1) : '—') + ' · sınır %' + SINIR.ind + '</div></div>'
+    + '<div class="kart ' + oranSinif(kP, SINIR.kap).replace('y', 'ok') + '"><div class="e">Kapasitif / aktif (dönem)</div><div class="d">%' + n(kP, 1) + '</div><div class="a">en yüksek ' + (maxK ? ayAd(maxK.ay) + ' %' + n(maxK.kapasitifOran, 1) : '—') + ' · sınır %' + SINIR.kap + '</div></div>'
+    + '<div class="kart ' + (rTL > 0 ? 'k' : 'ok') + '"><div class="e">Faturalanan reaktif bedel</div><div class="d">' + n(rTL, 2) + ' TL</div><div class="a">' + (rTL > 0 ? 'sınır aşılan ay var' : 'hiçbir ayda reaktif bedel yok') + '</div></div>'
+    + '</div>';
+  h += B.length ? B.map(b => '<div class="bulgu ' + b[0] + '">' + (b[0] === 'k' ? '🔴 ' : '🟠 ') + b[1] + '</div>').join('') : '<div class="bulgu y">🟢 Bütün aylarda endüktif ve kapasitif oranlar sınırın belirgin altında; reaktif bedel doğmamış, demand sözleşme gücünün altında.</div>';
+  h += '<div class="tablo-kap"><table><thead><tr><th class="sol">Gösterge</th>' + A.map(x => '<th><div class="ay-bas">' + ayAd(x.ay) + '<button class="ay-yenile" onclick="ayYenile(\'' + x.ay + '\',this)" title="Yalnız ' + ayAd(x.ay) + ' faturasını depodaki PDF\'ten yeniden oku">⟳</button><span class="ay-zaman" title="Son okuma">' + zaman(oku[x.ay]) + '</span></div></th>').join('') + '<th>Toplam / dönem</th></tr></thead><tbody>'
+    + '<tr class="grup"><td colspan="' + (A.length + 2) + '">AKTİF ENERJİ</td></tr>'
+    + satir('Ölçülen aktif', 'sayaç okuması × çarpan, kWh', x => n(x.olculen), n(olc))
+    + satir('Faturalanan aktif', 'ilave (trafo kaybı vb.) dahil, kWh', x => n(x.kwh), n(top('kwh')))
+    + satir('Gündüz · puant · gece', 'kWh', x => [x.gunduz, x.puant, x.gece].every(v => v == null) ? '—' : n(x.gunduz) + ' · ' + n(x.puant) + ' · ' + n(x.gece), '')
+    + '<tr class="grup"><td colspan="' + (A.length + 2) + '">REAKTİF ENERJİ</td></tr>'
+    + satir('Endüktif reaktif', 'ölçülen, kVArh', x => n(x.indK), n(iT))
+    + satir('Endüktif / aktif', 'sınır %' + SINIR.ind, x => x.induktifOran == null ? '—' : '%' + n(x.induktifOran, 1), '%' + n(iP, 1), x => oranSinif(x.induktifOran, SINIR.ind))
+    + satir('Kapasitif reaktif', 'ölçülen, kVArh', x => n(x.kapK), n(kT))
+    + satir('Kapasitif / aktif', 'sınır %' + SINIR.kap, x => x.kapasitifOran == null ? '—' : '%' + n(x.kapasitifOran, 1), '%' + n(kP, 1), x => oranSinif(x.kapasitifOran, SINIR.kap))
+    + satir('Güç faktörü (cos φ)', 'aktif ÷ √(aktif² + endüktif²)', x => n(x.cos, 3), olc ? n(olc / Math.sqrt(olc * olc + iT * iT), 3) : '—', x => x.cos == null ? '' : x.cos >= 0.98 ? 'y' : x.cos >= 0.95 ? 't' : 'k')
+    + satir('Reaktif bedel', 'faturada, TL', x => n(x.reaktifTL, 2), n(rTL, 2), x => x.reaktifTL > 0 ? 'k' : '')
+    + '<tr class="grup"><td colspan="' + (A.length + 2) + '">GÜÇ</td></tr>'
+    + satir('Maksimum demand', 'kW', x => n(x.demand), n(Math.max(...A.map(x => x.demand || 0))))
+    + satir('Sözleşme gücü', 'kW', x => n(x.sozlesmeGucu), '')
+    + satir('Demand / sözleşme gücü', '%90 ve üzeri dikkat', x => x.dg == null ? '—' : '%' + n(x.dg, 0), '', x => x.dg == null ? '' : x.dg >= 100 ? 'k' : x.dg >= 90 ? 't' : 'y')
+    + satir('Fatura', 'PDF', x => fno(x.faturaNo, x.belgeId), '')
+    + '</tbody></table></div>'
+    + '<div class="not">Renk: <b style="color:#1e8449">yeşil</b> güvenli · <b style="color:#b9770e">turuncu</b> sınıra yakın (%75 ve üzeri) · <b style="color:#c0392b">kırmızı</b> sınır aşımı. Güç faktörü 0,98 ve üzeri iyi, 0,95 altı kompanzasyon eksikliğine işaret eder. '
+    + 'Reaktif kVArh değerleri faturadaki sayaç okumasından (oran × ölçülen aktif) hesaplanır; faturalanan reaktif sınır altında sıfırdır.</div>';
+  document.getElementById('ana').innerHTML = h;
+  document.getElementById('ustAlt').textContent = 'SECENGIDA · AOSB fabrika (OG) · ' + A.length + ' fatura · önbellekte saklı · bir ayı yenilemek için o ayın ⟳ düğmesi';
+}
+yukle();
+</script>
+<script src="/sekme-serit.js"></script>
+</body>
+</html>

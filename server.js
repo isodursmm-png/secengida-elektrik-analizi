@@ -1195,6 +1195,14 @@ http.createServer(async (req, res) => {
     // Sayfaların başlığının altındaki ortak sekme şeridi (çerçevede açılınca)
     if (url.pathname === '/sekme-serit.js') return gonder(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'sekme-serit.js')), 'application/javascript; charset=utf-8');
     if (url.pathname === '/aosb') return gonder(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'aosb.html')), 'text/html; charset=utf-8');
+    // ⚡ Aktif · reaktif matrisi (AOSB OG faturaları, önbellekteki okunmuş değerlerden; ay bazlı yeniden okuma)
+    if (url.pathname === '/reaktif') return gonder(res, 200, fs.readFileSync(path.join(__dirname, 'public', 'reaktif.html')), 'text/html; charset=utf-8');
+    if (url.pathname === '/api/reaktif') return gonder(res, 200, { ...aosbRaporu(), okuma: SG.okumaZamanlari('OSB') });
+    if (url.pathname === '/api/reaktif/ay-yenile' && req.method === 'POST') {
+      const ay = url.searchParams.get('ay');
+      try { const r = await SG.ayYenidenOku(ay, 'OSB'); return gonder(res, 200, { ...aosbRaporu(), okuma: SG.okumaZamanlari('OSB'), yenileme: r }); }
+      catch (e) { return gonder(res, 400, { ok: false, hata: e.message }); }
+    }
     if (url.pathname === '/api/aosb') return gonder(res, 200, aosbRaporu());
     if (url.pathname === '/api/aosb/yenile' && req.method === 'POST') { const son = await panelCek(); return gonder(res, 200, { ...aosbRaporu(), yenileme: son }); }
     if (url.pathname === '/ges-mahsup') return gonder(res, 200, fs.readFileSync(GES_HTML), 'text/html; charset=utf-8');

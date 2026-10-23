@@ -18,7 +18,7 @@ header .sag{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:
 .btn:hover{background:#eef2f8}
 header .btn{background:transparent;color:#fff;border-color:#ffffff88}
 header .btn:hover{background:#ffffff22}
-main{padding:18px 22px 40px;max-width:1600px;margin:0 auto}
+main{padding:14px 16px 40px;max-width:none;margin:0}
 .durum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .rozet{background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:6px 10px;font-size:12px}
 .rozet b{color:#1a3a6b}
@@ -138,6 +138,7 @@ td.bos{color:#9aa3b2;text-align:center}
 <nav class="sekmeler">
   <button class="sekme aktif" id="skAnaliz" onclick="sekmeAc('analiz')">⚡ Elektrik Analizi</button>
   <button class="sekme" id="skKontrol" onclick="sekmeAc('kontrol')">🧾 Fatura Kontrol · ödenen ↔ hesap</button>
+<button class="sekme" id="skReaktif" onclick="sekmeAc('reaktif')" title="AOSB fabrika aktif / reaktif enerji matrisi (sayaç okumaları, sınır kontrolü)">⚡ Aktif · Reaktif</button>
   <button class="sekme" id="skGes" onclick="sekmeAc('ges')">🏭 AOSB Fabrika · ☀ GES</button>
   <button class="sekme" id="skBelgeler" onclick="sekmeAc('belgeler')">📁 Belgeler</button>
   <button class="sekme" id="skReferans" onclick="sekmeAc('referans')" title="Veri güncelleme, dönem özetleri, mahsup ve tablo işaretleri">📘 Referans</button>
@@ -317,6 +318,7 @@ td.bos{color:#9aa3b2;text-align:center}
 </main>
 </div>
 <div id="sekmeKontrol"><iframe id="kontrolCerceve" title="Elektrik Fatura Kontrol"></iframe></div>
+<div id="sekmeReaktif" style="display:none"><iframe id="reaktifCerceve" title="Aktif · Reaktif" style="width:100%;height:100vh;border:none;display:block;background:#f3f5f9"></iframe></div>
 <div id="sekmeGes" style="display:none"><iframe id="gesCerceve" title="GES Mahsup Kontrolü" style="width:100%;height:100vh;border:none;display:block;background:#f3f5f9"></iframe></div>
 <div id="sekmeBelgeler" style="display:none"><iframe id="belgeCerceve" title="Belgeler" style="width:100%;height:100vh;border:none;display:block;background:#f3f5f9"></iframe></div>
 <div id="sekmeReferans" style="display:none"><iframe id="referansCerceve" title="Referans" style="width:100%;height:100vh;border:none;display:block;background:#f3f5f9"></iframe></div>
@@ -1091,17 +1093,17 @@ function panelCiz() {
 
 // ─── Sekmeler: Elektrik Analizi | Fatura Kontrol (aynı sunucudaki /fatura-kontrol sayfası çerçevede) ─
 function sekmeAc(ad) {
-  const bolum = { analiz: 'sekmeAnaliz', kontrol: 'sekmeKontrol', ges: 'sekmeGes', belgeler: 'sekmeBelgeler', referans: 'sekmeReferans' }, dugme = { analiz: 'skAnaliz', kontrol: 'skKontrol', ges: 'skGes', belgeler: 'skBelgeler', referans: 'skReferans' };
+  const bolum = { analiz: 'sekmeAnaliz', kontrol: 'sekmeKontrol', reaktif: 'sekmeReaktif', ges: 'sekmeGes', belgeler: 'sekmeBelgeler', referans: 'sekmeReferans' }, dugme = { analiz: 'skAnaliz', kontrol: 'skKontrol', reaktif: 'skReaktif', ges: 'skGes', belgeler: 'skBelgeler', referans: 'skReferans' };
   for (const k of Object.keys(bolum)) {
     document.getElementById(bolum[k]).style.display = k === ad ? (k === 'analiz' ? '' : 'block') : 'none';
     document.getElementById(dugme[k]).classList.toggle('aktif', k === ad);
   }
-  const cer = { kontrol: ['kontrolCerceve', '/fatura-kontrol'], ges: ['gesCerceve', '/aosb'], belgeler: ['belgeCerceve', '/belgeler'], referans: ['referansCerceve', '/referans'] }[ad];
+  const cer = { kontrol: ['kontrolCerceve', '/fatura-kontrol'], reaktif: ['reaktifCerceve', '/reaktif'], ges: ['gesCerceve', '/aosb'], belgeler: ['belgeCerceve', '/belgeler'], referans: ['referansCerceve', '/referans'] }[ad];
   if (cer) { const c = document.getElementById(cer[0]); if (!c.src || ad === 'referans') c.src = cer[1]; }
   try { history.replaceState(null, '', ad === 'analiz' ? location.pathname : '#' + ad); } catch (e) { }
   window.scrollTo(0, 0);
 }
-if (['#kontrol', '#ges', '#belgeler', '#referans'].includes(location.hash)) setTimeout(() => sekmeAc(location.hash.slice(1)), 0);
+if (['#kontrol', '#reaktif', '#ges', '#belgeler', '#referans'].includes(location.hash)) setTimeout(() => sekmeAc(location.hash.slice(1)), 0);
 
 // ─── Geri dön / tam ekran ────────────────────────────────────────────────────
 function aktifSekme() { return document.getElementById('sekmeKontrol').style.display === 'block' ? 'kontrol' : document.getElementById('sekmeGes').style.display === 'block' ? 'ges' : 'analiz'; }

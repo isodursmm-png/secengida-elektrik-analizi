@@ -57,7 +57,7 @@
     kop.forEach((b, i) => { b.removeAttribute('onclick'); b.removeAttribute('id'); b.onclick = () => { orj[i].click(); setTimeout(esitle, 150); }; });
     function esitle() { kop.forEach((b, i) => { b.className = orj[i].className; b.textContent = orj[i].textContent; b.title = orj[i].title; }); }
     // Hangi sekmedeysem o sekme aktif görünsün (çerçevenin kimliğinden)
-    const benim = { kontrolCerceve: 'skKontrol', gesCerceve: 'skGes', belgeCerceve: 'skBelgeler', referansCerceve: 'skReferans' }[(window.frameElement || {}).id];
+    const benim = { kontrolCerceve: 'skKontrol', reaktifCerceve: 'skReaktif', gesCerceve: 'skGes', belgeCerceve: 'skBelgeler', referansCerceve: 'skReferans' }[(window.frameElement || {}).id];
     esitle();
     if (benim) kop.forEach((b, i) => { if (orj[i].classList.contains('sekme')) b.classList.toggle('aktif', orj[i].id === benim); });
     const ust = document.querySelector('.ust');
