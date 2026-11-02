@@ -1048,12 +1048,14 @@ const MAIL_PS1 = path.join(__dirname, 'araclar', 'elektrik_mail_gonder.ps1');
 const MAIL_ADRES_DOSYASI = path.join(VERI, 'elektrik_mail_adresleri.json');
 // Yönetici maili ve WhatsApp: tek liste; mailler mail penceresinin adres önerilerine de girer. Program mesajı kendiliğinden göndermez.
 const YONETICI_DOSYASI = path.join(VERI, 'elektrik_yonetici.json');
-const yoneticiler = () => jsonOku(YONETICI_DOSYASI, { liste: [] }).liste || [];
+// Kişi bilgisi içerir: şifresiz (APP_SIFRE tanımsız) web sürümünde liste kapalıdır; masaüstü ve portal etkilenmez.
+const yoneticiAcik = () => !BULUT || !!process.env.APP_SIFRE;
+const yoneticiler = () => (yoneticiAcik() ? jsonOku(YONETICI_DOSYASI, { liste: [] }).liste || [] : []);
 // Liste Supabase deposunda da durur: masaüstü ve web aynı listeyi görür, bulut yeniden başlasa da kaybolmaz.
 const YONETICI_NESNE = 'secengida_yonetici.json';
 let yoneticiZaman = 0;
 async function yoneticiTazele(zorla) {
-  if (!SUPA.hazir || (!zorla && Date.now() - yoneticiZaman < 60000)) return;
+  if (!yoneticiAcik() || !SUPA.hazir || (!zorla && Date.now() - yoneticiZaman < 60000)) return;
   yoneticiZaman = Date.now();
   try { const u = await SUPA.depoOku(YONETICI_NESNE); if (u && Array.isArray(u.liste)) jsonYaz(YONETICI_DOSYASI, { liste: u.liste }); } catch (e) { log('Yönetici listesi alınamadı:', e.message); }
 }
@@ -1209,6 +1211,7 @@ http.createServer(async (req, res) => {
     if (url.pathname === '/api/mahsup/panel-cek' && req.method === 'POST') { await panelCek(); return gonder(res, 200, mahsupRaporu()); }
     if (url.pathname === '/api/panel') return gonder(res, 200, panelRaporu());
     if (url.pathname === '/fatura-kontrol') return gonder(res, 200, fs.readFileSync(KONTROL_HTML), 'text/html; charset=utf-8');
+    if (url.pathname === '/api/yonetici' && !yoneticiAcik()) return gonder(res, 403, { ok: false, hata: 'Web sürümünde giriş şifresi tanımlı olmadığı için bu liste kapalı. Portaldan veya masaüstünden açın.' });
     if (url.pathname === '/api/yonetici' && req.method === 'GET') { await yoneticiTazele(true); return gonder(res, 200, { ok: true, liste: yoneticiler() }); }
     if (url.pathname === '/api/yonetici' && req.method === 'POST') {
       let liste;
