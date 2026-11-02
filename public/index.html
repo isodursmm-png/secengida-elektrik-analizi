@@ -1460,5 +1460,44 @@ veriYukle();
 setInterval(() => veriYukle(true), 5 * 60 * 1000);
 </script>
 <script src="/sekme-serit.js"></script>
+<script>
+/* Yönetici maili ve WhatsApp: pencere kendi içinde; mesajı program göndermez, satırdan mail ve WhatsApp penceresi açılır. */
+(function () {
+  // Portal üst çubuğu ve sekmeleri gizlediği için düğme her görünümde köşede sabit durur.
+  var YA = typeof API !== 'undefined' ? API : '';
+  var kac = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var wa = function (t) { var r = String(t || '').replace(/\D/g, ''); if (r.charAt(0) === '0') r = '90' + r.slice(1); else if (r.length === 10) r = '90' + r; return r; };
+  var kose = document.createElement('button'); kose.id = 'yonDugme'; kose.type = 'button'; kose.textContent = '👤 Yönetici ve WhatsApp'; kose.title = 'Yönetici maili ve WhatsApp bilgileri';
+  kose.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:9000;padding:7px 12px;background:#1a3a6b;color:#fff;border:1px solid #fff;border-radius:8px;font:700 12px Segoe UI,Arial,sans-serif;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.35)';
+  kose.onclick = function () { window.yoneticiAc(); };
+  document.body.appendChild(kose);
+  window.yoneticiAc = async function () {
+    var d; try { d = await (await fetch(YA + '/api/yonetici')).json(); } catch (e) { return alert('Yönetici listesi okunamadı.'); }
+    var p = document.createElement('div'); p.id = 'yonPerde';
+    p.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    p.innerHTML = '<div style="background:#fff;color:#0f172a;border-radius:10px;padding:16px;width:820px;max-width:100%;max-height:90vh;overflow:auto;font:13px Segoe UI,Arial,sans-serif"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:15px;color:#1a3a6b">👤 Yönetici Maili ve WhatsApp</b><button type="button" id="yonX" title="Kapat (Esc)" style="width:30px;height:30px;background:#c0392b;color:#fff;border:0;border-radius:6px;font-weight:700;cursor:pointer">✕</button></div><div style="font-size:12px;color:#475569;margin-bottom:8px">Mailler, mail penceresinin adres önerilerinde de çıkar. Program kendiliğinden mesaj göndermez.</div><table style="width:100%;border-collapse:collapse" id="yonTablo"><thead><tr style="text-align:left;color:#1a3a6b"><th>Yönetici</th><th>Yönetici maili</th><th>WhatsApp no</th><th>Mesaj</th><th></th></tr></thead><tbody></tbody></table><div id="yonHata" style="color:#c0392b;font-weight:700;margin-top:6px"></div><div style="margin-top:10px;display:flex;gap:8px"><button type="button" id="yonEkle" style="padding:6px 12px;border:1px solid #1a3a6b;background:#fff;color:#1a3a6b;border-radius:6px;cursor:pointer">+ Yeni satır</button><button type="button" id="yonKaydet" style="padding:6px 14px;border:0;background:#1a3a6b;color:#fff;border-radius:6px;font-weight:700;cursor:pointer">Kaydet</button></div></div>';
+    document.body.appendChild(p);
+    var tb = p.querySelector('tbody'), kut = 'width:100%;box-sizing:border-box;padding:5px;border:1px solid #cbd5e1;border-radius:5px';
+    var satir = function (x) {
+      x = x || {}; var t = document.createElement('tr');
+      t.innerHTML = '<td><input class="yY" style="' + kut + '" value="' + kac(x.yonetici) + '"></td><td><input class="yE" style="' + kut + '" value="' + kac(x.eposta) + '"></td><td><input class="yW" style="' + kut + '" placeholder="05xx xxx xx xx" value="' + kac(x.whatsapp) + '"></td><td style="white-space:nowrap">' + (x.eposta ? '<a href="mailto:' + kac(x.eposta) + '">✉️</a> ' : '') + (x.whatsapp ? '<a target="_blank" rel="noopener noreferrer" href="https://wa.me/' + kac(wa(x.whatsapp)) + '" title="WhatsApp penceresi açar">💬</a>' : '') + '</td><td><button type="button" class="ySil" title="Sil" style="border:1px solid #cbd5e1;background:#fff;border-radius:5px;cursor:pointer">🗑</button></td>';
+      t.querySelector('.ySil').onclick = function () { t.remove(); };
+      tb.appendChild(t);
+    };
+    (d.liste || []).forEach(satir); if (!(d.liste || []).length) satir();
+    var kapat = function () { p.remove(); document.removeEventListener('keydown', tus); }, tus = function (e) { if (e.key === 'Escape') kapat(); };
+    document.addEventListener('keydown', tus);
+    p.querySelector('#yonX').onclick = kapat;
+    p.querySelector('#yonEkle').onclick = function () { satir(); };
+    p.querySelector('#yonKaydet').onclick = async function () {
+      var liste = [].map.call(tb.rows, function (t) { return { yonetici: t.querySelector('.yY').value, eposta: t.querySelector('.yE').value, whatsapp: t.querySelector('.yW').value }; });
+      var r = await fetch(YA + '/api/yonetici', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ liste: liste }) }), j = await r.json().catch(function () { return {}; });
+      if (!r.ok || !j.ok) { p.querySelector('#yonHata').textContent = j.hata || 'Kaydedilemedi.'; return; }
+      if (typeof MAIL_BILGI !== 'undefined') { try { MAIL_BILGI = null; } catch (e) {} }
+      kapat();
+    };
+  };
+})();
+</script>
 </body>
 </html>

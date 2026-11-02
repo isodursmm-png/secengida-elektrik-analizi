@@ -1046,6 +1046,28 @@ const { execFile } = require('child_process');
 const os2 = require('os');
 const MAIL_PS1 = path.join(__dirname, 'araclar', 'elektrik_mail_gonder.ps1');
 const MAIL_ADRES_DOSYASI = path.join(VERI, 'elektrik_mail_adresleri.json');
+// Yönetici maili ve WhatsApp: tek liste; mailler mail penceresinin adres önerilerine de girer. Program mesajı kendiliğinden göndermez.
+const YONETICI_DOSYASI = path.join(VERI, 'elektrik_yonetici.json');
+const yoneticiler = () => jsonOku(YONETICI_DOSYASI, { liste: [] }).liste || [];
+// Liste Supabase deposunda da durur: masaüstü ve web aynı listeyi görür, bulut yeniden başlasa da kaybolmaz.
+const YONETICI_NESNE = 'secengida_yonetici.json';
+let yoneticiZaman = 0;
+async function yoneticiTazele(zorla) {
+  if (!SUPA.hazir || (!zorla && Date.now() - yoneticiZaman < 60000)) return;
+  yoneticiZaman = Date.now();
+  try { const u = await SUPA.depoOku(YONETICI_NESNE); if (u && Array.isArray(u.liste)) jsonYaz(YONETICI_DOSYASI, { liste: u.liste }); } catch (e) { log('Yönetici listesi alınamadı:', e.message); }
+}
+function yoneticiKaydet(g) {
+  const l = (Array.isArray(g && g.liste) ? g.liste : []).map(x => ({ yonetici: String(x.yonetici || '').trim().slice(0, 120), eposta: String(x.eposta || '').trim().slice(0, 160), whatsapp: String(x.whatsapp || '').trim().slice(0, 30) })).filter(x => x.yonetici || x.eposta || x.whatsapp);
+  for (const x of l) {
+    if (!x.yonetici) throw new Error('Yönetici adı zorunludur');
+    if (x.eposta && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x.eposta)) throw new Error(x.yonetici + ': yönetici maili geçersiz');
+    const hane = x.whatsapp.replace(/\D/g, '').length;
+    if (x.whatsapp && (!/^\+?[\d\s()-]+$/.test(x.whatsapp) || hane < 10 || hane > 13)) throw new Error(x.yonetici + ': WhatsApp numarası 10-13 hane olmalı');
+  }
+  jsonYaz(YONETICI_DOSYASI, { liste: l });
+  return l;
+}
 const GOVDE_SATIR_SINIRI = 300;
 function psCalistir(args) {
   return new Promise(res => execFile('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', MAIL_PS1, ...args], { timeout: 120000, windowsHide: true, encoding: 'utf8' }, (err, out) => {
@@ -1187,9 +1209,17 @@ http.createServer(async (req, res) => {
     if (url.pathname === '/api/mahsup/panel-cek' && req.method === 'POST') { await panelCek(); return gonder(res, 200, mahsupRaporu()); }
     if (url.pathname === '/api/panel') return gonder(res, 200, panelRaporu());
     if (url.pathname === '/fatura-kontrol') return gonder(res, 200, fs.readFileSync(KONTROL_HTML), 'text/html; charset=utf-8');
+    if (url.pathname === '/api/yonetici' && req.method === 'GET') { await yoneticiTazele(true); return gonder(res, 200, { ok: true, liste: yoneticiler() }); }
+    if (url.pathname === '/api/yonetici' && req.method === 'POST') {
+      let liste;
+      try { liste = yoneticiKaydet(await govdeOku(req)); } catch (e) { return gonder(res, 400, { ok: false, hata: e.message }); }
+      if (SUPA.hazir) { try { await SUPA.depoYaz(YONETICI_NESNE, { liste }); } catch (e) { return gonder(res, 500, { ok: false, hata: 'Liste bu bilgisayara kaydedildi ama ortak depoya yazılamadı: ' + e.message }); } }
+      return gonder(res, 200, { ok: true, liste });
+    }
     if (url.pathname === '/api/mail/bilgi') {
+      await yoneticiTazele();
       if (!mailHesaplari) { if (OUTLOOK_KULLAN) { const h = await psCalistir(['-Hesaplar']); if (h.ok) mailHesaplari = h.hesaplar; } else mailHesaplari = (process.env.SMTP_GONDEREN || process.env.SMTP_KULLANICI || '').split(/[;,]/).map(x => x.trim()).filter(Boolean); }
-      return gonder(res, 200, { ok: true, hesaplar: mailHesaplari || [], adresler: jsonOku(MAIL_ADRES_DOSYASI, { adresler: [] }).adresler });
+      return gonder(res, 200, { ok: true, hesaplar: mailHesaplari || [], adresler: [...new Set([...yoneticiler().map(x => x.eposta).filter(Boolean), ...jsonOku(MAIL_ADRES_DOSYASI, { adresler: [] }).adresler])] });
     }
     if (url.pathname === '/api/mail' && req.method === 'POST') return gonder(res, 200, await mailGonder(await govdeOku(req)));
     // Sayfaların başlığının altındaki ortak sekme şeridi (çerçevede açılınca)
