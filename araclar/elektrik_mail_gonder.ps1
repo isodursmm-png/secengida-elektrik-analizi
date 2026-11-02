@@ -8,16 +8,18 @@ $ErrorActionPreference = 'Stop'
 try {
   $ol = New-Object -ComObject Outlook.Application
   if ($Hesaplar) {
-    $liste = @($ol.Session.Accounts | ForEach-Object { $_.SmtpAddress })
+    # 2026-10-21: yalnızca ishak.durmus@scgrup.co listelenir (kişisel hesap kullanılmaz)
+    $liste = @($ol.Session.Accounts | ForEach-Object { $_.SmtpAddress } | Where-Object { ([string]$_).ToLower() -eq 'ishak.durmus@scgrup.co' })
     ConvertTo-Json -InputObject @{ ok = $true; hesaplar = $liste } -Compress
     exit 0
   }
   $j = Get-Content -LiteralPath $Is -Raw -Encoding UTF8 | ConvertFrom-Json
   $m = $ol.CreateItem(0)
-  if ($j.gonderen) {
-    $hesap = $ol.Session.Accounts | Where-Object { $_.SmtpAddress -eq $j.gonderen } | Select-Object -First 1
-    if ($hesap) { $m.SendUsingAccount = $hesap }
-  }
+  # 2026-10-21: gönderen YALNIZCA ishak.durmus@scgrup.co — seçilen/verilen gönderen yok sayılır;
+  # hesap Outlook'ta yoksa gönderilmez (Outlook varsayılanındaki kişisel hesaba düşülmez).
+  $hesap = $ol.Session.Accounts | Where-Object { ([string]$_.SmtpAddress).ToLower() -eq 'ishak.durmus@scgrup.co' } | Select-Object -First 1
+  if (-not $hesap) { throw "Outlook'ta ishak.durmus@scgrup.co hesabı bulunamadı — gönderiler yalnızca bu hesaptan yapılır" }
+  $m.SendUsingAccount = $hesap
   $m.To = (@($j.kime) -join '; ')
   if (@($j.bilgi).Count) { $m.CC = (@($j.bilgi) -join '; ') }
   $m.Subject = $j.konu
