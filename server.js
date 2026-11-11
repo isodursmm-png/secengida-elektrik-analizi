@@ -1,7 +1,7 @@
 // server.js — SECENGIDA ELEKTRİK ANALİZİ (port 5356)
 //
 // TAHTAKALE ELEKTRİK ANALİZİ'nin (port 5352, ELEKTRIK-ANALIZI-WEB) SECENGIDA kopyası. Farklar:
-//  • Faturalar Elektrik Fatura Paneli yerine Masaüstü\SECENGIDA klasöründen okunur (zip / PDF, lib/secengida_kaynak.js):
+//  • Faturalar Elektrik Fatura Paneli yerine SECENGIDA fatura klasöründen (SECENGIDA_KLASOR → Masaüstü\SECENGIDA → veri/secengida_gelen) okunur (zip / PDF, lib/secengida_kaynak.js):
 //    CK Akdeniz abonelikleri, Antalya OSB fabrika faturaları, ANT Trafo hizmet faturaları.
 //  • Ortak piyasa verisi (EPİAŞ hesabı, saatlik PTF, YEKDEM, EPDK tarifeleri, gider tablosu, PVGIS) 5352 ortamının
 //    dosyalarından (Desktop\CLAUDE) alınır, eksikler bu sunucu tarafından tamamlanır.
@@ -574,8 +574,19 @@ async function panelleriBul() {
 }
 // Bilinen tüm paneller her turda okunur ve birleştirilir (lib/elektrik_panel_kaynak.js). Öncelik: varsayılan
 // (Sami PC) → ayardaki liste → eski tek adres. 127.0.0.1 aynı paneli iki kez saymasın diye listeye alınmaz.
-// SECENGIDA: faturalar Masaüstü\SECENGIDA klasöründen (zip / PDF). Panel modülü yapıda kalır (PANEL_KULLAN=1 ile açılır).
-const SG_KLASORLER = () => { const a = jsonOku(AYAR_DOSYASI, {}); return [...new Set([process.env.SECENGIDA_KLASOR || path.join(os.homedir(), 'Desktop', 'SECENGIDA'), ...(a.kaynakKlasorleri || [])])].filter(k => fs.existsSync(k)); };
+// SECENGIDA: faturalar SECENGIDA gelen klasöründen (zip / PDF). Panel modülü yapıda kalır (PANEL_KULLAN=1 ile açılır).
+// Ana klasör sırası: SECENGIDA_KLASOR ortam değişkeni → (varsa) Masaüstü\SECENGIDA → <veri klasörü>/secengida_gelen
+// (bilgisayardan bağımsız varsayılan; Linux sunucuda faturalar buraya bırakılır, yoksa oluşturulur).
+// Ayar dosyasındaki kaynakKlasorleri de ayrıca taranır.
+function sgAnaKlasor() {
+  if (process.env.SECENGIDA_KLASOR) return process.env.SECENGIDA_KLASOR;
+  const masaustu = path.join(os.homedir(), 'Desktop', 'SECENGIDA');
+  if (fs.existsSync(masaustu)) return masaustu;
+  const k = path.join(VERI, 'secengida_gelen');
+  try { fs.mkdirSync(k, { recursive: true }); } catch (e) { }
+  return k;
+}
+const SG_KLASORLER = () => { const a = jsonOku(AYAR_DOSYASI, {}); return [...new Set([sgAnaKlasor(), ...(a.kaynakKlasorleri || [])])].filter(k => fs.existsSync(k)); };
 const SG = require('./lib/secengida_kaynak.js').kaynak({ veri: VERI, klasorler: SG_KLASORLER, log });
 const PANELLER = require('./lib/elektrik_panel_kaynak.js').paneller({
   adresler: () => { const a = jsonOku(AYAR_DOSYASI, {}); return [PANEL_VARSAYILAN, ...(a.paneller || []), a.panelTaban].filter(x => x && !/127\.0\.0\.1/.test(x)); },
@@ -1039,12 +1050,14 @@ function mahsupRaporu() {
 }
 const yuvarla2 = x => Math.round(x * 100) / 100;
 
-// ─── Mail (Outlook) ─────────────────────────────────────────────────────────────────────────────
+// ─── Mail (varsayılan mail uygulaması) ──────────────────────────────────────────────────────────
 // Seçilen raporlar mail gövdesinde HTML tablo + tek Excel eki (her rapor ayrı sayfa) olarak gider.
-// Gönderim elektrik_mail_gonder.ps1 ile Outlook üzerinden: 'Outlook'ta aç' (kontrol et) veya 'Hemen gönder'.
-const { execFile } = require('child_process');
+// 'Mail uygulamasında aç': sunucu gönderilmemiş bir .eml taslağı üretir (lib/eml.js); tarayıcı indirir,
+// kullanıcının varsayılan mail uygulaması (Outlook, Thunderbird, Windows Posta…) düzenlenebilir yeni ileti
+// olarak açar, kullanıcı kontrol edip kendisi gönderir. Windows / Outlook / PowerShell gerekmez.
+// 'Hemen gönder' yalnız SMTP ayarı (SMTP_HOST …) tanımlıysa sunulur ve SMTP ile doğrudan gönderir.
 const os2 = require('os');
-const MAIL_PS1 = path.join(__dirname, 'araclar', 'elektrik_mail_gonder.ps1');
+const EML = require('./lib/eml.js');
 const MAIL_ADRES_DOSYASI = path.join(VERI, 'elektrik_mail_adresleri.json');
 // Yönetici maili ve WhatsApp: tek liste; mailler mail penceresinin adres önerilerine de girer. Program mesajı kendiliğinden göndermez.
 const YONETICI_DOSYASI = path.join(VERI, 'elektrik_yonetici.json');
@@ -1071,13 +1084,6 @@ function yoneticiKaydet(g) {
   return l;
 }
 const GOVDE_SATIR_SINIRI = 300;
-function psCalistir(args) {
-  return new Promise(res => execFile('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', MAIL_PS1, ...args], { timeout: 120000, windowsHide: true, encoding: 'utf8' }, (err, out) => {
-    const m = /\{[\s\S]*\}/.exec(out || '');
-    try { res(JSON.parse(m[0])); } catch (e) { res({ ok: false, hata: (err && err.message) || 'Outlook yanıt vermedi' }); }
-  }));
-}
-let mailHesaplari = null;
 const htmlKac = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const hucreMetni = v => typeof v === 'number' ? (Number.isInteger(v) ? v.toLocaleString('tr-TR') : v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })) : (v == null ? '' : String(v));
 function mailGovdesi(b) {
@@ -1101,9 +1107,9 @@ function mailGovdesi(b) {
   return h + '<div style="color:#888;font-size:11px;margin-top:18px">Bu e-posta ' + UYGULAMA + ' uygulamasından gönderilmiştir.</div></div>';
 }
 const EPOSTA = /^[^\s@;,]+@[^\s@;,]+\.[^\s@;,]+$/;
-// SMTP (Render / Outlook olmayan makineler): SMTP_HOST, SMTP_PORT, SMTP_KULLANICI, SMTP_SIFRE, SMTP_GONDEREN
+// İsteğe bağlı SMTP ('Hemen gönder' için): SMTP_HOST, SMTP_PORT, SMTP_KULLANICI, SMTP_SIFRE, SMTP_GONDEREN
 const SMTP_VAR = !!process.env.SMTP_HOST;
-const OUTLOOK_KULLAN = process.platform === 'win32' && process.env.MAIL_YONTEMI !== 'smtp';
+const smtpHesaplari = () => (process.env.SMTP_GONDEREN || process.env.SMTP_KULLANICI || '').split(/[;,]/).map(x => x.trim()).filter(Boolean);
 async function smtpGonder({ gonderen, kime, bilgi, konu, govdeDosya, ekler }) {
   if (!SMTP_VAR) return { ok: false, hata: 'Mail için SMTP ayarı yok (SMTP_HOST, SMTP_KULLANICI, SMTP_SIFRE). Render panelinde Environment bölümüne ekleyin.' };
   const nodemailer = require('nodemailer');
@@ -1119,6 +1125,7 @@ async function mailGonder(b) {
   if (!kime.length) return { ok: false, hata: 'En az bir alıcı girin.' };
   if (hatali.length) return { ok: false, hata: 'Geçersiz e-posta adresi: ' + hatali.join(', ') };
   if (!(b.raporlar || []).length) return { ok: false, hata: 'En az bir rapor seçin.' };
+  if (b.hemen && !SMTP_VAR) return { ok: false, hata: 'Doğrudan gönderim için SMTP ayarı yok. "Mail uygulamasında aç" ile taslak hazırlayıp kendi mail uygulamanızdan gönderin.' };
   const klasor = fs.mkdtempSync(path.join(os2.tmpdir(), 'elk_mail_'));
   const govdeDosya = path.join(klasor, 'govde.html');
   fs.writeFileSync(govdeDosya, mailGovdesi(b), 'utf8');
@@ -1137,10 +1144,14 @@ async function mailGonder(b) {
     fs.writeFileSync(ek, XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
     ekler.push(ek);
   }
-  const isDosya = path.join(klasor, 'is.json');
-  fs.writeFileSync(isDosya, JSON.stringify({ gonderen: b.gonderen || '', kime, bilgi, konu: b.konu || 'Elektrik Analizi', govdeDosya, ekler, hemen: !!b.hemen }), 'utf8');
-  // Bulutta 'Outlook'ta aç' mümkün değildir; SMTP ile doğrudan gönderilir
-  const r = OUTLOOK_KULLAN ? await psCalistir(['-Is', isDosya]) : await smtpGonder({ gonderen: b.gonderen, kime, bilgi, konu: b.konu || 'Elektrik Analizi', govdeDosya, ekler });
+  const konu = b.konu || 'Elektrik Analizi';
+  let r;
+  if (b.hemen) r = await smtpGonder({ gonderen: b.gonderen, kime, bilgi, konu, govdeDosya, ekler });
+  else {
+    // Taslak: gönderen alanı yoktur; mail uygulamasında açık olan hesap gönderir
+    try { r = { ok: true, ...EML.yanit({ kime, bilgi, konu, html: fs.readFileSync(govdeDosya, 'utf8'), ekler: ekler.map(e => ({ ad: path.basename(e), icerik: fs.readFileSync(e) })) }) }; }
+    catch (e) { r = { ok: false, hata: e.message }; }
+  }
   setTimeout(() => { try { fs.rmSync(klasor, { recursive: true, force: true }); } catch (e) { } }, 10 * 60 * 1000);
   if (r.ok) {
     const kayit = jsonOku(MAIL_ADRES_DOSYASI, { adresler: [] });
@@ -1221,8 +1232,8 @@ http.createServer(async (req, res) => {
     }
     if (url.pathname === '/api/mail/bilgi') {
       await yoneticiTazele();
-      if (!mailHesaplari) { if (OUTLOOK_KULLAN) { const h = await psCalistir(['-Hesaplar']); if (h.ok) mailHesaplari = h.hesaplar; } else mailHesaplari = (process.env.SMTP_GONDEREN || process.env.SMTP_KULLANICI || '').split(/[;,]/).map(x => x.trim()).filter(Boolean); }
-      return gonder(res, 200, { ok: true, hesaplar: mailHesaplari || [], adresler: [...new Set([...yoneticiler().map(x => x.eposta).filter(Boolean), ...jsonOku(MAIL_ADRES_DOSYASI, { adresler: [] }).adresler])] });
+      // smtp: 'Hemen gönder' sunulsun mu · hesaplar: yalnız SMTP gönderen adresleri (taslakta gönderen mail uygulamasındaki hesaptır)
+      return gonder(res, 200, { ok: true, yontem: 'taslak', smtp: SMTP_VAR, hesaplar: SMTP_VAR ? smtpHesaplari() : [], adresler: [...new Set([...yoneticiler().map(x => x.eposta).filter(Boolean), ...jsonOku(MAIL_ADRES_DOSYASI, { adresler: [] }).adresler])] });
     }
     if (url.pathname === '/api/mail' && req.method === 'POST') return gonder(res, 200, await mailGonder(await govdeOku(req)));
     // Sayfaların başlığının altındaki ortak sekme şeridi (çerçevede açılınca)

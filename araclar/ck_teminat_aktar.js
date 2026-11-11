@@ -5,15 +5,26 @@
 // ekrandan eklenmiş tarihli kayıtlar korunur. Nakit / mektup / müşteri tipi kaydın açıklamasına yazılır.
 // Kayıt çalışan ELEKTRİK ANALİZİ sunucusuna (/api/firma) yapılır: yerel ayar + Supabase birlikte güncellenir.
 //
-// Kullanım: node araclar/ck_teminat_aktar.js ["C:\...\CK ELEKTRİK.xlsx"] [--dene]
+// Kullanım: node araclar/ck_teminat_aktar.js ["<yol>/CK ELEKTRİK.xlsx"] [--dene]
 //   --dene: kaydetmeden yalnızca eşleşmeyi gösterir. Sunucu adresi: SUNUCU_URL (varsayılan http://localhost:5352)
+// Dosya verilmezse sırayla: CK_TEMINAT_DOSYASI ortam değişkeni → (varsa) Masaüstü\CK ELEKTRİK.xlsx →
+// <DATA_DIR ya da proje\veri>/CK ELEKTRİK.xlsx (bilgisayardan bağımsız varsayılan; Linux sunucuda buraya konur).
+const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const XLSX = require('xlsx');
 
 const arg = process.argv.slice(2);
 const DENE = arg.includes('--dene');
-const DOSYA = arg.find(a => !a.startsWith('--')) || path.join(os.homedir(), 'Desktop', 'CK ELEKTRİK.xlsx');
+const CK_AD = 'CK ELEKTRİK.xlsx';
+function varsayilanDosya() {
+  if (process.env.CK_TEMINAT_DOSYASI) return process.env.CK_TEMINAT_DOSYASI;
+  const masaustu = path.join(os.homedir(), 'Desktop', CK_AD);
+  if (fs.existsSync(masaustu)) return masaustu;
+  return path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'veri'), CK_AD);
+}
+const DOSYA = arg.find(a => !a.startsWith('--')) || varsayilanDosya();
+if (!fs.existsSync(DOSYA)) { console.error('CK Elektrik dosyası bulunamadı: ' + DOSYA + '\n(Dosya yolunu bağımsız değişken olarak ya da CK_TEMINAT_DOSYASI ortam değişkeniyle verin.)'); process.exit(1); }
 const SUNUCU = (process.env.SUNUCU_URL || 'http://localhost:5352').replace(/\/+$/, '');
 const tl = v => Number(v).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const sayi = v => typeof v === 'number' ? v : parseFloat(String(v == null ? '' : v).trim().split('.').join('').replace(',', '.')) || 0;

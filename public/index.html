@@ -128,7 +128,7 @@ td.bos{color:#9aa3b2;text-align:center}
 <header>
   <div>
     <h1>⚡ SECENGIDA ELEKTRİK ANALİZİ</h1>
-    <div class="alt">SECENGIDA · Akdeniz Bölgesi · Tüzel kişi · AOSB fabrika (OG) + CK Akdeniz abonelikleri · Son 12 ay · EPDK + EPİAŞ + PVGIS canlı · faturalar Masaüstü › SECENGIDA klasöründen</div>
+    <div class="alt">SECENGIDA · Akdeniz Bölgesi · Tüzel kişi · AOSB fabrika (OG) + CK Akdeniz abonelikleri · Son 12 ay · EPDK + EPİAŞ + PVGIS canlı · faturalar SECENGIDA fatura klasöründen</div>
   </div>
   <div class="sag">
     <button class="btn" onclick="ayarAc()">⚙ EPİAŞ Ayarları</button>
@@ -146,7 +146,7 @@ td.bos{color:#9aa3b2;text-align:center}
     <button class="geri" onclick="geriDon()" title="Bir önceki görünüme / sekmeye dön">← Geri dön</button>
     <button id="btnTamEkran" onclick="tamEkran()" title="Tam ekran aç / kapat">⛶ Tam ekran</button>
     <button onclick="yazdirAc()" title="A4 ön izleme ile yazdır">🖨 Yazdır</button>
-    <button class="mail" onclick="mailAc()" title="Seçilen raporları Outlook ile gönder">✉ Mail gönder</button>
+    <button class="mail" onclick="mailAc()" title="Seçilen raporları e-posta taslağı olarak varsayılan mail uygulamanızda açar">✉ Mail gönder</button>
   </div>
 </nav>
 
@@ -363,7 +363,7 @@ td.bos{color:#9aa3b2;text-align:center}
 </div>
 <div class="tam-modal" id="mailModal">
   <div class="kutu2">
-    <div class="bas2"><h3>✉ Mail gönder · Outlook</h3><button class="x" onclick="mailKapat()">×</button></div>
+    <div class="bas2"><h3>✉ Mail gönder · mail uygulaması</h3><button class="x" onclick="mailKapat()">×</button></div>
     <div class="govde2">
       <div class="secenek">
         <h4>Gönderilecek raporlar</h4>
@@ -372,20 +372,20 @@ td.bos{color:#9aa3b2;text-align:center}
         <label><input type="checkbox" id="mlExcel" checked> Excel eki (her rapor ayrı sayfa)</label>
         <label><input type="checkbox" id="mlGovde" checked> Tablolar mailin içinde görünsün</label>
         <div class="dugmeler">
-          <button class="d-ana" onclick="mailGonder(false)">📝 Outlook'ta aç · kontrol edip gönder</button>
-          <button class="d-kirmizi" onclick="mailGonder(true)">✉ Hemen gönder</button>
+          <button class="d-ana" onclick="mailGonder(false)">📝 Mail uygulamasında aç · kontrol edip gönder</button>
+          <button class="d-kirmizi" id="mlHemen" style="display:none" title="SMTP ile doğrudan gönderir" onclick="mailGonder(true)">✉ Hemen gönder</button>
           <button class="d-sade" onclick="mailKapat()">Kapat</button>
         </div>
       </div>
       <div class="mail-alan">
         <div class="mail-sonuc" id="mlSonuc"></div>
-        <div class="alan"><b>Gönderen hesap</b><select id="mlGonderen"></select></div>
+        <div class="alan" id="mlGonderenAlan" style="display:none"><b>Gönderen hesap (Hemen gönder · SMTP)</b><select id="mlGonderen"></select></div>
         <div class="alan"><b>Kime (birden fazla alıcı)</b><div class="cip-kutu" id="mlKime" onclick="this.querySelector('input').focus()"><input list="mlAdresler" placeholder="e-posta yazıp Enter'a basın · birden fazlasını ; ile yapıştırabilirsiniz"></div><div class="ipucu2">Daha önce gönderilen adresler yazarken öneri olarak çıkar.</div></div>
         <div class="alan"><b>Bilgi (CC)</b><div class="cip-kutu" id="mlBilgi" onclick="this.querySelector('input').focus()"><input list="mlAdresler" placeholder="isteğe bağlı"></div></div>
         <datalist id="mlAdresler"></datalist>
         <div class="alan"><b>Konu</b><input class="tam" id="mlKonu"></div>
         <div class="alan"><b>Mesaj</b><textarea id="mlMesaj"></textarea></div>
-        <div class="ipucu2">"Outlook'ta aç" maili Outlook'ta hazırlar, siz kontrol edip gönderirsiniz. "Hemen gönder" onayınızdan sonra doğrudan gönderir.</div>
+        <div class="ipucu2">"Mail uygulamasında aç" e-postayı alıcılar, konu, tablolar ve eklerle bir taslak (.eml) dosyası olarak indirir; dosyayı açınca varsayılan mail uygulamanızda (Outlook, Thunderbird, Windows Posta…) yeni ileti olarak açılır, kontrol edip kendi hesabınızdan gönderirsiniz. Gönderen, mail uygulamasında seçili hesaptır; kurumsal hesabınızı (@scgrup.co) seçmeyi unutmayın.<span id="mlHemenIpucu" style="display:none"> "Hemen gönder" onayınızdan sonra SMTP ile doğrudan gönderir.</span></div>
       </div>
     </div>
   </div>
@@ -1035,7 +1035,7 @@ function panelCiz() {
   d.push('<div class="rozet ' + (s.hata ? 'hata' : 'ok') + '">Son yenileme: <b>' + tarihTR(P.alinma) + '</b>' + (y.gelen != null ? ' · ' + y.gelen.toLocaleString('tr-TR') + ' okundu, ' + y.yeni.toLocaleString('tr-TR') + ' yeni, ' + y.guncellenen.toLocaleString('tr-TR') + ' güncellendi' : '') + (s.hata ? ' · son deneme hatası: ' + s.hata : '') + '</div>');
   d.push('<div class="rozet">Saklanan fatura: <b>' + P.faturalar.length.toLocaleString('tr-TR') + '</b> · lokasyon: <b>' + P.lokasyonlar.length.toLocaleString('tr-TR') + '</b> · ilk kayıt: ' + tarihTR(P.ilkAlinma) + '</div>');
   d.push('<div class="rozet">Panel adresi: <b>' + (s.adres || '—') + '</b> · panelin fatura klasörü: ' + (s.klasor || '—') + '</div>');
-  d.push('<div class="rozet">Saklandığı yer: <b>Desktop\\CLAUDE\\elektrik_mahsup_veri.json</b> · ham anlık görüntüler: <b>Desktop\\CLAUDE\\elektrik_panel_ham\\</b></div>');
+  d.push('<div class="rozet">Saklandığı yer: <b>veri klasörü (DATA_DIR) › elektrik_mahsup_veri.json</b> · ham anlık görüntüler: <b>veri klasörü › elektrik_panel_ham</b></div>');
   // Aynı sözleşme + aynı ay + aynı kWh ve tutarla birden fazla fatura dosyası: mükerrer kesilmiş olabilir
   const grp = {};
   for (const f of P.faturalar) (grp[f.sozlesmeNo + '|' + f.donem + '|' + f.tuketim + '|' + f.odenecek] = grp[f.sozlesmeNo + '|' + f.donem + '|' + f.tuketim + '|' + f.odenecek] || []).push(f);
@@ -1255,7 +1255,19 @@ function pvYazdir() {
   setTimeout(() => { fr.contentWindow.focus(); fr.contentWindow.print(); setTimeout(() => fr.remove(), 60000); }, 300);
 }
 
-// ─── Mail: Outlook ile çok alıcılı gönderim ─────────────────────────────────
+// E-posta taslağı (.eml): sunucunun ürettiği base64 içeriği indirir; varsayılan mail uygulaması yeni ileti olarak açar
+function emlIndir(r) {
+  if (!r || !r.eml) return false;
+  const ikili = atob(r.eml), u = new Uint8Array(ikili.length);
+  for (let i = 0; i < ikili.length; i++) u[i] = ikili.charCodeAt(i);
+  const url = URL.createObjectURL(new Blob([u], { type: 'message/rfc822' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = r.emlAd || 'eposta.eml'; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 60000);
+  return true;
+}
+// ─── Mail: varsayılan mail uygulamasıyla çok alıcılı gönderim (.eml taslağı) ─────────────────────────────────
 const EPOSTA_RE = /^[^\s@;,]+@[^\s@;,]+\.[^\s@;,]+$/;
 function cipKur(kutuId) {
   const kutu = document.getElementById(kutuId), inp = kutu.querySelector('input');
@@ -1277,13 +1289,15 @@ async function mailAc(secim) {
   mailKonuGuncelle(true);
   if (!MAIL_BILGI) {
     const sel = document.getElementById('mlGonderen');
-    sel.innerHTML = '<option>⏳ Outlook hesapları okunuyor…</option>';
+    sel.innerHTML = '<option>⏳ Okunuyor…</option>';
     try { MAIL_BILGI = await (await fetch(API + '/api/mail/bilgi')).json(); } catch (e) { MAIL_BILGI = { hesaplar: [], adresler: [] }; }
     const h = MAIL_BILGI.hesaplar || [];
-    sel.innerHTML = h.length ? h.map(a => '<option value="' + pvKac(a) + '">' + pvKac(a) + '</option>').join('') : '<option value="">Outlook varsayılan hesabı</option>';
+    sel.innerHTML = h.length ? h.map(a => '<option value="' + pvKac(a) + '">' + pvKac(a) + '</option>').join('') : '<option value="">SMTP varsayılan gönderen</option>';
     const kurumsal = h.find(a => /scgrup/i.test(a)); if (kurumsal) sel.value = kurumsal;
     try { const onceki = localStorage.getItem('elk_mail_gonderen'); if (onceki && h.includes(onceki)) sel.value = onceki; } catch (e) { }
     document.getElementById('mlAdresler').innerHTML = (MAIL_BILGI.adresler || []).map(a => '<option value="' + pvKac(a) + '">').join('');
+    // 'Hemen gönder' ve gönderen seçimi yalnız sunucuda SMTP ayarı varsa görünür
+    for (const id of ['mlHemen', 'mlGonderenAlan', 'mlHemenIpucu']) document.getElementById(id).style.display = MAIL_BILGI.smtp ? '' : 'none';
   }
 }
 function mailKapat() { document.getElementById('mailModal').style.display = 'none'; }
@@ -1305,7 +1319,7 @@ async function mailGonder(hemen) {
   if (hatali.length) return hata('Geçersiz e-posta adresi: ' + hatali.join(', ') + ' · kırmızı adresleri düzeltin veya × ile kaldırın.');
   if (!secim.length) return hata('Soldan en az bir rapor seçin.');
   if (hemen && !confirm('Mail HEMEN gönderilecek.\n\nKime: ' + kime.join(', ') + (bilgi.length ? '\nBilgi: ' + bilgi.join(', ') : '') + '\nKonu: ' + document.getElementById('mlKonu').value + '\nRapor sayısı: ' + secim.length + '\n\nOnaylıyor musunuz?')) return;
-  yuklemeGoster(hemen ? 'Mail gönderiliyor…' : 'Mail Outlook\'ta hazırlanıyor…');
+  yuklemeGoster(hemen ? 'Mail gönderiliyor…' : 'Mail taslağı hazırlanıyor…');
   try {
     const { raporlar, filtre } = await raporlariTopla(secim);
     const gonderen = document.getElementById('mlGonderen').value;
@@ -1313,7 +1327,7 @@ async function mailGonder(hemen) {
     const r = await (await fetch(API + '/api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gonderen, kime, bilgi, konu: document.getElementById('mlKonu').value, not: document.getElementById('mlMesaj').value, raporlar, filtre, excel: document.getElementById('mlExcel').checked, govdeTablo: document.getElementById('mlGovde').checked, hemen, dosyaAdi: 'ELEKTRİK ANALİZİ ' + new Date().toISOString().slice(0, 10) }) })).json();
     if (!r.ok) return hata('Gönderilemedi: ' + r.hata);
     sonuc.className = 'mail-sonuc ok';
-    sonuc.textContent = r.durum === 'gonderildi' ? '✔ Mail gönderildi → ' + kime.join(', ') + (bilgi.length ? ' (bilgi: ' + bilgi.join(', ') + ')' : '') : '✔ Mail Outlook\'ta açıldı. Kontrol edip Gönder\'e basın.';
+    sonuc.textContent = r.durum === 'gonderildi' ? '✔ Mail gönderildi → ' + kime.join(', ') + (bilgi.length ? ' (bilgi: ' + bilgi.join(', ') + ')' : '') : (emlIndir(r) ? '✔ Taslak indirildi (' + r.emlAd + '). Dosyayı açın: varsayılan mail uygulamanızda yeni ileti olarak açılır; kontrol edip Gönder\'e basın.' : '✔ Hazırlandı.');
     MAIL_BILGI = null;
   } catch (e) { hata('Hata: ' + e.message); }
   finally { yuklemeGizle(); }

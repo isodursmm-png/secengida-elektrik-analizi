@@ -188,7 +188,7 @@ function ciz() {
   solCiz();
   const ana = document.getElementById('ana');
   if (!V) return;
-  if (!V.var) { ana.innerHTML = '<div class="bos">SECENGIDA klasöründe Antalya OSB faturası bulunamadı. Masaüstü\\SECENGIDA klasörüne fatura zip / PDF dosyalarını bırakın.</div>'; return; }
+  if (!V.var) { ana.innerHTML = '<div class="bos">SECENGIDA klasöründe Antalya OSB faturası bulunamadı. SECENGIDA fatura klasörüne (Masaüstü\\SECENGIDA; o yoksa veri\\secengida_gelen ya da SECENGIDA_KLASOR) fatura zip / PDF dosyalarını bırakın.</div>'; return; }
   ana.innerHTML = CIZ[GORUNUM]();
 }
 async function yukle(yeni) {
